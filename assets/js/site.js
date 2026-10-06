@@ -79,7 +79,11 @@
       '<div class="drop-menu">' +
       navLink("apply.html", "申請輔大 imMBA", "Apply for Fu JEN imMBA", c.apply) +
       "</div></div>" +
-      navLink("curriculum.html", "課程資訊", "Curriculum", c.curriculum) +
+      '<div class="drop' + (c.curriculum ? " is-current" : "") + '">' +
+      '<a class="drop-trigger" href="' + prefix + 'curriculum.html">' + t("課程", "Courses") + "</a>" +
+      '<div class="drop-menu">' +
+      navLink("curriculum.html", "課程與修業規定", "Curriculum and Requirements", c.curriculum) +
+      "</div></div>" +
       navLink("faculty.html", "師資介紹", "Faculty", c.faculty) +
       navLink("guide.html", "imMBA全攻略", "Student guide", c.guide) +
       navLink("graduation.html", "畢業與離校", "Graduation", c.graduation) +
@@ -95,7 +99,7 @@
       '<div class="lang" role="group" aria-label="Language">' +
       '<button type="button" data-set-locale="zh">中文</button>' +
       '<button type="button" data-set-locale="en">EN</button></div>' +
-      '<a class="btn btn-gold" href="' + prefix + 'apply.html">' + t("我要報名", "Apply Now") + "</a>" +
+      '<a class="btn btn-gold" href="https://www.management.fju.edu.tw/esubweb/immbaengindex/" target="_blank" rel="noopener">' + t("我要報名", "Apply Now") + "</a>" +
       "</div></div>" +
       "</div></header>";
   }
