@@ -66,7 +66,7 @@
       '<div class="chrome-sticky">' +
       /* 3. Navigation bar */
       '<div class="nav-bar">' +
-      '<div class="wrap">' +
+      '<div class="wrap nav-bar-inner">' +
       '<nav class="nav" data-nav aria-label="Primary">' +
       '<div class="drop' + (c.about || c.environment ? " is-current" : "") + '">' +
       '<a class="drop-trigger" href="' + prefix + 'about.html">' + t("簡介", "About") + "</a>" +
@@ -92,15 +92,13 @@
       navLink("gallery.html", "活動集錦", "Gallery", c.gallery) +
       navLink("news.html", "公告", "News", c.news) +
       navLink("contact.html", "聯絡我們", "Contact", c.contact) +
-      "</nav></div></div>" +
-      /* 4. Action area */
-      '<div class="action-bar">' +
-      '<div class="wrap action-inner">' +
+      "</nav>" +
+      '<div class="nav-actions">' +
       '<div class="lang" role="group" aria-label="Language">' +
       '<button type="button" data-set-locale="zh">中文</button>' +
       '<button type="button" data-set-locale="en">EN</button></div>' +
       '<a class="btn btn-gold" href="https://www.management.fju.edu.tw/esubweb/immbaengindex/" target="_blank" rel="noopener">' + t("我要報名", "Apply Now") + "</a>" +
-      "</div></div>" +
+      "</div></div></div>" +
       "</div></header>";
   }
 
