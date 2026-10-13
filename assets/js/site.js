@@ -69,18 +69,18 @@
       '<div class="wrap nav-bar-inner">' +
       '<nav class="nav" data-nav aria-label="Primary">' +
       '<div class="drop' + (c.about || c.environment ? " is-current" : "") + '">' +
-      '<a class="drop-trigger" href="' + prefix + 'about.html">' + t("簡介", "About") + "</a>" +
+      '<button type="button" class="drop-trigger" aria-haspopup="true">' + t("簡介", "About") + "</button>" +
       '<div class="drop-menu">' +
       navLink("about.html", "特色與排名", "Overview and Ranking", c.about) +
       navLink("environment.html", "學習環境", "Our Learning Environment", c.environment) +
       "</div></div>" +
-      '<div class="drop' + (c.admissions || c.apply ? " is-current" : "") + '">' +
-      '<a class="drop-trigger" href="' + prefix + 'admissions.html">' + t("招生資訊", "Admissions") + "</a>" +
+      '<div class="drop' + (c.apply ? " is-current" : "") + '">' +
+      '<button type="button" class="drop-trigger" aria-haspopup="true">' + t("招生資訊", "Admissions") + "</button>" +
       '<div class="drop-menu">' +
       navLink("apply.html", "申請輔大 imMBA", "Apply for Fu JEN imMBA", c.apply) +
       "</div></div>" +
       '<div class="drop' + (c.curriculum ? " is-current" : "") + '">' +
-      '<a class="drop-trigger" href="' + prefix + 'curriculum.html">' + t("課程", "Courses") + "</a>" +
+      '<button type="button" class="drop-trigger" aria-haspopup="true">' + t("課程", "Courses") + "</button>" +
       '<div class="drop-menu">' +
       navLink("curriculum.html", "課程與修業規定", "Curriculum and Requirements", c.curriculum) +
       "</div></div>" +
@@ -111,7 +111,7 @@
       ) +
       "</p></div>" +
       "<div><h3>" + t("快速連結", "Explore") + "</h3>" +
-      navLink("admissions.html", "招生資訊", "Admissions", false) + "<br>" +
+      navLink("apply.html", "申請輔大 imMBA", "Apply for Fu JEN imMBA", false) + "<br>" +
       navLink("dual-degree.html", "跨國雙碩士", "Dual master’s", false) + "<br>" +
       navLink("news.html", "最新公告", "News", false) + "<br>" +
       navLink("contact.html", "聯絡我們", "Contact", false) +
