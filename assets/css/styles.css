@@ -28,6 +28,48 @@ body {
 
 img { max-width: 100%; display: block; }
 a { color: inherit; }
+a[href^="http://"]::after,
+a[href^="https://"]::after {
+  content: " ↗";
+  font-weight: 800;
+  color: inherit;
+}
+.home-news-row[href^="http://"]::after,
+.home-news-row[href^="https://"]::after,
+.news-item[href^="http://"]::after,
+.news-item[href^="https://"]::after {
+  content: none;
+}
+.home-news-row[href^="http://"] .home-news-title::after,
+.home-news-row[href^="https://"] .home-news-title::after,
+.news-item[href^="http://"] h3::after,
+.news-item[href^="https://"] h3::after {
+  content: " ↗";
+  font-weight: 800;
+  color: inherit;
+}
+.home-gallery-grid a[href^="http://"]::after,
+.home-gallery-grid a[href^="https://"]::after,
+.gallery-grid a[href^="http://"]::after,
+.gallery-grid a[href^="https://"]::after {
+  content: "↗";
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  color: #fff;
+  font-weight: 800;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+.page-home a[href^="http://"]::after,
+.page-home a[href^="https://"]::after,
+.page-home .home-news-row .home-news-title::after,
+.page-home .home-gallery-grid a::after {
+  content: none;
+}
+a.file-pdf::after {
+  content: none;
+}
 button, input, select, textarea { font: inherit; }
 
 html[data-locale="en"] .zh { display: none !important; }
@@ -696,12 +738,6 @@ html[data-locale="en"] .overview-topic h2 {
   padding: 0;
   border-radius: 0;
   box-shadow: none;
-}
-.link-mark[target="_blank"]::after {
-  content: " ↗";
-  font-weight: 800;
-  color: #c4a35a;
-  background: none;
 }
 .link-mark:hover {
   color: #a07d3a;

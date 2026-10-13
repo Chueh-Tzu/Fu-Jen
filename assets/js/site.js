@@ -48,7 +48,7 @@
       '<span class="zh">本網頁為學生 Zoe Chueh 製作之課程教學網。This is not the official website.</span>' +
       '<span class="en">Teaching-site notice by student Zoe Chueh. This is not the official website.</span>' +
       "</p>" +
-      '<a class="notice-link" href="https://www.management.fju.edu.tw/subweb/immba/" target="_blank" rel="noopener">' +
+      '<a class="notice-link" href="https://www.management.fju.edu.tw/subweb/immba/">' +
       t("官方網站請點此連結", "Official website") +
       "</a>" +
       "</div></div>" +
@@ -95,7 +95,7 @@
       "</nav>" +
       '<div class="nav-actions">' +
       '<button type="button" class="lang-toggle" data-locale-toggle>EN</button>' +
-      '<a class="btn btn-gold" href="https://www.management.fju.edu.tw/esubweb/immbaengindex/" target="_blank" rel="noopener">' + t("我要報名", "Apply Now") + "</a>" +
+      '<a class="btn btn-gold" href="https://www.management.fju.edu.tw/esubweb/immbaengindex/">' + t("我要報名", "Apply Now") + "</a>" +
       "</div></div></div>" +
       "</div></header>";
   }
