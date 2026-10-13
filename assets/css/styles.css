@@ -530,7 +530,7 @@ h2 {
 }
 .overview-links { margin-top: 14px !important; }
 .link-mark {
-  color: #8a6a28;
+  color: #c4a35a;
   font-weight: 800;
   text-decoration: none;
   background: none;
@@ -541,13 +541,17 @@ h2 {
 .link-mark[target="_blank"]::after {
   content: " ↗";
   font-weight: 800;
-  color: #8a6a28;
+  color: #c4a35a;
   background: none;
 }
 .link-mark:hover {
-  color: #6e531c;
+  color: #a07d3a;
   text-decoration: none;
   background: none;
+}
+.mark-stat {
+  color: #c0392b;
+  font-weight: 800;
 }
 .overview-badge {
   margin: 28px 0 0;
