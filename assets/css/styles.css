@@ -205,24 +205,19 @@ html[data-locale="zh"] .en { display: none !important; }
   background: var(--paper);
 }
 
-.lang {
-  display: inline-flex;
+.lang-toggle {
   border: 1px solid rgba(255,255,255,.28);
   border-radius: 999px;
-  overflow: hidden;
   background: transparent;
-}
-.lang button {
-  border: 0;
-  background: transparent;
-  padding: 7px 12px;
+  padding: 7px 14px;
   cursor: pointer;
-  color: rgba(255,255,255,.75);
+  color: #fff;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: .04em;
+  min-width: 52px;
 }
-.lang button[aria-pressed="true"] {
+.lang-toggle:hover {
   background: #fff;
   color: var(--navy);
 }

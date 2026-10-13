@@ -94,9 +94,7 @@
       navLink("contact.html", "聯絡我們", "Contact", c.contact) +
       "</nav>" +
       '<div class="nav-actions">' +
-      '<div class="lang" role="group" aria-label="Language">' +
-      '<button type="button" data-set-locale="zh">中文</button>' +
-      '<button type="button" data-set-locale="en">EN</button></div>' +
+      '<button type="button" class="lang-toggle" data-locale-toggle>EN</button>' +
       '<a class="btn btn-gold" href="https://www.management.fju.edu.tw/esubweb/immbaengindex/" target="_blank" rel="noopener">' + t("我要報名", "Apply Now") + "</a>" +
       "</div></div></div>" +
       "</div></header>";
@@ -131,19 +129,23 @@
   var locale = saved || (navigator.language && navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en");
   setLocale(locale);
 
-  document.querySelectorAll("[data-set-locale]").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      setLocale(btn.getAttribute("data-set-locale"));
+  var langToggle = document.querySelector("[data-locale-toggle]");
+  if (langToggle) {
+    langToggle.addEventListener("click", function () {
+      var currentLocale = document.documentElement.getAttribute("data-locale");
+      setLocale(currentLocale === "en" ? "zh" : "en");
     });
-  });
+  }
 
   function setLocale(next) {
-    document.documentElement.lang = next === "en" ? "en" : "zh-Hant";
-    document.documentElement.setAttribute("data-locale", next === "en" ? "en" : "zh");
-    localStorage.setItem("immba-locale", next === "en" ? "en" : "zh");
-    document.querySelectorAll("[data-set-locale]").forEach(function (btn) {
-      btn.setAttribute("aria-pressed", btn.getAttribute("data-set-locale") === (next === "en" ? "en" : "zh") ? "true" : "false");
-    });
+    var isEn = next === "en";
+    document.documentElement.lang = isEn ? "en" : "zh-Hant";
+    document.documentElement.setAttribute("data-locale", isEn ? "en" : "zh");
+    localStorage.setItem("immba-locale", isEn ? "en" : "zh");
+    if (langToggle) {
+      langToggle.textContent = isEn ? "中文" : "EN";
+      langToggle.setAttribute("aria-label", isEn ? "切換為中文" : "Switch to English");
+    }
   }
 
   var toggle = document.querySelector("[data-menu-toggle]");
