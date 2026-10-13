@@ -522,6 +522,7 @@ h2 {
   font-size: 17px;
   line-height: 1.8;
 }
+.overview-copy > p + p { margin-top: 12px; }
 .overview-kicker {
   margin: 0 0 8px !important;
   color: var(--accent);
@@ -555,18 +556,61 @@ h2 {
 }
 .overview-badge {
   margin: 28px 0 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  padding: 10px 16px;
-  border: 2px solid #1b7a4b;
-  color: #1b7a4b;
-  font-weight: 800;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  font-size: 13px;
+  display: block;
+  width: min(280px, 70%);
+  height: auto;
+  justify-self: end;
 }
+
+.env-gallery {
+  display: grid;
+  gap: 18px;
+  max-width: 920px;
+}
+.env-shot {
+  position: relative;
+  margin: 0;
+}
+.env-shot img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.env-shot figcaption {
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 1px 10px rgba(0,0,0,.75);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.apply-list,
+.apply-notes {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  color: var(--ink);
+  line-height: 1.75;
+}
+.apply-list li,
+.apply-notes li { margin: 6px 0; }
+.apply-open {
+  margin: 0 0 12px;
+  color: #c0392b;
+  font-weight: 800;
+  font-size: 20px;
+}
+.fee-box {
+  margin: 14px 0;
+  padding: 16px 18px;
+  background: var(--paper);
+  border-left: 4px solid var(--gold);
+  border-radius: 8px;
+}
+.fee-box p { margin: 0; }
+.fee-box p + p { margin-top: 6px; }
 
 .timeline { display: grid; gap: 16px; }
 .step {
