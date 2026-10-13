@@ -67,6 +67,12 @@ a[href^="https://"]::after {
 .page-home .home-gallery-grid a::after {
   content: none;
 }
+.page-home .notice-link[href^="http://"]::after,
+.page-home .notice-link[href^="https://"]::after {
+  content: " ↗";
+  font-weight: 800;
+  color: inherit;
+}
 a.file-pdf::after {
   content: none;
 }
