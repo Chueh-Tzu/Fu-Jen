@@ -71,7 +71,7 @@
       '<div class="drop' + (c.about || c.environment ? " is-current" : "") + '">' +
       '<a class="drop-trigger" href="' + prefix + 'about.html">' + t("簡介", "About") + "</a>" +
       '<div class="drop-menu">' +
-      navLink("about.html", "學程概況與排名", "Overview and Ranking", c.about) +
+      navLink("about.html", "特色與排名", "Overview and Ranking", c.about) +
       navLink("environment.html", "學習環境", "Our Learning Environment", c.environment) +
       "</div></div>" +
       '<div class="drop' + (c.admissions || c.apply ? " is-current" : "") + '">' +
@@ -127,7 +127,6 @@
 
   var saved = localStorage.getItem("immba-locale");
   var locale = saved || (navigator.language && navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en");
-  setLocale(locale);
 
   var langToggle = document.querySelector("[data-locale-toggle]");
   if (langToggle) {
@@ -136,6 +135,8 @@
       setLocale(currentLocale === "en" ? "zh" : "en");
     });
   }
+
+  setLocale(locale);
 
   function setLocale(next) {
     var isEn = next === "en";
