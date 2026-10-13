@@ -780,6 +780,30 @@ html[data-locale="en"] .overview-topic h2 {
   gap: 18px;
   max-width: 920px;
 }
+.overview-copy .env-gallery {
+  margin-top: 20px;
+  max-width: 100%;
+}
+.env-page.overview {
+  text-align: left;
+}
+.env-page .overview-row {
+  grid-template-columns: 1fr;
+  gap: 0;
+  justify-items: start;
+}
+.env-page .overview-copy {
+  width: 100%;
+}
+.env-page .overview-copy .overview-title,
+.env-page .overview-copy > p {
+  text-align: left;
+}
+.env-page .overview-badge {
+  justify-self: start;
+  margin-left: 0;
+  margin-right: 0;
+}
 .env-shot {
   position: relative;
   margin: 0;
