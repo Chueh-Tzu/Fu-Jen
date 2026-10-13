@@ -307,6 +307,155 @@ html[data-locale="zh"] .en { display: none !important; }
 .lead { font-size: 19px; color: rgba(255,255,255,.86); max-width: 58ch; }
 .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
 
+.home-banner {
+  position: relative;
+  overflow: hidden;
+  background: #1c3344;
+  color: #fff;
+  width: 100%;
+  margin: 0;
+}
+.home-banner-photo {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: brightness(.78) saturate(.88);
+}
+.home-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: rgba(16, 32, 48, .32);
+}
+.home-banner-slogan {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  padding: 7% 20px 10%;
+  text-align: center;
+  background: linear-gradient(to bottom, rgba(18, 32, 46, .28) 0%, transparent 80%);
+}
+.home-banner-slogan h1 {
+  margin: 0;
+  color: #fff;
+  font-family: "Source Sans 3", "Noto Sans TC", sans-serif;
+  font-size: clamp(22px, 3.4vw, 40px);
+  font-weight: 700;
+  letter-spacing: .02em;
+  line-height: 1.3;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, .65), 0 0 2px rgba(0, 0, 0, .4);
+}
+.home-banner-actions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 72px 16px 28px;
+  background: linear-gradient(transparent 0%, rgba(12, 28, 42, .35) 40%, rgba(12, 28, 42, .72) 100%);
+}
+.home-banner-actions .btn {
+  padding: 10px 18px;
+  white-space: nowrap;
+}
+.home-block { padding: 48px 0 64px; }
+.home-panel {
+  max-width: 920px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 36px 40px 28px;
+}
+.home-news-head,
+.home-gallery-head {
+  text-align: center;
+  margin: 0 0 28px;
+  font-size: 28px;
+  font-weight: 600;
+}
+.home-news-list { display: grid; }
+.home-news-row {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  gap: 8px 16px;
+  align-items: start;
+  padding: 16px 0;
+  border-bottom: 1px dotted #d4cec2;
+  text-decoration: none;
+}
+.home-news-row:last-of-type { border-bottom: 0; }
+.home-news-row:hover .home-news-title { color: var(--gold); }
+.home-news-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.55;
+}
+.home-news-date {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  white-space: nowrap;
+  padding-top: 3px;
+}
+.news-top-slot {
+  min-width: 42px;
+  padding-top: 3px;
+}
+.news-top {
+  display: inline-block;
+  background: #1bb4e0;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.home-news-more {
+  text-align: right;
+  margin: 8px 0 0;
+}
+.home-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.home-gallery-grid a {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #d9e6f2;
+}
+.home-gallery-grid img {
+  width: 100%;
+  height: 168px;
+  object-fit: cover;
+  transition: transform .35s ease;
+}
+.home-gallery-grid a:hover img { transform: scale(1.04); }
+.home-gallery-grid figcaption {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  margin: 0;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-shadow: 0 1px 8px rgba(0,0,0,.7);
+}
+
 .stats {
   background: var(--navy);
   color: #fff;
@@ -640,10 +789,12 @@ h2 {
   padding: 20px;
   background: #fff;
 }
+.faculty-group { margin: 8px 0 28px; }
+.faculty-group h2 { margin: 0 0 16px; font-size: 22px; }
+.faculty-card.is-chair { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
 .faculty-card h3 { margin: 0 0 4px; font-size: 20px; }
 .faculty-card .role { color: var(--gold); font-size: 14px; font-weight: 700; margin-bottom: 8px; }
 .faculty-card p { margin: 4px 0; font-size: 15px; color: var(--muted); }
-.faculty-card a { color: var(--accent); }
 
 .form {
   display: grid;
@@ -731,6 +882,9 @@ h2 {
   .gallery-grid, .gallery-grid a:first-child { grid-row: auto; }
   .gallery-grid a { min-height: 200px; }
   .news-item { grid-template-columns: 1fr; }
+  .home-gallery-grid { grid-template-columns: repeat(2, 1fr); }
+  .home-news-row { grid-template-columns: auto 1fr; }
+  .home-news-date { grid-column: 2; }
   .step { grid-template-columns: 1fr; }
 }
 
