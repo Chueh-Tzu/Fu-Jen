@@ -78,7 +78,8 @@ a[href^="https://"]::after {
   font-weight: 800;
   color: inherit;
 }
-a.file-pdf::after {
+a.file-pdf::after,
+a.file-doc::after {
   content: none;
 }
 button, input, select, textarea { font: inherit; }
@@ -999,6 +1000,136 @@ ol.apply-list li::marker {
 }
 .fee-box p { margin: 0; }
 .fee-box p + p { margin-top: 6px; }
+
+/* Chinese Apply page — official MBA + scholarship content */
+.page-apply {
+  background:
+    radial-gradient(ellipse 70% 40% at 100% 0%, rgba(196, 163, 90, 0.07), transparent 55%),
+    linear-gradient(180deg, #f8f6f1 0%, var(--white) 36%, var(--paper) 100%);
+}
+.apply-zh {
+  max-width: 920px;
+  display: grid;
+  gap: 28px;
+}
+.apply-panel {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(11, 31, 58, 0.05);
+  padding: 28px 30px 32px;
+}
+.apply-panel-title {
+  margin: 0 0 22px;
+  color: var(--navy);
+  font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+  font-size: clamp(30px, 4vw, 40px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+.apply-block + .apply-block { margin-top: 28px; }
+.apply-block-head {
+  margin: 0 0 12px;
+  color: var(--navy-2);
+  font-size: 20px;
+  font-weight: 800;
+}
+.apply-block-head-lg {
+  font-size: 22px;
+  color: var(--navy);
+}
+.apply-block-heading-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 18px;
+  margin-bottom: 14px;
+}
+.apply-block-heading-row .apply-block-head { margin: 0; }
+.apply-intl-note {
+  font-size: 14px;
+  font-weight: 700;
+}
+.apply-block > p {
+  margin: 0;
+  color: var(--ink);
+  line-height: 1.8;
+}
+.apply-block > p + p { margin-top: 10px; }
+.apply-date-line {
+  margin: 0 0 18px;
+  color: var(--navy);
+  font-weight: 700;
+  line-height: 1.7;
+}
+.apply-date-em {
+  color: #b42318;
+  font-weight: 800;
+}
+.apply-item {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.apply-item-label {
+  margin: 0 0 10px;
+  color: var(--navy);
+  font-weight: 800;
+  line-height: 1.65;
+}
+.apply-item-text {
+  font-weight: 600;
+  color: var(--ink);
+}
+.apply-item > p {
+  margin: 0;
+  color: var(--ink);
+  line-height: 1.75;
+}
+.apply-item > p + p { margin-top: 8px; }
+.apply-link-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+.apply-signup-btn {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 2px;
+}
+.apply-soon {
+  color: var(--muted);
+  font-weight: 600;
+}
+.apply-arrow {
+  padding-left: 0.2em;
+}
+.apply-scholarship-list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+.apply-scholarship-list li {
+  padding: 12px 14px;
+  background: var(--paper);
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  line-height: 1.7;
+}
+.apply-zh .overview-badge {
+  margin-left: auto;
+}
+@media (max-width: 760px) {
+  .apply-panel { padding: 22px 18px 26px; }
+  .apply-block-heading-row { flex-direction: column; align-items: flex-start; }
+}
 
 .timeline { display: grid; gap: 16px; }
 .step {

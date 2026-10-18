@@ -125,8 +125,13 @@
       " © Fu Jen Catholic University imMBA</div></footer>";
   }
 
+  var params = new URLSearchParams(location.search);
+  var queryLocale = params.get("locale");
   var saved = localStorage.getItem("immba-locale");
-  var locale = saved || (navigator.language && navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en");
+  var locale =
+    queryLocale === "en" || queryLocale === "zh"
+      ? queryLocale
+      : saved || (navigator.language && navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en");
 
   var langToggle = document.querySelector("[data-locale-toggle]");
   if (langToggle) {
@@ -137,6 +142,15 @@
   }
 
   setLocale(locale);
+
+  if (queryLocale === "en" || queryLocale === "zh") {
+    try {
+      params.delete("locale");
+      var nextSearch = params.toString();
+      var nextUrl = location.pathname + (nextSearch ? "?" + nextSearch : "") + location.hash;
+      history.replaceState(null, "", nextUrl);
+    } catch (err) {}
+  }
 
   function setLocale(next) {
     var isEn = next === "en";
