@@ -1,6 +1,8 @@
-(function () {
-  /** Structured announcements collected from the official imMBA news page. */
-  var ANNOUNCEMENTS = [
+(function (global) {
+  var STORAGE_KEY = "immba-announcements-v1";
+
+  /** Default announcements collected from the official imMBA news page. */
+  var DEFAULT_ANNOUNCEMENTS = [
     {
       id: "2689",
       date: "2026-08-19",
@@ -177,16 +179,69 @@
       name: "輔仁大學國際經管(imMBA)官方公告",
       url: "https://www.management.fju.edu.tw/subweb/immba/news.php",
       details: "查看詳細內容",
-      more: "更多公告"
+      more: "更多公告",
+      admin: "公告後台管理"
     },
     en: {
       label: "Source: ",
       name: "Fu Jen imMBA Official News",
       url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news.php",
       details: "View Details",
-      more: "More announcements"
+      more: "More announcements",
+      admin: "AdminNews"
     }
   };
+
+  function cloneDefaults() {
+    return JSON.parse(JSON.stringify(DEFAULT_ANNOUNCEMENTS));
+  }
+
+  function dateLabelFromIso(iso) {
+    return String(iso || "").replace(/-/g, "/");
+  }
+
+  function normalizeItem(item) {
+    var date = item.date || "";
+    return {
+      id: String(item.id || ""),
+      date: date,
+      dateLabel: item.dateLabel || dateLabelFromIso(date),
+      top: !!item.top,
+      zh: {
+        title: (item.zh && item.zh.title) || "",
+        url: (item.zh && item.zh.url) || "",
+        content: (item.zh && item.zh.content) || ""
+      },
+      en: {
+        title: (item.en && item.en.title) || "",
+        url: (item.en && item.en.url) || "",
+        content: (item.en && item.en.content) || ""
+      }
+    };
+  }
+
+  function getAll() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return cloneDefaults();
+      var parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return cloneDefaults();
+      return parsed.map(normalizeItem);
+    } catch (err) {
+      return cloneDefaults();
+    }
+  }
+
+  function saveAll(list) {
+    var normalized = (list || []).map(normalizeItem);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    return normalized;
+  }
+
+  function restoreDefaults() {
+    localStorage.removeItem(STORAGE_KEY);
+    return cloneDefaults();
+  }
 
   function escapeHtml(str) {
     return String(str)
@@ -196,12 +251,24 @@
       .replace(/"/g, "&quot;");
   }
 
+  function bodyHtml(content) {
+    if (!content) return "";
+    return (
+      '<span class="announce-body">' +
+      escapeHtml(content).replace(/\n/g, "<br>") +
+      "</span>"
+    );
+  }
+
   function cardHtml(item) {
     var topBadge = item.top
       ? '<span class="announce-top">TOP</span>'
       : "";
+    var hasBody = !!(item.zh.content || item.en.content);
     return (
-      '<article class="announce-card" data-announce="' +
+      '<article class="announce-card' +
+      (hasBody ? " has-body" : "") +
+      '" data-announce="' +
       escapeHtml(item.id) +
       '">' +
       '<a class="announce-card-hit zh" href="' +
@@ -215,8 +282,11 @@
       "</time>" +
       topBadge +
       "</span>" +
+      '<span class="announce-main">' +
       '<span class="announce-title">' +
       escapeHtml(item.zh.title) +
+      "</span>" +
+      bodyHtml(item.zh.content) +
       "</span>" +
       '<span class="announce-link">' +
       SOURCE.zh.details +
@@ -233,8 +303,11 @@
       "</time>" +
       topBadge +
       "</span>" +
+      '<span class="announce-main">' +
       '<span class="announce-title">' +
       escapeHtml(item.en.title) +
+      "</span>" +
+      bodyHtml(item.en.content) +
       "</span>" +
       '<span class="announce-link">' +
       SOURCE.en.details +
@@ -244,11 +317,12 @@
     );
   }
 
-  function render() {
+  function renderHome() {
     var root = document.getElementById("home-announcements");
     if (!root) return;
 
-    var cards = ANNOUNCEMENTS.map(cardHtml).join("");
+    var list = getAll();
+    var cards = list.map(cardHtml).join("");
     root.innerHTML =
       '<div class="announce-grid">' +
       cards +
@@ -272,6 +346,9 @@
       SOURCE.zh.url +
       '">' +
       SOURCE.zh.name +
+      "</a>" +
+      ' · <a class="link-mark" href="admin-news.html">' +
+      SOURCE.zh.admin +
       "</a></span>" +
       '<span class="en">' +
       SOURCE.en.label +
@@ -279,13 +356,35 @@
       SOURCE.en.url +
       '">' +
       SOURCE.en.name +
+      "</a>" +
+      ' · <a class="link-mark" href="admin-news.html">' +
+      SOURCE.en.admin +
       "</a></span>" +
       "</p>";
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", render);
-  } else {
-    render();
+  global.ImMbaAnnouncements = {
+    STORAGE_KEY: STORAGE_KEY,
+    getDefaults: cloneDefaults,
+    getAll: getAll,
+    saveAll: saveAll,
+    restoreDefaults: restoreDefaults,
+    dateLabelFromIso: dateLabelFromIso,
+    normalizeItem: normalizeItem,
+    renderHome: renderHome
+  };
+
+  function boot() {
+    renderHome();
   }
-})();
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+
+  global.addEventListener("storage", function (event) {
+    if (event.key === STORAGE_KEY) renderHome();
+  });
+})(window);

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-locale="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AdminNews | International Management (imMBA)</title>
+  <meta name="description" content="AdminNews — manage imMBA homepage announcements (CRUD).">
+  <link rel="icon" href="assets/img/immba-logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=admin-content">
+</head>
+<body class="page-admin-news">
+  <a class="skip" href="#main">Skip to content</a>
+  <div id="site-header"></div>
+  <main id="main">
+    <header class="page-hero">
+      <div class="wrap">
+        <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">公告後台管理</span><span class="en">AdminNews</span></p>
+        <h1><span class="zh">公告後台管理</span><span class="en">AdminNews</span></h1>
+        <p class="lead">
+          <span class="zh">在此新增、查看、編輯、刪除公告，或還原預設清單。儲存後會同步到首頁「最新消息」。</span>
+          <span class="en">Create, view, edit, or delete announcements, or restore the default list. Saved changes sync to the homepage Announcements section.</span>
+        </p>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="wrap admin-news-wrap">
+        <div class="admin-toolbar" role="toolbar" aria-label="Announcement actions">
+          <button type="button" class="btn btn-gold" id="admin-btn-add">
+            <span class="zh">新增公告</span><span class="en">Add announcement</span>
+          </button>
+          <button type="button" class="btn btn-outline" id="admin-btn-restore">
+            <span class="zh">還原預設清單</span><span class="en">Restore defaults</span>
+          </button>
+          <a class="btn btn-navy" href="index.html#home-announce-heading">
+            <span class="zh">查看前台最新消息</span><span class="en">View homepage</span>
+          </a>
+        </div>
+
+        <p class="admin-status" id="admin-status" role="status" aria-live="polite" hidden></p>
+
+        <div class="admin-form-panel" id="admin-form-panel" hidden>
+          <h2 class="admin-form-title" id="admin-form-title">
+            <span class="zh">新增公告</span><span class="en">Add announcement</span>
+          </h2>
+          <form class="form admin-form" id="admin-form" novalidate>
+            <input type="hidden" id="admin-id" name="id" value="">
+            <div class="admin-form-grid">
+              <div class="field">
+                <label for="admin-date"><span class="zh">日期</span><span class="en">Date</span></label>
+                <input type="date" id="admin-date" name="date" required>
+              </div>
+              <div class="field admin-field-check">
+                <label class="admin-check-label" for="admin-top">
+                  <input type="checkbox" id="admin-top" name="top">
+                  <span class="zh">標記為 TOP</span><span class="en">Mark as TOP</span>
+                </label>
+              </div>
+              <div class="field">
+                <label for="admin-zh-title"><span class="zh">中文標題</span><span class="en">Chinese title</span></label>
+                <input type="text" id="admin-zh-title" name="zhTitle" required maxlength="200" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="admin-zh-url"><span class="zh">中文連結</span><span class="en">Chinese URL</span></label>
+                <input type="url" id="admin-zh-url" name="zhUrl" required placeholder="https://">
+              </div>
+              <div class="field admin-field-full">
+                <label for="admin-zh-content"><span class="zh">中文內容</span><span class="en">Chinese content</span></label>
+                <textarea id="admin-zh-content" name="zhContent" rows="4" maxlength="2000" placeholder="公告內文（選填）"></textarea>
+              </div>
+              <div class="field">
+                <label for="admin-en-title"><span class="zh">英文標題</span><span class="en">English title</span></label>
+                <input type="text" id="admin-en-title" name="enTitle" required maxlength="200" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="admin-en-url"><span class="zh">英文連結</span><span class="en">English URL</span></label>
+                <input type="url" id="admin-en-url" name="enUrl" required placeholder="https://">
+              </div>
+              <div class="field admin-field-full">
+                <label for="admin-en-content"><span class="zh">英文內容</span><span class="en">English content</span></label>
+                <textarea id="admin-en-content" name="enContent" rows="4" maxlength="2000" placeholder="Announcement body (optional)"></textarea>
+              </div>
+            </div>
+            <div class="admin-form-actions">
+              <button type="submit" class="btn btn-gold" id="admin-btn-save">
+                <span class="zh">儲存並同步前台</span><span class="en">Save &amp; sync to site</span>
+              </button>
+              <button type="button" class="btn btn-outline" id="admin-btn-cancel">
+                <span class="zh">取消</span><span class="en">Cancel</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="admin-list-head">
+          <h2>
+            <span class="zh">目前公告清單</span>
+            <span class="en">Current announcement list</span>
+          </h2>
+          <p class="admin-count" id="admin-count"></p>
+        </div>
+        <div class="admin-list" id="admin-list" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+  <div id="site-footer"></div>
+  <script src="assets/js/announcements.js?v=admin-content"></script>
+  <script src="assets/js/site.js?v=no-gallery-nav"></script>
+  <script src="assets/js/admin-news.js?v=2"></script>
+</body>
+</html>

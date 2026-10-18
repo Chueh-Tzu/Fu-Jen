@@ -29,9 +29,9 @@
       dual: file === "dual-degree.html",
       exchange: file === "exchange.html",
       news: file === "news.html" || inNews,
-      gallery: file === "gallery.html",
       scholarships: file === "scholarships.html",
       contact: file === "contact.html",
+      adminNews: file === "admin-news.html",
     };
   }
 
@@ -89,7 +89,6 @@
       navLink("graduation.html", "畢業與離校", "Graduation", c.graduation) +
       navLink("dual-degree.html", "跨國雙碩士", "Dual master’s", c.dual) +
       navLink("exchange.html", "海外交換", "Exchange", c.exchange) +
-      navLink("gallery.html", "活動集錦", "Gallery", c.gallery) +
       navLink("news.html", "公告", "News", c.news) +
       navLink("contact.html", "聯絡我們", "Contact", c.contact) +
       "</nav>" +
@@ -114,6 +113,7 @@
       navLink("apply.html", "申請輔大 imMBA", "Apply for Fu JEN imMBA", false) + "<br>" +
       navLink("dual-degree.html", "跨國雙碩士", "Dual master’s", false) + "<br>" +
       navLink("news.html", "最新公告", "News", false) + "<br>" +
+      navLink("admin-news.html", "公告後台管理", "AdminNews", c.adminNews) + "<br>" +
       navLink("contact.html", "聯絡我們", "Contact", false) +
       "</div>" +
       "<div><h3>" + t("聯絡", "Contact") + "</h3>" +
