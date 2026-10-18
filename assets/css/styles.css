@@ -73,6 +73,11 @@ a[href^="https://"]::after {
   font-weight: 800;
   color: inherit;
 }
+.page-home .announce-link::after {
+  content: " ↗";
+  font-weight: 800;
+  color: inherit;
+}
 a.file-pdf::after {
   content: none;
 }
@@ -486,6 +491,111 @@ body.page-home {
 .home-news-more {
   text-align: right;
   margin: 8px 0 0;
+}
+.announce-panel {
+  max-width: 980px;
+}
+.announce-lead {
+  margin: -8px auto 28px;
+  max-width: 62ch;
+  text-align: center;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+.announce-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.announce-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(11, 31, 58, 0.04);
+  transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease, background-color .22s ease;
+}
+.announce-card-hit {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr) auto;
+  gap: 14px 18px;
+  align-items: center;
+  padding: 16px 20px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+.announce-card:hover {
+  border-color: var(--gold);
+  border-left-color: #a07d3a;
+  background: #fffcf6;
+  box-shadow: 0 18px 40px rgba(11, 31, 58, 0.14);
+  transform: translateY(-4px);
+}
+.announce-card:hover .announce-title {
+  color: var(--navy-2);
+}
+.announce-card:hover .announce-link {
+  color: #a07d3a;
+}
+.announce-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.announce-date {
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+.announce-top {
+  display: inline-block;
+  background: #1bb4e0;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.announce-title {
+  margin: 0;
+  color: var(--navy);
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.5;
+  transition: color .22s ease;
+}
+.announce-link {
+  color: #c4a35a;
+  font-weight: 800;
+  font-size: 14px;
+  white-space: nowrap;
+  transition: color .22s ease;
+}
+.announce-more {
+  margin: 22px 0 0;
+  text-align: right;
+}
+.announce-source {
+  margin: 14px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  text-align: left;
+}
+@media (max-width: 760px) {
+  .announce-card-hit {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 16px 18px;
+  }
+  .announce-link { justify-self: start; }
 }
 .home-gallery-grid {
   display: grid;
