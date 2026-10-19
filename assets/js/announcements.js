@@ -260,10 +260,48 @@
     );
   }
 
+  function cardHit(locale, item, detailsLabel) {
+    var loc = item[locale] || {};
+    var topBadge = item.top ? '<span class="announce-top">TOP</span>' : "";
+    var inner =
+      '<span class="announce-meta">' +
+      '<time class="announce-date" datetime="' +
+      escapeHtml(item.date) +
+      '">' +
+      escapeHtml(item.dateLabel) +
+      "</time>" +
+      topBadge +
+      "</span>" +
+      '<span class="announce-main">' +
+      '<span class="announce-title">' +
+      escapeHtml(loc.title) +
+      "</span>" +
+      bodyHtml(loc.content) +
+      "</span>" +
+      (loc.url
+        ? '<span class="announce-link">' + detailsLabel + "</span>"
+        : "");
+    if (loc.url) {
+      return (
+        '<a class="announce-card-hit ' +
+        locale +
+        '" href="' +
+        escapeHtml(loc.url) +
+        '">' +
+        inner +
+        "</a>"
+      );
+    }
+    return (
+      '<div class="announce-card-hit announce-card-hit-static ' +
+      locale +
+      '">' +
+      inner +
+      "</div>"
+    );
+  }
+
   function cardHtml(item) {
-    var topBadge = item.top
-      ? '<span class="announce-top">TOP</span>'
-      : "";
     var hasBody = !!(item.zh.content || item.en.content);
     return (
       '<article class="announce-card' +
@@ -271,48 +309,8 @@
       '" data-announce="' +
       escapeHtml(item.id) +
       '">' +
-      '<a class="announce-card-hit zh" href="' +
-      escapeHtml(item.zh.url) +
-      '">' +
-      '<span class="announce-meta">' +
-      '<time class="announce-date" datetime="' +
-      escapeHtml(item.date) +
-      '">' +
-      escapeHtml(item.dateLabel) +
-      "</time>" +
-      topBadge +
-      "</span>" +
-      '<span class="announce-main">' +
-      '<span class="announce-title">' +
-      escapeHtml(item.zh.title) +
-      "</span>" +
-      bodyHtml(item.zh.content) +
-      "</span>" +
-      '<span class="announce-link">' +
-      SOURCE.zh.details +
-      "</span>" +
-      "</a>" +
-      '<a class="announce-card-hit en" href="' +
-      escapeHtml(item.en.url) +
-      '">' +
-      '<span class="announce-meta">' +
-      '<time class="announce-date" datetime="' +
-      escapeHtml(item.date) +
-      '">' +
-      escapeHtml(item.dateLabel) +
-      "</time>" +
-      topBadge +
-      "</span>" +
-      '<span class="announce-main">' +
-      '<span class="announce-title">' +
-      escapeHtml(item.en.title) +
-      "</span>" +
-      bodyHtml(item.en.content) +
-      "</span>" +
-      '<span class="announce-link">' +
-      SOURCE.en.details +
-      "</span>" +
-      "</a>" +
+      cardHit("zh", item, SOURCE.zh.details) +
+      cardHit("en", item, SOURCE.en.details) +
       "</article>"
     );
   }

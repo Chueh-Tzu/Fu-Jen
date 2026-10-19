@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AdminNews | International Management (imMBA)</title>
-  <meta name="description" content="AdminNews — manage imMBA homepage announcements (CRUD).">
+  <meta name="description" content="AdminNews — bilingual announcement CRUD with auto-translate and preview.">
   <link rel="icon" href="assets/img/immba-logo.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=link-hover-ul">
+  <link rel="stylesheet" href="assets/css/styles.css?v=logo-admin">
 </head>
 <body class="page-admin-news">
   <a class="skip" href="#main">Skip to content</a>
@@ -20,8 +20,8 @@
         <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">公告後台管理</span><span class="en">AdminNews</span></p>
         <h1><span class="zh">公告後台管理</span><span class="en">AdminNews</span></h1>
         <p class="lead">
-          <span class="zh">在此新增、查看、編輯、刪除公告，或還原預設清單。儲存後會同步到首頁「最新消息」。</span>
-          <span class="en">Create, view, edit, or delete announcements, or restore the default list. Saved changes sync to the homepage Announcements section.</span>
+          <span class="zh">中英文一併新增與儲存為同一則公告；預設自動翻譯、可再編輯；發佈前預覽雙語並檢查同步；刪除一次即同時移除兩邊。</span>
+          <span class="en">Create and save Chinese and English together as one record. Auto-translate by default (editable), preview both languages and check sync before publishing, and delete once to remove both.</span>
         </p>
       </div>
     </header>
@@ -30,7 +30,7 @@
       <div class="wrap admin-news-wrap">
         <div class="admin-toolbar" role="toolbar" aria-label="Announcement actions">
           <button type="button" class="btn btn-gold" id="admin-btn-add">
-            <span class="zh">新增公告</span><span class="en">Add announcement</span>
+            <span class="zh">Create</span><span class="en">Create</span>
           </button>
           <button type="button" class="btn btn-outline" id="admin-btn-restore">
             <span class="zh">還原預設清單</span><span class="en">Restore defaults</span>
@@ -44,13 +44,15 @@
 
         <div class="admin-form-panel" id="admin-form-panel" hidden>
           <h2 class="admin-form-title" id="admin-form-title">
-            <span class="zh">新增公告</span><span class="en">Add announcement</span>
+            <span class="zh">Create</span><span class="en">Create</span>
           </h2>
+
           <form class="form admin-form" id="admin-form" novalidate>
             <input type="hidden" id="admin-id" name="id" value="">
-            <div class="admin-form-grid">
+
+            <div class="admin-shared-row">
               <div class="field">
-                <label for="admin-date"><span class="zh">日期</span><span class="en">Date</span></label>
+                <label for="admin-date"><span class="zh">日期（共用）</span><span class="en">Date (shared)</span></label>
                 <input type="date" id="admin-date" name="date" required>
               </div>
               <div class="field admin-field-check">
@@ -59,46 +61,96 @@
                   <span class="zh">標記為 TOP</span><span class="en">Mark as TOP</span>
                 </label>
               </div>
-              <div class="field">
-                <label for="admin-zh-title"><span class="zh">中文標題</span><span class="en">Chinese title</span></label>
-                <input type="text" id="admin-zh-title" name="zhTitle" required maxlength="200" autocomplete="off">
-              </div>
-              <div class="field">
-                <label for="admin-zh-url"><span class="zh">中文連結</span><span class="en">Chinese URL</span></label>
-                <input type="url" id="admin-zh-url" name="zhUrl" required placeholder="https://">
-              </div>
-              <div class="field admin-field-full">
-                <label for="admin-zh-content"><span class="zh">中文內容</span><span class="en">Chinese content</span></label>
-                <textarea id="admin-zh-content" name="zhContent" rows="4" maxlength="2000" placeholder="公告內文（選填）"></textarea>
-              </div>
-              <div class="field">
-                <label for="admin-en-title"><span class="zh">英文標題</span><span class="en">English title</span></label>
-                <input type="text" id="admin-en-title" name="enTitle" required maxlength="200" autocomplete="off">
-              </div>
-              <div class="field">
-                <label for="admin-en-url"><span class="zh">英文連結</span><span class="en">English URL</span></label>
-                <input type="url" id="admin-en-url" name="enUrl" required placeholder="https://">
-              </div>
-              <div class="field admin-field-full">
-                <label for="admin-en-content"><span class="zh">英文內容</span><span class="en">English content</span></label>
-                <textarea id="admin-en-content" name="enContent" rows="4" maxlength="2000" placeholder="Announcement body (optional)"></textarea>
-              </div>
             </div>
+
+            <div class="admin-translate-bar">
+              <label class="admin-check-label" for="admin-auto-translate">
+                <input type="checkbox" id="admin-auto-translate" checked>
+                <span class="zh">預設自動翻譯（可再編輯）</span>
+                <span class="en">Auto-translate by default (still editable)</span>
+              </label>
+              <div class="admin-translate-dir" role="group" aria-label="Translate direction">
+                <label class="admin-radio">
+                  <input type="radio" name="admin-translate-dir" value="zh-en" checked>
+                  <span>CHI → EN</span>
+                </label>
+                <label class="admin-radio">
+                  <input type="radio" name="admin-translate-dir" value="en-zh">
+                  <span>EN → CHI</span>
+                </label>
+              </div>
+              <button type="button" class="btn btn-outline" id="admin-btn-translate">
+                <span class="zh">立即翻譯</span><span class="en">Translate now</span>
+              </button>
+            </div>
+
+            <div class="admin-bilingual-grid">
+              <fieldset class="admin-lang-panel" data-lang="zh">
+                <legend><span class="zh">中文版本</span><span class="en">Chinese version</span></legend>
+                <div class="field">
+                  <label for="admin-zh-title"><span class="zh">中文標題</span><span class="en">Chinese title</span></label>
+                  <input type="text" id="admin-zh-title" name="zhTitle" required maxlength="200" autocomplete="off" data-lang-field="zh-title">
+                </div>
+                <div class="field">
+                  <label for="admin-zh-url"><span class="zh">中文連結（選填）</span><span class="en">Chinese URL (optional)</span></label>
+                  <input type="url" id="admin-zh-url" name="zhUrl" placeholder="https://" data-lang-field="zh-url">
+                </div>
+                <div class="field">
+                  <label for="admin-zh-content"><span class="zh">中文內容</span><span class="en">Chinese content</span></label>
+                  <textarea id="admin-zh-content" name="zhContent" rows="5" maxlength="2000" placeholder="公告內文（選填）" data-lang-field="zh-content"></textarea>
+                </div>
+              </fieldset>
+
+              <fieldset class="admin-lang-panel" data-lang="en">
+                <legend><span class="zh">英文版本</span><span class="en">English version</span></legend>
+                <div class="field">
+                  <label for="admin-en-title"><span class="zh">英文標題</span><span class="en">English title</span></label>
+                  <input type="text" id="admin-en-title" name="enTitle" required maxlength="200" autocomplete="off" data-lang-field="en-title">
+                </div>
+                <div class="field">
+                  <label for="admin-en-url"><span class="zh">英文連結（選填）</span><span class="en">English URL (optional)</span></label>
+                  <input type="url" id="admin-en-url" name="enUrl" placeholder="https://" data-lang-field="en-url">
+                </div>
+                <div class="field">
+                  <label for="admin-en-content"><span class="zh">英文內容</span><span class="en">English content</span></label>
+                  <textarea id="admin-en-content" name="enContent" rows="5" maxlength="2000" placeholder="Announcement body (optional)" data-lang-field="en-content"></textarea>
+                </div>
+              </fieldset>
+            </div>
+
+            <div class="admin-sync-box" id="admin-sync-box" role="status" aria-live="polite">
+              <strong class="admin-sync-label"><span class="zh">雙語同步檢查</span><span class="en">Bilingual sync check</span></strong>
+              <p class="admin-sync-text" id="admin-sync-text"></p>
+            </div>
+
             <div class="admin-form-actions">
+              <button type="button" class="btn btn-outline" id="admin-btn-preview">
+                <span class="zh">預覽中英文</span><span class="en">Preview CHI &amp; EN</span>
+              </button>
               <button type="submit" class="btn btn-gold" id="admin-btn-save">
-                <span class="zh">儲存並同步前台</span><span class="en">Save &amp; sync to site</span>
+                <span class="zh">儲存雙語為同一則公告</span><span class="en">Save both as one record</span>
               </button>
               <button type="button" class="btn btn-outline" id="admin-btn-cancel">
                 <span class="zh">取消</span><span class="en">Cancel</span>
               </button>
             </div>
           </form>
+
+          <div class="admin-preview-panel" id="admin-preview-panel" hidden>
+            <div class="admin-preview-head">
+              <h3><span class="zh">發佈前預覽（中英文）</span><span class="en">Pre-publish preview (CHI &amp; EN)</span></h3>
+              <button type="button" class="btn btn-outline" id="admin-btn-preview-close">
+                <span class="zh">關閉預覽</span><span class="en">Close preview</span>
+              </button>
+            </div>
+            <div class="admin-preview-grid" id="admin-preview-grid"></div>
+          </div>
         </div>
 
         <div class="admin-list-head">
           <h2>
-            <span class="zh">目前公告清單</span>
-            <span class="en">Current announcement list</span>
+            <span class="zh">目前公告清單（每則含中英文）</span>
+            <span class="en">Current list (each row is one bilingual record)</span>
           </h2>
           <p class="admin-count" id="admin-count"></p>
         </div>
@@ -107,8 +159,8 @@
     </section>
   </main>
   <div id="site-footer"></div>
-  <script src="assets/js/announcements.js?v=admin-content"></script>
-  <script src="assets/js/site.js?v=no-gallery-nav"></script>
-  <script src="assets/js/admin-news.js?v=2"></script>
+  <script src="assets/js/announcements.js?v=optional-url"></script>
+  <script src="assets/js/site.js?v=logo-no-title"></script>
+  <script src="assets/js/admin-news.js?v=zh-to-chi"></script>
 </body>
 </html>

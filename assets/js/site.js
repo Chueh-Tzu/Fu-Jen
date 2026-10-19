@@ -55,12 +55,14 @@
       /* 2. Branding header */
       '<div class="branding-header">' +
       '<div class="wrap branding-inner">' +
-      '<a class="brand" href="' + prefix + 'index.html">' +
+      '<div class="brand">' +
+      '<a class="brand-logo" href="' + prefix + 'admin-news.html">' +
       '<img src="' + prefix + 'assets/img/immba-logo.jpg" alt="International Management imMBA">' +
-      '<span class="brand-text">' +
+      "</a>" +
+      '<a class="brand-text" href="' + prefix + 'index.html">' +
       '<span class="brand-kicker">Fu Jen Catholic University · College of Management</span>' +
       '<span class="brand-name">' + t("國際經營管理碩士班（imMBA）", "International Management (imMBA)") + "</span>" +
-      "</span></a>" +
+      "</a></div>" +
       '<button class="menu-toggle" type="button" aria-label="Menu" data-menu-toggle>☰</button>' +
       "</div></div>" +
       '<div class="chrome-sticky">' +
