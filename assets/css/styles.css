@@ -79,7 +79,8 @@ a[href^="https://"]::after {
   color: inherit;
 }
 a.file-pdf::after,
-a.file-doc::after {
+a.file-doc::after,
+a.file-xlsx::after {
   content: none;
 }
 button, input, select, textarea { font: inherit; }
@@ -805,6 +806,7 @@ h2 {
 }
 .crumbs { color: rgba(255,255,255,.55); font-size: 13px; }
 .crumbs a { color: var(--gold-2); text-decoration: none; }
+.crumbs a:hover { text-decoration: underline; }
 
 .prose { max-width: 76ch; }
 .prose h2 { font-size: 32px; margin: 36px 0 12px; }
@@ -887,8 +889,35 @@ html[data-locale="en"] .overview-topic h2 {
 }
 .link-mark:hover {
   color: #a07d3a;
-  text-decoration: none;
+  text-decoration: underline;
   background: none;
+}
+
+/* Text link hover: color + underline (all locales; Home excluded) */
+body:not(.page-home) a[href]:not(.btn):not(.brand):hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+body:not(.page-home) .link-mark:hover {
+  color: #a07d3a;
+}
+body:not(.page-home) .crumbs a:hover {
+  color: #fff;
+}
+body:not(.page-home) .notice-link:hover {
+  color: var(--navy);
+}
+body:not(.page-home) .nav > a:hover {
+  color: #fff;
+}
+body:not(.page-home) .nav .drop-menu a:hover {
+  color: var(--navy-2);
+}
+body:not(.page-home) main a[href]:not(.btn):not(.link-mark):not(.brand):hover {
+  color: var(--navy-2);
+}
+body:not(.page-home) .site-footer a:hover {
+  color: #fff;
 }
 .mark-stat {
   color: #c0392b;
