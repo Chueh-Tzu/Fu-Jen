@@ -1031,10 +1031,32 @@ ol.apply-list li::marker {
 .fee-box p + p { margin-top: 6px; }
 
 /* Chinese Apply page — official MBA + scholarship content */
-.page-apply {
+.page-apply,
+.page-official {
   background:
     radial-gradient(ellipse 70% 40% at 100% 0%, rgba(196, 163, 90, 0.07), transparent 55%),
     linear-gradient(180deg, #f8f6f1 0%, var(--white) 36%, var(--paper) 100%);
+}
+.official-wrap {
+  max-width: 920px;
+  display: grid;
+  gap: 28px;
+}
+.official-wrap .overview-badge {
+  margin-left: auto;
+}
+.official-audience {
+  margin: 0 0 14px;
+  padding-left: 1.2em;
+  color: var(--ink);
+  line-height: 1.75;
+}
+.official-audience li { margin: 6px 0; }
+.official-tagline {
+  margin-top: 14px !important;
+  color: var(--navy);
+  font-weight: 800;
+  letter-spacing: 0.04em;
 }
 .apply-zh {
   max-width: 920px;
@@ -1049,6 +1071,13 @@ ol.apply-list li::marker {
   box-shadow: 0 10px 28px rgba(11, 31, 58, 0.05);
   padding: 28px 30px 32px;
 }
+.apply-panel > p {
+  margin: 0;
+  color: var(--ink);
+  line-height: 1.8;
+}
+.apply-panel > p + p { margin-top: 12px; }
+.apply-panel > p + .apply-block { margin-top: 24px; }
 .apply-panel-title {
   margin: 0 0 22px;
   color: var(--navy);
@@ -1169,6 +1198,12 @@ ol.apply-list li::marker {
   background: #fff;
   border-left: 3px solid var(--gold);
 }
+.page-faculty {
+  background:
+    radial-gradient(ellipse 70% 40% at 0% 0%, rgba(196, 163, 90, 0.07), transparent 55%),
+    linear-gradient(180deg, #f8f6f1 0%, var(--white) 40%, var(--paper) 100%);
+}
+.faculty-page { max-width: 1040px; }
 .faculty-toolbar {
   display: flex;
   gap: 12px;
@@ -1181,19 +1216,59 @@ ol.apply-list li::marker {
   padding: 11px 14px;
   background: #fff;
 }
+.faculty-toolbar input:focus,
+.faculty-toolbar select:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(196, 163, 90, 0.22);
+}
 .faculty-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 .faculty-card {
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 20px;
   background: #fff;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: 0 8px 22px rgba(11, 31, 58, 0.04);
+  transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+}
+.faculty-card:hover {
+  border-color: var(--gold);
+  border-left-color: #a07d3a;
+  box-shadow: 0 14px 32px rgba(11, 31, 58, 0.1);
+  transform: translateY(-2px);
 }
 .faculty-group { margin: 8px 0 28px; }
-.faculty-group h2 { margin: 0 0 16px; font-size: 22px; }
-.faculty-card.is-chair { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
-.faculty-card h3 { margin: 0 0 4px; font-size: 20px; }
-.faculty-card .role { color: var(--gold); font-size: 14px; font-weight: 700; margin-bottom: 8px; }
-.faculty-card p { margin: 4px 0; font-size: 15px; color: var(--muted); }
+.faculty-group h2 {
+  margin: 0 0 16px;
+  color: var(--navy);
+  font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+  font-size: 28px;
+  font-weight: 700;
+}
+.faculty-card.is-chair {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px rgba(196, 163, 90, 0.35), 0 10px 28px rgba(11, 31, 58, 0.06);
+}
+.faculty-card h3 {
+  margin: 0 0 6px;
+  color: var(--navy);
+  font-size: 20px;
+  font-weight: 700;
+}
+.faculty-card .role {
+  color: var(--gold);
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+.faculty-card p {
+  margin: 5px 0;
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.65;
+}
 
 .form {
   display: grid;
