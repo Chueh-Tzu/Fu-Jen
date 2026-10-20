@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-Hant" data-locale="zh">
 <head>
   <meta charset="UTF-8">
@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=admin-news-media">
+  <link rel="stylesheet" href="assets/css/styles.css?v=page-hero-short">
 </head>
 <body class="page-admin-news">
   <a class="skip" href="#main">Skip to content</a>
@@ -38,8 +38,17 @@
           <a class="btn btn-navy" href="index.html#home-announce-heading">
             <span class="zh">查看前台最新消息</span><span class="en">View homepage</span>
           </a>
+          <a class="btn btn-outline" href="admin-users.html" id="admin-news-link-users" hidden>
+            <span class="zh">管理員審核</span><span class="en">Approve admins</span>
+          </a>
+          <a class="btn btn-outline" href="login.html?next=admin-news.html">
+            <span class="zh">登入</span><span class="en">Login</span>
+          </a>
+          <button type="button" class="btn btn-outline" id="admin-news-btn-logout">
+            <span class="zh">登出</span><span class="en">Sign out</span>
+          </button>
         </div>
-
+        <p class="admin-auth-meta" id="admin-news-auth-meta" hidden></p>
         <p class="admin-status" id="admin-status" role="status" aria-live="polite" hidden></p>
 
         <div class="admin-form-panel" id="admin-form-panel" hidden>
@@ -196,8 +205,11 @@
     </section>
   </main>
   <div id="site-footer"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/auth.js"></script>
   <script src="assets/js/announcements.js?v=media"></script>
-  <script src="assets/js/site.js?v=auth"></script>
-  <script src="assets/js/admin-news.js?v=media"></script>
+  <script src="assets/js/site.js?v=footer-clean"></script>
+  <script src="assets/js/admin-news.js?v=auth-gate"></script>
 </body>
 </html>

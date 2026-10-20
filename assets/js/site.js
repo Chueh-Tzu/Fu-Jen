@@ -10,9 +10,18 @@
     return '<span class="zh">' + zh + '</span><span class="en">' + en + "</span>";
   }
 
-  function navLink(href, zh, en, current) {
+  function navLink(href, zh, en, current, attrs) {
     var aria = current ? ' aria-current="page"' : "";
-    return '<a href="' + prefix + href + '"' + aria + ">" + t(zh, en) + "</a>";
+    var extra = attrs ? " " + attrs : "";
+    return '<a href="' + prefix + href + '"' + aria + extra + ">" + t(zh, en) + "</a>";
+  }
+
+  function hasAdminNavAccess() {
+    try {
+      return localStorage.getItem("immba-admin-nav") === "1";
+    } catch (err) {
+      return false;
+    }
   }
 
   function current() {
@@ -65,7 +74,7 @@
       '<div class="branding-header">' +
       '<div class="wrap branding-inner">' +
       '<div class="brand">' +
-      '<a class="brand-logo" href="' + prefix + 'admin-news.html">' +
+      '<a class="brand-logo" href="' + prefix + 'login.html?next=admin-news.html" title="AdminNews / Authentication">' +
       '<img src="' + prefix + 'assets/img/immba-logo.jpg" alt="International Management imMBA">' +
       "</a>" +
       '<a class="brand-text" href="' + prefix + 'index.html">' +
@@ -95,7 +104,12 @@
       '<div class="drop-menu">' +
       navLink("curriculum.html", "課程與修業規定", "Curriculum and Requirements", c.curriculum) +
       "</div></div>" +
-      navLink("faculty.html", "師資介紹", "Faculty", c.faculty) +
+      (function () {
+        var facultyAdmin = hasAdminNavAccess();
+        var facultyHref = facultyAdmin ? "admin-faculty.html" : "faculty.html";
+        var facultyCurrent = c.faculty || (facultyAdmin && c.adminFaculty);
+        return navLink(facultyHref, "師資介紹", "Faculty", facultyCurrent, 'data-nav-faculty="1"');
+      })() +
       navLink("guide.html", "imMBA全攻略", "Student guide", c.guide) +
       navLink("graduation.html", "畢業與離校", "Graduation", c.graduation) +
       navLink("dual-degree.html", "跨國雙碩士", "Dual master’s", c.dual) +
@@ -124,9 +138,6 @@
       navLink("apply.html", "申請輔大 imMBA", "Apply for Fu JEN imMBA", false) + "<br>" +
       navLink("dual-degree.html", "跨國雙碩士", "Dual master’s", false) + "<br>" +
       navLink("news.html", "最新公告", "News", false) + "<br>" +
-      navLink("admin-news.html", "公告後台管理", "AdminNews", c.adminNews) + "<br>" +
-      navLink("admin-faculty.html", "教職員後台管理", "AdminFaculty", c.adminFaculty) + "<br>" +
-      navLink("admin-users.html", "管理員審核", "Admin approval", c.adminUsers) + "<br>" +
       navLink("login.html", "管理員登入", "Admin login", c.login) + "<br>" +
       navLink("contact.html", "聯絡我們", "Contact", false) +
       "</div>" +
@@ -259,5 +270,27 @@
         item.style.display = item.textContent.toLowerCase().indexOf(query) !== -1 ? "" : "none";
       });
     });
+  }
+
+  function applyFacultyNavLink(isAdmin) {
+    var link = document.querySelector("[data-nav-faculty]");
+    if (!link) return;
+    link.href = prefix + (isAdmin ? "admin-faculty.html" : "faculty.html");
+    if (isAdmin && c.adminFaculty) link.setAttribute("aria-current", "page");
+    else if (!isAdmin && c.faculty) link.setAttribute("aria-current", "page");
+    else if (!(c.faculty || (isAdmin && c.adminFaculty))) link.removeAttribute("aria-current");
+  }
+
+  // Keep「師資介紹 / Faculty」pointing at faculty admin after admin login.
+  if (window.ImMbaAuth && typeof window.ImMbaAuth.getProfile === "function") {
+    window.ImMbaAuth.getProfile(true)
+      .then(function (profile) {
+        applyFacultyNavLink(!!(profile && window.ImMbaAuth.isAdminRole(profile.role)));
+      })
+      .catch(function () {
+        applyFacultyNavLink(hasAdminNavAccess());
+      });
+  } else {
+    applyFacultyNavLink(hasAdminNavAccess());
   }
 })();

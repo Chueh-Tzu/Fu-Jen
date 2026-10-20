@@ -1,5 +1,6 @@
 (function () {
   var api = window.ImMbaAnnouncements;
+  var auth = window.ImMbaAuth;
   if (!api) return;
 
   var listEl = document.getElementById("admin-list");
@@ -13,6 +14,8 @@
   var previewPanel = document.getElementById("admin-preview-panel");
   var previewGrid = document.getElementById("admin-preview-grid");
   var autoTranslateEl = document.getElementById("admin-auto-translate");
+  var authMeta = document.getElementById("admin-news-auth-meta");
+  var usersLink = document.getElementById("admin-news-link-users");
 
   var editingId = null;
   var statusTimer = null;
@@ -735,13 +738,55 @@
     if (event.key === api.STORAGE_KEY) renderList();
   });
 
-  function boot() {
+  var logoutBtn = document.getElementById("admin-news-btn-logout");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async function () {
+      if (!auth) {
+        location.href = "login.html?next=admin-news.html";
+        return;
+      }
+      await auth.signOut();
+      location.href = "login.html?next=admin-news.html";
+    });
+  }
+
+  async function boot() {
+    if (!auth) {
+      location.replace("login.html?next=admin-news.html");
+      return;
+    }
+    var gate = await auth.requireAdmin();
+    if (!gate) return;
+    if (authMeta) {
+      authMeta.hidden = false;
+      authMeta.textContent = t(
+        "已登入：" + gate.profile.email + "（" + roleLabel(gate.profile.role) + "）",
+        "Signed in: " + gate.profile.email + " (" + gate.profile.role + ")"
+      );
+    }
+    if (usersLink) usersLink.hidden = gate.profile.role !== "super_admin";
     renderList();
+    showStatus(
+      t("已通過身分驗證，可管理公告。", "Authenticated — you can manage announcements."),
+      "ok"
+    );
+  }
+
+  function roleLabel(role) {
+    if (role === "admin") return t("管理員", "admin");
+    if (role === "super_admin") return t("超級管理員", "super_admin");
+    return t("待審核", "pending");
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
+    document.addEventListener("DOMContentLoaded", function () {
+      boot().catch(function (err) {
+        showStatus(t("驗證失敗：", "Auth failed: ") + (err.message || err), "err");
+      });
+    });
   } else {
-    boot();
+    boot().catch(function (err) {
+      showStatus(t("驗證失敗：", "Auth failed: ") + (err.message || err), "err");
+    });
   }
 })();

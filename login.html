@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=auth-tabs">
+  <link rel="stylesheet" href="assets/css/styles.css?v=page-hero-short">
 </head>
 <body class="page-admin-faculty">
   <a class="skip" href="#main">Skip to content</a>
@@ -18,11 +18,7 @@
     <header class="page-hero">
       <div class="wrap">
         <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">管理員登入</span><span class="en">Admin login</span></p>
-        <h1><span class="zh">身分驗證</span><span class="en">Authentication</span></h1>
-        <p class="lead">
-          <span class="zh">註冊後預設為待審核。經超級管理員核准為管理員後，才能進入教職員後台。</span>
-          <span class="en">New accounts start as pending. After a super_admin approves you as admin, you can open AdminFaculty.</span>
-        </p>
+        <h1><span class="zh">後台登入</span><span class="en">Admin login</span></h1>
       </div>
     </header>
 
@@ -63,12 +59,47 @@
             </form>
           </div>
 
-          <div class="auth-mode-switch" role="group" aria-label="Login or register">
+          <div class="auth-view" id="auth-view-forgot" hidden>
+            <h2 class="admin-form-title"><span class="zh">忘記密碼</span><span class="en">Forgot password</span></h2>
+            <p class="auth-hint">
+              <span class="zh">輸入註冊信箱，我們會寄送重設密碼連結。請確認信箱後再回來設定新密碼。</span>
+              <span class="en">Enter your registered email. We will send a reset link—check your inbox, then return here to set a new password.</span>
+            </p>
+            <form class="form admin-form" id="forgot-form" novalidate>
+              <div class="field">
+                <label for="forgot-email"><span class="zh">電子郵件</span><span class="en">Email</span></label>
+                <input type="email" id="forgot-email" required autocomplete="username">
+              </div>
+            </form>
+          </div>
+
+          <div class="auth-view" id="auth-view-reset" hidden>
+            <h2 class="admin-form-title"><span class="zh">設定新密碼</span><span class="en">Set new password</span></h2>
+            <p class="auth-hint">
+              <span class="zh">請輸入新密碼（至少 6 碼），完成後即可重新登入。</span>
+              <span class="en">Enter a new password (min 6 characters), then sign in again.</span>
+            </p>
+            <form class="form admin-form" id="reset-form" novalidate>
+              <div class="field">
+                <label for="reset-password"><span class="zh">新密碼</span><span class="en">New password</span></label>
+                <input type="password" id="reset-password" required minlength="6" autocomplete="new-password">
+              </div>
+              <div class="field">
+                <label for="reset-password2"><span class="zh">確認新密碼</span><span class="en">Confirm new password</span></label>
+                <input type="password" id="reset-password2" required minlength="6" autocomplete="new-password">
+              </div>
+            </form>
+          </div>
+
+          <div class="auth-mode-switch" role="group" aria-label="Login, register, or forgot password">
             <button type="button" class="btn btn-gold" id="auth-tab-login" data-auth-tab="login" aria-pressed="true">
               <span class="zh">登入</span><span class="en">Sign in</span>
             </button>
             <button type="button" class="btn btn-outline" id="auth-tab-register" data-auth-tab="register" aria-pressed="false">
               <span class="zh">註冊</span><span class="en">Register</span>
+            </button>
+            <button type="button" class="btn btn-outline" id="auth-tab-forgot" data-auth-tab="forgot" aria-pressed="false">
+              <span class="zh">忘記密碼</span><span class="en">Forgot password</span>
             </button>
           </div>
         </div>
@@ -77,8 +108,13 @@
           <h2 class="admin-form-title"><span class="zh">目前工作階段</span><span class="en">Current session</span></h2>
           <p id="auth-session-text"></p>
           <div class="admin-form-actions">
-            <a class="btn btn-gold" href="admin-faculty.html" id="auth-link-faculty" hidden>
-              <span class="zh">前往 AdminFaculty</span><span class="en">Open AdminFaculty</span>
+            <a class="btn btn-gold" href="admin-news.html" id="auth-link-news" hidden>
+              <span class="zh">前往公告後台管理</span>
+              <span class="en">Go to announcement admin</span>
+            </a>
+            <a class="btn btn-navy" href="admin-faculty.html" id="auth-link-faculty" hidden>
+              <span class="zh">前往教職員資料後台</span>
+              <span class="en">Go to faculty admin</span>
             </a>
             <a class="btn btn-outline" href="admin-users.html" id="auth-link-users" hidden>
               <span class="zh">管理員審核</span><span class="en">Approve admins</span>
@@ -95,7 +131,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase-config.js"></script>
   <script src="assets/js/auth.js"></script>
-  <script src="assets/js/site.js?v=auth"></script>
-  <script src="assets/js/login-page.js?v=auth-tabs"></script>
+  <script src="assets/js/site.js?v=footer-clean"></script>
+  <script src="assets/js/login-page.js?v=no-backend-panel"></script>
 </body>
 </html>

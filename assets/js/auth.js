@@ -1,6 +1,14 @@
 (function (global) {
   var client = null;
   var cached = { session: null, profile: null, loadedAt: 0 };
+  var ADMIN_NAV_KEY = "immba-admin-nav";
+
+  function setAdminNavAccess(enabled) {
+    try {
+      if (enabled) localStorage.setItem(ADMIN_NAV_KEY, "1");
+      else localStorage.removeItem(ADMIN_NAV_KEY);
+    } catch (err) {}
+  }
 
   function getClient() {
     if (client) return client;
@@ -49,9 +57,11 @@
     var session = await getSession();
     if (!session || !session.user) {
       cached.profile = null;
+      setAdminNavAccess(false);
       return null;
     }
     if (!force && cached.profile && cached.profile.id === session.user.id) {
+      setAdminNavAccess(isAdminRole(cached.profile.role));
       return cached.profile;
     }
     var sb = getClient();
@@ -74,6 +84,7 @@
       if (upsert.error) throw upsert.error;
       cached.profile = normalizeProfile(upsert.data);
     }
+    setAdminNavAccess(cached.profile && isAdminRole(cached.profile.role));
     return cached.profile;
   }
 
@@ -110,6 +121,28 @@
     if (result.error) throw result.error;
     cached.session = null;
     cached.profile = null;
+    setAdminNavAccess(false);
+  }
+
+  /**
+   * Send password-reset email. redirectTo should be allow-listed in Supabase Auth.
+   * @param {string} email
+   * @param {string} [redirectTo]
+   */
+  async function resetPassword(email, redirectTo) {
+    var sb = getClient();
+    var result = await sb.auth.resetPasswordForEmail(String(email || "").trim(), {
+      redirectTo: redirectTo || (location.origin + location.pathname.replace(/[^/]+$/, "") + "login.html?mode=reset")
+    });
+    if (result.error) throw result.error;
+    return result.data;
+  }
+
+  async function updatePassword(newPassword) {
+    var sb = getClient();
+    var result = await sb.auth.updateUser({ password: String(newPassword || "") });
+    if (result.error) throw result.error;
+    return result.data;
   }
 
   async function listProfiles() {
@@ -174,10 +207,14 @@
     signUp: signUp,
     signIn: signIn,
     signOut: signOut,
+    resetPassword: resetPassword,
+    updatePassword: updatePassword,
     listProfiles: listProfiles,
     setRole: setRole,
     requireAdmin: requireAdmin,
     requireSuperAdmin: requireSuperAdmin,
-    isAdminRole: isAdminRole
+    isAdminRole: isAdminRole,
+    setAdminNavAccess: setAdminNavAccess,
+    ADMIN_NAV_KEY: ADMIN_NAV_KEY
   };
 })(window);

@@ -856,13 +856,20 @@ h2 {
 .page-hero {
   background: var(--navy);
   color: #fff;
-  padding: 72px 0 48px;
+  /* Shorter vertical band on inner pages; home uses .hero instead. */
+  padding: 28px 0 24px;
 }
 .page-hero h1 {
   font-family: "Cormorant Garamond", "Noto Serif TC", serif;
-  font-size: clamp(36px, 5vw, 58px);
-  margin: 10px 0 12px;
+  font-size: clamp(32px, 4.2vw, 48px);
+  margin: 6px 0 0;
   font-weight: 600;
+  line-height: 1.15;
+}
+.page-hero .lead {
+  margin-top: 10px;
+  margin-bottom: 0;
+  font-size: 16px;
 }
 .crumbs { color: rgba(255,255,255,.55); font-size: 13px; }
 .crumbs a { color: var(--gold-2); text-decoration: none; }
@@ -1380,12 +1387,28 @@ ol.apply-list li::marker {
   margin: 8px 0 24px;
   font-weight: 600;
 }
-.auth-wrap { max-width: 520px; }
+.auth-wrap { max-width: 560px; }
 .auth-panel { margin-bottom: 18px; }
+.auth-backend-panel { margin-bottom: 18px; }
+.auth-backend-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.auth-backend-actions .btn {
+  flex: 1 1 220px;
+  text-align: center;
+  justify-content: center;
+}
 .auth-panel-single {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+.auth-backend-panel[hidden],
+.auth-panel-single[hidden],
+.auth-session[hidden] {
+  display: none !important;
 }
 .auth-mode-switch {
   display: flex;
@@ -1399,6 +1422,12 @@ ol.apply-list li::marker {
 }
 .auth-mode-switch .btn {
   min-width: 120px;
+}
+.auth-hint {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
 }
 .admin-auth-meta {
   margin: 0 0 16px;
