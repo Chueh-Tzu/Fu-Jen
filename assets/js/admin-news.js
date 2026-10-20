@@ -449,70 +449,105 @@
       return;
     }
 
-    listEl.innerHTML = list
+    var rows = list
       .map(function (item, index) {
         var sync = getSyncState(item);
-        var top = item.top ? '<span class="announce-top">TOP</span>' : "";
+        var top = item.top ? '<span class="admin-news-top">TOP</span>' : "";
         var published = item.published !== false;
+        var syncLabel =
+          sync.level === "ok"
+            ? t("已同步", "Synced")
+            : sync.level === "warn"
+              ? t("部分同步", "Partial")
+              : t("未同步", "Not synced");
         return (
-          '<article class="admin-row admin-news-row" data-id="' +
+          '<tr class="admin-news-tr" data-id="' +
           escapeHtml(item.id) +
           '">' +
-          '<div class="admin-news-main">' +
-          '<div class="admin-news-copy">' +
-          '<div class="admin-row-meta">' +
+          '<td class="admin-news-col-order">' +
+          '<span class="admin-news-order-num">' +
+          (index + 1) +
+          "</span>" +
+          '<span class="admin-news-order-btns">' +
+          '<button type="button" class="admin-news-order-btn" data-action="up" aria-label="' +
+          t("上移", "Move up") +
+          '"' +
+          (index === 0 ? " disabled" : "") +
+          ">▲</button>" +
+          '<button type="button" class="admin-news-order-btn" data-action="down" aria-label="' +
+          t("下移", "Move down") +
+          '"' +
+          (index === list.length - 1 ? " disabled" : "") +
+          ">▼</button>" +
+          "</span></td>" +
+          '<td class="admin-news-col-date">' +
           '<time datetime="' +
           escapeHtml(item.date) +
           '">' +
           escapeHtml(item.dateLabel) +
-          "</time>" +
+          "</time></td>" +
+          '<td class="admin-news-col-title">' +
           top +
-          '<span class="admin-sync-pill is-' +
+          '<span class="admin-news-title-text">' +
+          escapeHtml(item.zh.title || "—") +
+          "</span></td>" +
+          '<td class="admin-news-col-title">' +
+          '<span class="admin-news-title-text">' +
+          escapeHtml(item.en.title || "—") +
+          "</span></td>" +
+          '<td class="admin-news-col-status">' +
+          '<span class="admin-news-pill is-' +
+          (published ? "ok" : "off") +
+          '">' +
+          (published ? t("已發布", "Published") : t("未發布", "Unpublished")) +
+          "</span></td>" +
+          '<td class="admin-news-col-sync">' +
+          '<span class="admin-news-pill is-' +
           sync.level +
           '">' +
-          t(
-            sync.level === "ok" ? "雙語已同步" : sync.level === "warn" ? "部分同步" : "未同步",
-            sync.level === "ok" ? "Synced" : sync.level === "warn" ? "Partial" : "Not synced"
-          ) +
-          "</span>" +
-          "</div>" +
-          '<h3 class="admin-row-title">' +
-          escapeHtml(item.zh.title || "—") +
-          (item.en.title ? " / " + escapeHtml(item.en.title) : "") +
-          "</h3>" +
-          '<p class="admin-row-sub">' +
-          escapeHtml(item.zh.content || item.en.content || t("（無內文）", "(No body text)")) +
-          "</p>" +
-          "</div></div>" +
-          '<div class="admin-row-actions">' +
-          '<button type="button" class="btn btn-outline" data-action="up"' +
-          (index === 0 ? " disabled" : "") +
-          ">" +
-          t("上移", "Up") +
-          "</button>" +
-          '<button type="button" class="btn btn-outline" data-action="down"' +
-          (index === list.length - 1 ? " disabled" : "") +
-          ">" +
-          t("下移", "Down") +
-          "</button>" +
-          '<button type="button" class="btn btn-outline" data-action="edit">' +
+          syncLabel +
+          "</span></td>" +
+          '<td class="admin-news-col-actions">' +
+          '<button type="button" class="admin-news-action-btn" data-action="edit">' +
           t("編輯", "Edit") +
           "</button>" +
-          '<button type="button" class="btn admin-btn-delete" data-action="delete">' +
+          '<button type="button" class="admin-news-action-btn is-delete" data-action="delete">' +
           t("刪除", "Delete") +
           "</button>" +
-          '<span class="admin-published-badge' +
-          (published ? " is-on" : " is-off") +
-          '" aria-label="' +
-          (published ? t("已發布", "Published") : t("未發布", "Unpublished")) +
-          '">' +
-          (published ? t("已發布", "Published") : t("未發布", "Unpublished")) +
-          "</span>" +
-          "</div>" +
-          "</article>"
+          "</td></tr>"
         );
       })
       .join("");
+
+    listEl.innerHTML =
+      '<div class="admin-news-table-wrap">' +
+      '<table class="admin-news-table">' +
+      "<thead><tr>" +
+      "<th>" +
+      t("順序", "Order") +
+      "</th>" +
+      "<th>" +
+      t("日期", "Date") +
+      "</th>" +
+      "<th>" +
+      t("中文標題", "Chinese title") +
+      "</th>" +
+      "<th>" +
+      t("英文標題", "English title") +
+      "</th>" +
+      "<th>" +
+      t("狀態", "Status") +
+      "</th>" +
+      "<th>" +
+      t("同步", "Sync") +
+      "</th>" +
+      "<th>" +
+      t("操作", "Actions") +
+      "</th>" +
+      "</tr></thead>" +
+      "<tbody>" +
+      rows +
+      "</tbody></table></div>";
   }
 
   function findById(id) {
