@@ -32,6 +32,7 @@
       scholarships: file === "scholarships.html",
       contact: file === "contact.html",
       adminNews: file === "admin-news.html",
+      adminFaculty: file === "admin-faculty.html",
     };
   }
 
@@ -122,6 +123,7 @@
       navLink("dual-degree.html", "跨國雙碩士", "Dual master’s", false) + "<br>" +
       navLink("news.html", "最新公告", "News", false) + "<br>" +
       navLink("admin-news.html", "公告後台管理", "AdminNews", c.adminNews) + "<br>" +
+      navLink("admin-faculty.html", "教職員後台管理", "AdminFaculty", c.adminFaculty) + "<br>" +
       navLink("contact.html", "聯絡我們", "Contact", false) +
       "</div>" +
       "<div><h3>" + t("聯絡", "Contact") + "</h3>" +

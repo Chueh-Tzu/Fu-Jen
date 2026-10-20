@@ -1282,7 +1282,7 @@ ol.apply-list li::marker {
   border-color: var(--gold);
   box-shadow: 0 0 0 3px rgba(196, 163, 90, 0.22);
 }
-.faculty-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.faculty-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
 .faculty-card {
   background: #fff;
   border: 1px solid var(--line);
@@ -1322,6 +1322,111 @@ ol.apply-list li::marker {
   font-weight: 700;
   margin-bottom: 10px;
   line-height: 1.5;
+}
+.faculty-photo {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 0 0 12px;
+  border: 1px solid var(--line);
+  background: #f3f0ea;
+}
+.faculty-load-status {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #eef3f9;
+  color: var(--navy);
+  font-weight: 600;
+}
+.faculty-load-status.is-err {
+  background: #fdf0f0;
+  color: #8a2f2f;
+}
+.faculty-empty {
+  margin: 0;
+  padding: 18px;
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+}
+.faculty-admin-hint {
+  margin: 8px 0 24px;
+  font-weight: 600;
+}
+.page-admin-faculty {
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(196, 163, 90, 0.08), transparent 55%),
+    linear-gradient(180deg, #f8f6f1 0%, var(--white) 42%, var(--paper) 100%);
+}
+.admin-faculty-row {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 820px) {
+  .admin-faculty-row {
+    grid-template-columns: 1fr auto;
+  }
+}
+.admin-faculty-main {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.admin-faculty-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  flex: 0 0 auto;
+  background: #f3f0ea;
+}
+.admin-faculty-thumb.is-empty {
+  background:
+    linear-gradient(135deg, #e8e2d6, #f7f4ee);
+}
+.admin-faculty-copy { min-width: 0; }
+.admin-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(11, 31, 58, 0.08);
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
+}
+.admin-form .field select,
+.admin-form .field input[type="email"],
+.admin-form .field input[type="number"],
+.admin-form .field input[type="file"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+  color: var(--ink);
+  background: #fff;
+}
+.admin-field-hint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.admin-photo-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 12px;
+}
+.admin-photo-preview img {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #f3f0ea;
 }
 .faculty-card p {
   margin: 5px 0;

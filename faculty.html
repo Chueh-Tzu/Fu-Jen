@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=faculty-official">
+  <link rel="stylesheet" href="assets/css/styles.css?v=faculty-one-col">
 </head>
 <body class="page-faculty">
   <div id="site-header"></div>
@@ -17,6 +17,10 @@
       <div class="wrap">
         <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">師資介紹</span><span class="en">Faculty</span></p>
         <h1><span class="zh">師資介紹</span><span class="en">Faculty</span></h1>
+        <p class="lead">
+          <span class="zh">資料來自 Supabase 雲端資料庫；可在 AdminFaculty 後台新增、編輯、排序。</span>
+          <span class="en">Loaded from the Supabase cloud database. Manage profiles in AdminFaculty.</span>
+        </p>
       </div>
     </header>
     <section class="section">
@@ -30,194 +34,31 @@
           </select>
         </div>
 
+        <p class="faculty-load-status" id="faculty-load-status" hidden></p>
+
         <div class="faculty-group" data-faculty-group="full">
           <h2><span class="zh">專任教師</span><span class="en">Full-Time Faculty</span></h2>
-          <div class="faculty-grid">
-
-            <article class="faculty-card is-chair" data-faculty="full" id="chair">
-              <h3><span class="zh">杜逸寧 (統計資訊系專任)</span><span class="en">Yi-Ning Tu</span></h3>
-              <div class="role"><span class="zh">副教授兼國際經營管理碩士(imMBA)主任</span><span class="en">Associate Professor, Chair of MBA Program in International Management (imMBA)</span></div>
-              <p><span class="zh">學歷：政治大學資訊管理學博士</span><span class="en">Education： Ph.D. in Information Management, National Chengchi University, Taiwan</span></p>
-              <p><span class="zh">研究領域：資料探勘、文字探勘、人工智慧、機器學習、資訊檢索</span><span class="en">Specialties： Data Mining, Text Mining, Artificial Intelligence, Machine Learning, Information Retrieval</span></p>
-              <p><span class="zh">個人網站：</span><span class="en">Personal website: </span><a class="link-mark" href="https://sites.google.com/view/yiningtu">https://sites.google.com/view/yiningtu</a></p>
-              <p><span class="zh">聯絡電話：#3988，LM208-2</span><span class="en">TEL：#3988，LM208-2</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:082435@mail.fju.edu.tw">082435@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">李天行 (商學博士班專任)</span><span class="en">Michael T. S. Lee</span></h3>
-              <div class="role"><span class="zh">講座教授 (前國際與資源發展副校長)</span><span class="en">Chair Professor</span></div>
-              <p><span class="zh">學歷：美國奧斯汀德州大學作業研究與工業工程博士</span><span class="en">Education： Ph.D. in Operations Research and Industrial Engineering, University of Texas at Austin, USA</span></p>
-              <p><span class="zh">研究領域：顧客關係管理、人工智慧、應用統計、作業研究</span><span class="en">Specialties： Operations Research and Industrial Engineering</span></p>
-              <p><span class="zh">聯絡電話：#2905，研究室SL228</span><span class="en">TEL：#2905，Office: SL228</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:036665@mail.fju.edu.tw">036665@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">林耀南 (企業管理系專任)</span><span class="en">Yaonan Lin</span></h3>
-              <div class="role"><span class="zh">教授(前國際教育長)</span><span class="en">Professor</span></div>
-              <p><span class="zh">學歷：美國舊金山金門大學企業管理博士</span><span class="en">Education： Ph.D. in Marketing, Golden Gate University, San Francisco, USA</span></p>
-              <p><span class="zh">研究領域：消費者心理學、產品與行銷創新、創造力、人力資源管理</span><span class="en">Specialties： Marketing Management</span></p>
-              <p><span class="zh">聯絡電話：#2735，研究室SL260</span><span class="en">TEL：# 2735, 2021</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:065999@mail.fju.edu.tw">065999@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">許育銘 (金融國企系專任)</span><span class="en">Yu-Ming Hsu</span></h3>
-              <div class="role"><span class="zh">副教授兼科技管理碩士學程主任</span><span class="en">Associate Professor, Director of MS Program in Technology Management</span></div>
-              <p><span class="zh">學歷：台灣大學國際企業研究所博士</span><span class="en">Education： Ph.D. in International Business, National Taiwan University, Taiwan</span></p>
-              <p><span class="zh">研究領域：行銷管理、數位行銷、資訊科技行銷、社群商務、國際企業管理</span><span class="en">Specialties： Marketing Management, Digital Marketing, Information Technology Marketing, Social Commerce, International Business Administration</span></p>
-              <p><span class="zh">聯絡電話：#3977，研究室SL225</span><span class="en">TEL：#3977，SL225</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:155456@mail.fju.edu.tw">155456@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">林芷安 (金融國企系專任)</span><span class="en">Chih-An Lin</span></h3>
-              <div class="role"><span class="zh">副教授兼學術交流中心主任</span><span class="en">Associate Professor, Director of the Academic Exchange Center</span></div>
-              <p><span class="zh">學歷：台灣大學國際企業博士</span><span class="en">Education： Ph.D. in International Business, National Taiwan University, Taiwan</span></p>
-              <p><span class="zh">研究領域：供應鏈管理、媒體傳播、整合行銷、品牌管理</span><span class="en">Specialties： Supply Chain Management, Media Communication, Integrated Marketing, Brand Management</span></p>
-              <p><span class="zh">聯絡電話：#2924，研究室SL221</span><span class="en">TEL：#2924, Office: SL221</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:144629@mail.fju.edu.tw">144629@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">黃愷平 (企業管理系專任)</span><span class="en">Kai-Ping Huang</span></h3>
-              <div class="role"><span class="zh">副教授</span><span class="en">Associate Professor</span></div>
-              <p><span class="zh">學歷：澳洲雪梨科技大學企業管理博士</span><span class="en">Education： Ph.D. in Business Administration, University of Technology Sydney, Australia</span></p>
-              <p><span class="zh">研究領域：中小企業、創業精神、行銷管理、人力資源管理</span><span class="en">Specialties： Business Administration</span></p>
-              <p><span class="zh">聯絡電話：#2906</span><span class="en">TEL：#2906</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:129741@mail.fju.edu.tw">129741@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">曾祥景 (企業管理系專任)</span><span class="en">Hsiang-Ching Tseng</span></h3>
-              <div class="role"><span class="zh">副教授</span><span class="en">Associate Professor</span></div>
-              <p><span class="zh">學歷：政治大學企業管理博士</span><span class="en">Education： Ph.D. in Marketing, National Chengchi University, Taiwan</span></p>
-              <p><span class="zh">研究領域：行銷相關領域</span><span class="en">Specialties： Marketing Management</span></p>
-              <p><span class="zh">聯絡電話：#2737</span><span class="en">TEL：#2737</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:142652@mail.fju.edu.tw">142652@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">林玫君 (金融國企系專任)</span><span class="en">Mei-Chun Lin</span></h3>
-              <div class="role"><span class="zh">副教授</span><span class="en">Associate Professor</span></div>
-              <p><span class="zh">學歷：成功大學工業與資訊管理博士</span><span class="en">Education： Ph.D. in Industrial and Information Management, National Cheng Kung University, Taiwan</span></p>
-              <p><span class="zh">研究領域：產業分析與競爭策略、科技創新、服務行銷、供應鏈管理</span><span class="en">Specialties： AI application in Industry, Service Marketing, Industry Analysis and Competitive Strategy, Supply Chain Management</span></p>
-              <p><span class="zh">聯絡電話：#2968，研究室SL408</span><span class="en">TEL：#2968, SL408</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:151308@mail.fju.edu.tw">151308@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">鄭淑玲 (金融國企系專任)</span><span class="en">Shu-Ling Cheng</span></h3>
-              <div class="role"><span class="zh">副教授</span><span class="en">Associate Professor</span></div>
-              <p><span class="zh">學歷：成功大學企業管理系博士</span><span class="en">Education： Ph.D. in Business Administration, National Cheng Kung University, Taiwan</span></p>
-              <p><span class="zh">研究領域：行銷研究、資料分析、國際金融</span><span class="en">Specialties： Strategic Management, Marketing Research, Data Analysis, International Financial Management</span></p>
-              <p><span class="zh">聯絡電話：#2725，研究室SL211</span><span class="en">TEL：#2725, SL211</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:151667@mail.fju.edu.tw">151667@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">胡碧嬋 (跨文化研究所專任)</span><span class="en">Pi-Chan Hu</span></h3>
-              <div class="role"><span class="zh">副教授(前學術交流中心主任)</span><span class="en">Associate Professor</span></div>
-              <p><span class="zh">學歷：政治大學應用英語語言學博士</span><span class="en">Education： Ph.D. in Applied Linguistics, National Chengchi University, Taiwan</span></p>
-              <p><span class="zh">研究領域：國際商務談判、法律語言學、財經法律翻譯、法律口筆譯、醫療口筆譯、一般口筆譯</span><span class="en">Specialties： International Business Negotiation, English Translation, English Interpretation, Applied Linguistics, Forensic Linguistics</span></p>
-              <p><span class="zh">聯絡電話：#2145</span><span class="en">TEL：#2145</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:128144@mail.fju.edu.tw">128144@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">林淑雯</span><span class="en">Shu-wen Lin</span></h3>
-              <div class="role"><span class="zh">助理教授</span><span class="en">Assistant Professor</span></div>
-              <p><span class="zh">學歷：英國杜倫大學教育博士</span><span class="en">Education： Ed.D., School of Education, Durham University, UK</span></p>
-              <p><span class="zh">研究領域：通識及專業英文、世界性英語</span><span class="en">Specialties： English for General and Specific Purposes, Global Englishes</span></p>
-              <p><span class="zh">聯絡電話：#3362，研究室SF829</span><span class="en">TEL：#3362, SF829</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:156503@mail.fju.edu.tw">156503@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">江翠玲(金融國企系專任)</span><span class="en">Tsui-Lin Chiang</span></h3>
-              <div class="role"><span class="zh">助理教授</span><span class="en">Assistant Professor</span></div>
-              <p><span class="zh">學歷：輔仁大學商學研究所博士</span><span class="en">Education： Ph.D. in Business Administration, Fu Jen Catholic University, Taiwan</span></p>
-              <p><span class="zh">研究領域：經濟學、財務管理與公司治理、投資學與財務個案分析、國際財務管理、金融市場、信用風險管理</span><span class="en">Specialties： Economics, Business governance, Financial Management, Investment</span></p>
-              <p><span class="zh">聯絡電話：#3998, 研究室SL424</span><span class="en">TEL：#3998, SL424</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:051266@mail.fju.edu.tw">051266@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">顏孟賢(企業管理系專任)</span><span class="en">Meng-Hsien Yen</span></h3>
-              <div class="role"><span class="zh">助理教授</span><span class="en">Assistant Professor</span></div>
-              <p><span class="zh">學歷：政治大學企業管理學系博士</span><span class="en">Education： Ph.D. in Business Policy, National Cheng-Chi University, Taiwan</span></p>
-              <p><span class="zh">研究領域：一般管理、策略管理、國際企業</span><span class="en">Specialties： General Management and Business Policy</span></p>
-              <p><span class="zh">聯絡電話：#2648</span><span class="en">TEL：#2648</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:145785@mail.fju.edu.tw">145785@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">徐皓馨 (企業管理系專任)</span><span class="en">Hao-Hsin Hsu</span></h3>
-              <div class="role"><span class="zh">助理教授</span><span class="en">Assistant Professor</span></div>
-              <p><span class="zh">學歷：交通大學管理科學系博士</span><span class="en">Education： Ph.D. in Management Science, National Chiao Tung University, Taiwan</span></p>
-              <p><span class="zh">研究領域：組織行為、職場健康心理學、人力資源管理、效率及生產力分析領域</span><span class="en">Specialties： Organizational Behavior, Workplace Health Psychology,Human Resource Management, Efficiency and Productivity Analysis</span></p>
-              <p><span class="zh">聯絡電話：#2771</span><span class="en">TEL：#2771</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:144779@mail.fju.edu.tw">144779@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">黃凱斌 (企業管理系專任)</span><span class="en">Kai-Pin Huang</span></h3>
-              <div class="role"><span class="zh">助理教授</span><span class="en">Assistant Professor</span></div>
-              <p><span class="zh">學歷：交通大學工業工程與管理學系博士</span><span class="en">Education： Ph.D. in Industrial Engineering and Management, National Chiao Tung University, Taiwan</span></p>
-              <p><span class="zh">研究領域：統計推論與實務應用、品質工程及可靠度分析、資料探勘及機器學習、人工智慧於再生能源管理之應用、實驗室品質管理</span><span class="en">Specialties： Statistical Inference with Applications, Quality Engineering and Reliability Analysis, Data Mining and Machine Learning, Artificial Intelligence System Applications in Renewable Energy Management</span></p>
-              <p><span class="zh">聯絡電話：#6265</span><span class="en">TEL：#6265</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:152400@mail.fju.edu.tw">152400@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">黃慶偉 (企業管理系專任)</span><span class="en">Lai Ferry Sugianto</span></h3>
-              <div class="role"><span class="zh">助理教授</span><span class="en">Assistant Professor</span></div>
-              <p><span class="zh">學歷：中正大學財務金融博士</span><span class="en">Education： Ph.D. in Finance, National Chung Cheng University, Taiwan</span></p>
-              <p><span class="zh">研究領域：投資學、行為財務學、環境財經、綠色金融、氣候金融、永續金融</span><span class="en">Specialties： Investment, Behavioral Finance, Environmental Finance and Economics, Green Finance, Climate Finance, ESG</span></p>
-              <p><span class="zh">聯絡電話：#2678</span><span class="en">TEL：#2678</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:158325@mail.fju.edu.tw">158325@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">王滄賢(金融國企系專任)</span><span class="en">Tsang-Hsien Wang</span></h3>
-              <div class="role"><span class="zh">助理教授</span><span class="en">Assistant Professor</span></div>
-              <p><span class="zh">學歷：臺灣科技大學管理研究所博士</span><span class="en">Education： Ph.D in Management, National Taiwan University of Science and Technology</span></p>
-              <p><span class="zh">研究領域：消費者行為、行銷管理、創新與產品管理、國際企業管理、品牌管理</span><span class="en">Specialties： Consumer Behavior、Marketing Management、Innovation and Product Management、International Business Management、Brand Management</span></p>
-              <p><span class="zh">聯絡電話：#3931</span><span class="en">TEL：#3931</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:167167@mail.fju.edu.tw">167167@mail.fju.edu.tw</a></p>
-            </article>
-
-            <article class="faculty-card" data-faculty="full">
-              <h3><span class="zh">林佳樺(企業管理系專任)</span><span class="en">Chia-Hua Lin</span></h3>
-              <div class="role"><span class="zh">助理教授</span><span class="en">Assistant Professor</span></div>
-              <p><span class="zh">學歷：中正大學心理學系博士</span><span class="en">Education： Ph.D. in Psychology, National Chung Cheng University</span></p>
-              <p><span class="zh">研究領域：組織行為、工商心理學</span><span class="en">Specialties： Organizational Behavior, Industrial and Organizational Psychology</span></p>
-              <p><span class="zh">聯絡電話：#2966</span><span class="en">TEL：#2966</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:167208@mail.fju.edu.tw">167208@mail.fju.edu.tw</a></p>
-            </article>
-
-          </div>
+          <div class="faculty-grid" id="faculty-grid-full"></div>
         </div>
 
         <div class="faculty-group" data-faculty-group="adjunct">
           <h2><span class="zh">兼任教師</span><span class="en">Part-Time Faculty</span></h2>
-          <div class="faculty-grid">
-            <article class="faculty-card" data-faculty="adjunct">
-              <h3><span class="zh">王慧美</span><span class="en">Hui-Mei Wang</span></h3>
-              <div class="role"><span class="zh">兼任副教授 (前國際經營管理碩士(imMBA)主任)</span><span class="en">Part-time Associate Professor</span></div>
-              <p><span class="zh">學歷：台灣大學國際企業博士</span><span class="en">Education： Ph. D. in International Business, National Taiwan University , Taiwan</span></p>
-              <p><span class="zh">研究領域：國際企業、國際行銷</span><span class="en">Specialties： International Business International Marketing</span></p>
-              <p><span class="zh">聯絡信箱：</span><span class="en">E-mail： </span><a class="link-mark" href="mailto:wanghm.tw@gmail.com">wanghm.tw@gmail.com</a></p>
-            </article>
-          </div>
+          <div class="faculty-grid" id="faculty-grid-adjunct"></div>
         </div>
+
+        <p class="faculty-admin-hint">
+          <a class="link-mark" href="admin-faculty.html"><span class="zh">前往 AdminFaculty 後台</span><span class="en">Open AdminFaculty</span></a>
+        </p>
 
         <img class="overview-badge" src="assets/img/aacsb-accredited.png" alt="AACSB Accredited">
       </div>
     </section>
   </main>
   <div id="site-footer"></div>
-  <script src="assets/js/site.js?v=collapse-menu"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/faculty-api.js"></script>
+  <script src="assets/js/site.js?v=admin-faculty"></script>
+  <script src="assets/js/faculty-page.js"></script>
 </body>
 </html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-locale="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AdminFaculty | International Management (imMBA)</title>
+  <meta name="description" content="AdminFaculty — manage faculty profiles in Supabase (CRUD + reorder).">
+  <link rel="icon" href="assets/img/immba-logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=admin-faculty">
+</head>
+<body class="page-admin-faculty">
+  <a class="skip" href="#main">Skip to content</a>
+  <div id="site-header"></div>
+  <main id="main">
+    <header class="page-hero">
+      <div class="wrap">
+        <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">教職員後台管理</span><span class="en">AdminFaculty</span></p>
+        <h1><span class="zh">教職員後台管理</span><span class="en">AdminFaculty</span></h1>
+        <p class="lead">
+          <span class="zh">新增、編輯、刪除與重新排序教職員；變更會儲存並同步至線上的 Supabase 資料庫，前台師資頁會一併更新。</span>
+          <span class="en">Create, edit, delete, and reorder faculty. Changes save to Supabase and sync to the front-end Faculty page.</span>
+        </p>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="wrap admin-news-wrap">
+        <div class="admin-toolbar" role="toolbar" aria-label="Faculty actions">
+          <button type="button" class="btn btn-gold" id="admin-btn-add">
+            <span class="zh">新增教職員</span><span class="en">Add faculty</span>
+          </button>
+          <button type="button" class="btn btn-outline" id="admin-btn-seed">
+            <span class="zh">匯入官方清單</span><span class="en">Import official list</span>
+          </button>
+          <a class="btn btn-navy" href="faculty.html">
+            <span class="zh">查看前台師資</span><span class="en">View Faculty page</span>
+          </a>
+        </div>
+
+        <p class="admin-status" id="admin-status" role="status" aria-live="polite" hidden></p>
+
+        <div class="admin-form-panel" id="admin-form-panel" hidden>
+          <h2 class="admin-form-title" id="admin-form-title">
+            <span class="zh">新增教職員</span><span class="en">Add faculty</span>
+          </h2>
+
+          <form class="form admin-form" id="admin-form" novalidate>
+            <input type="hidden" id="admin-id" name="id" value="">
+
+            <div class="admin-form-grid">
+              <div class="field">
+                <label for="admin-name"><span class="zh">姓名</span><span class="en">Name</span></label>
+                <input type="text" id="admin-name" name="name" required maxlength="120" autocomplete="name">
+              </div>
+              <div class="field">
+                <label for="admin-category"><span class="zh">分類</span><span class="en">Category</span></label>
+                <select id="admin-category" name="category">
+                  <option value="full">專任 / Full-time</option>
+                  <option value="adjunct">兼任 / Adjunct</option>
+                </select>
+              </div>
+              <div class="field admin-field-full">
+                <label for="admin-title"><span class="zh">職稱</span><span class="en">Title</span></label>
+                <input type="text" id="admin-title" name="title" maxlength="240">
+              </div>
+              <div class="field admin-field-full">
+                <label for="admin-education"><span class="zh">學歷</span><span class="en">Education</span></label>
+                <textarea id="admin-education" name="education" rows="2" maxlength="800"></textarea>
+              </div>
+              <div class="field admin-field-full">
+                <label for="admin-research"><span class="zh">研究領域</span><span class="en">Research fields</span></label>
+                <textarea id="admin-research" name="research_fields" rows="2" maxlength="800"></textarea>
+              </div>
+              <div class="field">
+                <label for="admin-email"><span class="zh">電子郵件</span><span class="en">Email</span></label>
+                <input type="email" id="admin-email" name="email" maxlength="160">
+              </div>
+              <div class="field">
+                <label for="admin-phone"><span class="zh">電話</span><span class="en">Phone</span></label>
+                <input type="text" id="admin-phone" name="phone" maxlength="120">
+              </div>
+              <div class="field admin-field-full">
+                <label for="admin-website"><span class="zh">個人網站</span><span class="en">Personal website</span></label>
+                <input type="url" id="admin-website" name="website" placeholder="https://">
+              </div>
+              <div class="field admin-field-full">
+                <label for="admin-photo"><span class="zh">上傳教職員照片</span><span class="en">Upload faculty photo</span></label>
+                <input type="file" id="admin-photo" name="photo" accept="image/jpeg,image/png,image/webp,image/gif">
+                <p class="admin-field-hint">
+                  <span class="zh">可上傳 JPG / PNG / WEBP / GIF，最大 5 MB。上傳後會存到 Supabase Storage，並自動填入下方網址。</span>
+                  <span class="en">JPG / PNG / WEBP / GIF up to 5 MB. Uploads go to Supabase Storage and fill the URL below.</span>
+                </p>
+                <div class="admin-photo-preview" id="admin-photo-preview" hidden>
+                  <img id="admin-photo-preview-img" alt="">
+                  <button type="button" class="btn btn-outline" id="admin-btn-clear-photo">
+                    <span class="zh">清除照片</span><span class="en">Clear photo</span>
+                  </button>
+                </div>
+              </div>
+              <div class="field admin-field-full">
+                <label for="admin-image"><span class="zh">照片網址（可手動貼上或由上傳帶入）</span><span class="en">Photo URL (manual or from upload)</span></label>
+                <input type="url" id="admin-image" name="image_url" placeholder="https://…supabase.co/storage/…">
+              </div>
+              <div class="field">
+                <label for="admin-sort"><span class="zh">排序數字</span><span class="en">Sort order</span></label>
+                <input type="number" id="admin-sort" name="sort_order" step="1" value="0">
+              </div>
+            </div>
+
+            <div class="admin-form-actions">
+              <button type="submit" class="btn btn-gold" id="admin-btn-save">
+                <span class="zh">儲存至 Supabase</span><span class="en">Save to Supabase</span>
+              </button>
+              <button type="button" class="btn btn-outline" id="admin-btn-cancel">
+                <span class="zh">取消</span><span class="en">Cancel</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="admin-list-head">
+          <h2>
+            <span class="zh">當前教職員列表</span>
+            <span class="en">Current faculty list</span>
+          </h2>
+          <p class="admin-count" id="admin-count"></p>
+        </div>
+        <div class="admin-list" id="admin-list" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+  <div id="site-footer"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/faculty-api.js?v=storage-err"></script>
+  <script src="assets/js/site.js?v=admin-faculty"></script>
+  <script src="assets/js/admin-faculty.js?v=storage-err"></script>
+</body>
+</html>
