@@ -179,16 +179,14 @@
       name: "輔仁大學國際經管(imMBA)官方公告",
       url: "https://www.management.fju.edu.tw/subweb/immba/news.php",
       details: "查看詳細內容",
-      more: "更多公告",
-      admin: "公告後台管理"
+      more: "更多公告"
     },
     en: {
       label: "Source: ",
       name: "Fu Jen imMBA Official News",
       url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news.php",
       details: "View Details",
-      more: "More announcements",
-      admin: "AdminNews"
+      more: "More announcements"
     }
   };
 
@@ -358,13 +356,10 @@
     );
   }
 
-  function renderHome() {
-    var root = document.getElementById("home-announcements");
-    if (!root) return;
-
+  function listMarkup() {
     var list = getPublished();
     var cards = list.map(cardHtml).join("");
-    root.innerHTML =
+    return (
       '<div class="announce-grid">' +
       cards +
       "</div>" +
@@ -387,9 +382,6 @@
       SOURCE.zh.url +
       '">' +
       SOURCE.zh.name +
-      "</a>" +
-      ' · <a class="link-mark" href="admin-news.html">' +
-      SOURCE.zh.admin +
       "</a></span>" +
       '<span class="en">' +
       SOURCE.en.label +
@@ -397,11 +389,27 @@
       SOURCE.en.url +
       '">' +
       SOURCE.en.name +
-      "</a>" +
-      ' · <a class="link-mark" href="admin-news.html">' +
-      SOURCE.en.admin +
       "</a></span>" +
-      "</p>";
+      "</p>"
+    );
+  }
+
+  function renderHome() {
+    var root = document.getElementById("home-announcements");
+    if (!root) return;
+    root.innerHTML = listMarkup();
+  }
+
+  /** News page uses the same published list and card markup as homepage「最新消息」. */
+  function renderNewsPage() {
+    var root = document.getElementById("news-announcements");
+    if (!root) return;
+    root.innerHTML = listMarkup();
+  }
+
+  function renderAllFront() {
+    renderHome();
+    renderNewsPage();
   }
 
   global.ImMbaAnnouncements = {
@@ -413,11 +421,12 @@
     restoreDefaults: restoreDefaults,
     dateLabelFromIso: dateLabelFromIso,
     normalizeItem: normalizeItem,
-    renderHome: renderHome
+    renderHome: renderHome,
+    renderNewsPage: renderNewsPage
   };
 
   function boot() {
-    renderHome();
+    renderAllFront();
   }
 
   if (document.readyState === "loading") {
@@ -427,6 +436,6 @@
   }
 
   global.addEventListener("storage", function (event) {
-    if (event.key === STORAGE_KEY) renderHome();
+    if (event.key === STORAGE_KEY) renderAllFront();
   });
 })(window);

@@ -266,7 +266,7 @@
   if (newsQ) {
     newsQ.addEventListener("input", function () {
       var query = newsQ.value.toLowerCase();
-      document.querySelectorAll("[data-news]").forEach(function (item) {
+      document.querySelectorAll("[data-news], [data-announce]").forEach(function (item) {
         item.style.display = item.textContent.toLowerCase().indexOf(query) !== -1 ? "" : "none";
       });
     });
