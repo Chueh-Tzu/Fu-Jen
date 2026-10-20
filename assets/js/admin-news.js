@@ -20,6 +20,8 @@
   var translating = false;
   /** Fields filled by auto-translate; cleared when user edits that field. */
   var autoFilled = { "en-title": false, "en-content": false, "zh-title": false, "zh-content": false };
+  var mediaDraft = { photoUrl: "", fileUrl: "", fileName: "" };
+  var MAX_MEDIA_BYTES = 1.5 * 1024 * 1024;
 
   function isEn() {
     return document.documentElement.getAttribute("data-locale") === "en";
@@ -77,14 +79,66 @@
     };
   }
 
+  function setPhotoPreview(url) {
+    var box = document.getElementById("admin-photo-preview");
+    var img = document.getElementById("admin-photo-preview-img");
+    if (!box || !img) return;
+    if (url) {
+      img.src = url;
+      box.hidden = false;
+    } else {
+      img.removeAttribute("src");
+      box.hidden = true;
+    }
+  }
+
+  function setFilePreview(name) {
+    var box = document.getElementById("admin-file-preview");
+    var label = document.getElementById("admin-file-name");
+    if (!box || !label) return;
+    if (name) {
+      label.textContent = name;
+      box.hidden = false;
+    } else {
+      label.textContent = "";
+      box.hidden = true;
+    }
+  }
+
+  function readFileAsDataUrl(file) {
+    return new Promise(function (resolve, reject) {
+      if (!file) {
+        resolve("");
+        return;
+      }
+      if (file.size > MAX_MEDIA_BYTES) {
+        reject(new Error(t("檔案需小於 1.5 MB。", "File must be smaller than 1.5 MB.")));
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function () {
+        resolve(String(reader.result || ""));
+      };
+      reader.onerror = function () {
+        reject(new Error(t("讀取檔案失敗。", "Failed to read file.")));
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   function readForm() {
     var e = els();
     var date = e.date.value.trim();
+    var prev = editingId ? findById(editingId) : null;
     return api.normalizeItem({
       id: editingId || newId(),
       date: date,
       dateLabel: api.dateLabelFromIso(date),
       top: e.top.checked,
+      published: prev ? prev.published !== false : true,
+      photoUrl: mediaDraft.photoUrl || "",
+      fileUrl: mediaDraft.fileUrl || "",
+      fileName: mediaDraft.fileName || "",
       zh: {
         title: e.zhTitle.value.trim(),
         url: e.zhUrl.value.trim(),
@@ -109,6 +163,17 @@
     e.enTitle.value = item ? item.en.title : "";
     e.enUrl.value = item ? item.en.url : "";
     e.enContent.value = item ? item.en.content || "" : "";
+    mediaDraft = {
+      photoUrl: item && item.photoUrl ? item.photoUrl : "",
+      fileUrl: item && item.fileUrl ? item.fileUrl : "",
+      fileName: item && item.fileName ? item.fileName : ""
+    };
+    var photoInput = document.getElementById("admin-photo");
+    var fileInput = document.getElementById("admin-file");
+    if (photoInput) photoInput.value = "";
+    if (fileInput) fileInput.value = "";
+    setPhotoPreview(mediaDraft.photoUrl);
+    setFilePreview(mediaDraft.fileName || (mediaDraft.fileUrl ? t("已附加檔案", "Attached file") : ""));
     autoFilled = { "en-title": false, "en-content": false, "zh-title": false, "zh-content": false };
     updateSyncCheck();
     hidePreview();
@@ -118,8 +183,8 @@
     editingId = mode === "edit" && item ? item.id : null;
     formTitle.innerHTML =
       mode === "edit"
-        ? '<span class="zh">Update</span><span class="en">Update</span>'
-        : '<span class="zh">Create</span><span class="en">Create</span>';
+        ? '<span class="zh">編輯</span><span class="en">Update</span>'
+        : '<span class="zh">新增</span><span class="en">Create</span>';
     fillForm(item || null);
     if (!item) {
       var today = new Date();
@@ -140,6 +205,9 @@
   function closeForm() {
     editingId = null;
     form.reset();
+    mediaDraft = { photoUrl: "", fileUrl: "", fileName: "" };
+    setPhotoPreview("");
+    setFilePreview("");
     if (autoTranslateEl) autoTranslateEl.checked = true;
     var dirZhEn = form.querySelector('input[name="admin-translate-dir"][value="zh-en"]');
     if (dirZhEn) dirZhEn.checked = true;
@@ -379,14 +447,16 @@
     }
 
     listEl.innerHTML = list
-      .map(function (item) {
+      .map(function (item, index) {
         var sync = getSyncState(item);
         var top = item.top ? '<span class="announce-top">TOP</span>' : "";
+        var published = item.published !== false;
         return (
-          '<article class="admin-row" data-id="' +
+          '<article class="admin-row admin-news-row" data-id="' +
           escapeHtml(item.id) +
           '">' +
-          '<div class="admin-row-main">' +
+          '<div class="admin-news-main">' +
+          '<div class="admin-news-copy">' +
           '<div class="admin-row-meta">' +
           '<time datetime="' +
           escapeHtml(item.date) +
@@ -403,31 +473,38 @@
           ) +
           "</span>" +
           "</div>" +
-          '<p class="admin-row-lang-label">CHI</p>' +
           '<h3 class="admin-row-title">' +
-          escapeHtml(item.zh.title) +
+          escapeHtml(item.zh.title || "—") +
+          (item.en.title ? " / " + escapeHtml(item.en.title) : "") +
           "</h3>" +
-          '<p class="admin-row-lang-label">EN</p>' +
           '<p class="admin-row-sub">' +
-          escapeHtml(item.en.title) +
+          escapeHtml(item.zh.content || item.en.content || t("（無內文）", "(No body text)")) +
           "</p>" +
-          "</div>" +
+          "</div></div>" +
           '<div class="admin-row-actions">' +
-          '<button type="button" class="btn btn-outline admin-btn-preview-row" data-preview="' +
-          escapeHtml(item.id) +
-          '">' +
-          t("預覽", "Preview") +
+          '<button type="button" class="btn btn-outline" data-action="up"' +
+          (index === 0 ? " disabled" : "") +
+          ">" +
+          t("上移", "Up") +
           "</button>" +
-          '<button type="button" class="btn btn-outline admin-btn-edit" data-edit="' +
-          escapeHtml(item.id) +
-          '">' +
+          '<button type="button" class="btn btn-outline" data-action="down"' +
+          (index === list.length - 1 ? " disabled" : "") +
+          ">" +
+          t("下移", "Down") +
+          "</button>" +
+          '<button type="button" class="btn btn-outline" data-action="edit">' +
           t("編輯", "Edit") +
           "</button>" +
-          '<button type="button" class="btn admin-btn-delete" data-delete="' +
-          escapeHtml(item.id) +
-          '">' +
-          t("刪除雙語", "Delete both") +
+          '<button type="button" class="btn admin-btn-delete" data-action="delete">' +
+          t("刪除", "Delete") +
           "</button>" +
+          '<span class="admin-published-badge' +
+          (published ? " is-on" : " is-off") +
+          '" aria-label="' +
+          (published ? t("已發布", "Published") : t("未發布", "Unpublished")) +
+          '">' +
+          (published ? t("已發布", "Published") : t("未發布", "Unpublished")) +
+          "</span>" +
           "</div>" +
           "</article>"
         );
@@ -446,6 +523,58 @@
   });
 
   document.getElementById("admin-btn-cancel").addEventListener("click", closeForm);
+
+  var photoInput = document.getElementById("admin-photo");
+  if (photoInput) {
+    photoInput.addEventListener("change", async function () {
+      var file = photoInput.files && photoInput.files[0];
+      if (!file) return;
+      try {
+        mediaDraft.photoUrl = await readFileAsDataUrl(file);
+        setPhotoPreview(mediaDraft.photoUrl);
+        showStatus(t("照片已選取（選填）。", "Photo selected (optional)."), "ok");
+      } catch (err) {
+        photoInput.value = "";
+        showStatus(t("照片上傳失敗：", "Photo upload failed: ") + (err.message || err), "err");
+      }
+    });
+  }
+
+  var clearPhotoBtn = document.getElementById("admin-btn-clear-photo");
+  if (clearPhotoBtn) {
+    clearPhotoBtn.addEventListener("click", function () {
+      mediaDraft.photoUrl = "";
+      if (photoInput) photoInput.value = "";
+      setPhotoPreview("");
+    });
+  }
+
+  var fileInput = document.getElementById("admin-file");
+  if (fileInput) {
+    fileInput.addEventListener("change", async function () {
+      var file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      try {
+        mediaDraft.fileUrl = await readFileAsDataUrl(file);
+        mediaDraft.fileName = file.name || "attachment";
+        setFilePreview(mediaDraft.fileName);
+        showStatus(t("檔案已選取（選填）。", "File selected (optional)."), "ok");
+      } catch (err) {
+        fileInput.value = "";
+        showStatus(t("檔案上傳失敗：", "File upload failed: ") + (err.message || err), "err");
+      }
+    });
+  }
+
+  var clearFileBtn = document.getElementById("admin-btn-clear-file");
+  if (clearFileBtn) {
+    clearFileBtn.addEventListener("click", function () {
+      mediaDraft.fileUrl = "";
+      mediaDraft.fileName = "";
+      if (fileInput) fileInput.value = "";
+      setFilePreview("");
+    });
+  }
 
   document.getElementById("admin-btn-restore").addEventListener("click", function () {
     var ok = window.confirm(
@@ -533,26 +662,39 @@
   });
 
   listEl.addEventListener("click", function (event) {
-    var previewBtn = event.target.closest("[data-preview]");
-    if (previewBtn) {
-      var previewItem = findById(previewBtn.getAttribute("data-preview"));
-      if (!previewItem) return;
-      openForm("edit", previewItem);
-      showPreview(previewItem);
+    var btn = event.target.closest("[data-action]");
+    if (!btn) return;
+    var rowEl = btn.closest("[data-id]");
+    if (!rowEl) return;
+    var id = rowEl.getAttribute("data-id");
+    var action = btn.getAttribute("data-action");
+    var list = api.getAll();
+    var index = list.findIndex(function (row) {
+      return row.id === id;
+    });
+    var target = index >= 0 ? list[index] : null;
+
+    if (action === "edit" && target) {
+      openForm("edit", target);
       return;
     }
 
-    var editBtn = event.target.closest("[data-edit]");
-    if (editBtn) {
-      var editItem = findById(editBtn.getAttribute("data-edit"));
-      if (editItem) openForm("edit", editItem);
+    if (action === "up" || action === "down") {
+      if (index < 0) return;
+      var swapWith = action === "up" ? index - 1 : index + 1;
+      if (swapWith < 0 || swapWith >= list.length) return;
+      var tmp = list[index];
+      list[index] = list[swapWith];
+      list[swapWith] = tmp;
+      persist(
+        list,
+        "公告排序已更新，並同步到前台。",
+        "Announcement order updated and synced to the homepage."
+      );
       return;
     }
 
-    var deleteBtn = event.target.closest("[data-delete]");
-    if (deleteBtn) {
-      var id = deleteBtn.getAttribute("data-delete");
-      var target = findById(id);
+    if (action === "delete") {
       var label = target
         ? t(target.zh.title, target.en.title) +
           "\nCHI: " +
@@ -567,7 +709,7 @@
         ) + label
       );
       if (!ok) return;
-      var next = api.getAll().filter(function (row) {
+      var next = list.filter(function (row) {
         return row.id !== id;
       });
       if (editingId === id) closeForm();

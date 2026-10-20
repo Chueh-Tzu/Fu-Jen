@@ -207,6 +207,11 @@
       date: date,
       dateLabel: item.dateLabel || dateLabelFromIso(date),
       top: !!item.top,
+      // Default published so existing localStorage / seed items stay visible on the homepage
+      published: item.published !== false,
+      photoUrl: String(item.photoUrl || "").trim(),
+      fileUrl: String(item.fileUrl || "").trim(),
+      fileName: String(item.fileName || "").trim(),
       zh: {
         title: (item.zh && item.zh.title) || "",
         url: (item.zh && item.zh.url) || "",
@@ -218,6 +223,12 @@
         content: (item.en && item.en.content) || ""
       }
     };
+  }
+
+  function getPublished() {
+    return getAll().filter(function (item) {
+      return item.published !== false;
+    });
   }
 
   function getAll() {
@@ -258,6 +269,35 @@
       escapeHtml(content).replace(/\n/g, "<br>") +
       "</span>"
     );
+  }
+
+  function mediaHtml(item, locale) {
+    var bits = [];
+    if (item.photoUrl) {
+      bits.push(
+        '<img class="announce-photo" src="' +
+          escapeHtml(item.photoUrl) +
+          '" alt="' +
+          escapeHtml((item[locale] && item[locale].title) || "") +
+          '">'
+      );
+    }
+    if (item.fileUrl) {
+      var label =
+        locale === "en"
+          ? "Download file" + (item.fileName ? ": " + item.fileName : "")
+          : "下載檔案" + (item.fileName ? "：" + item.fileName : "");
+      bits.push(
+        '<a class="announce-file link-mark" href="' +
+          escapeHtml(item.fileUrl) +
+          '" download="' +
+          escapeHtml(item.fileName || "attachment") +
+          '">' +
+          escapeHtml(label) +
+          "</a>"
+      );
+    }
+    return bits.length ? '<span class="announce-media">' + bits.join("") + "</span>" : "";
   }
 
   function cardHit(locale, item, detailsLabel) {
@@ -302,7 +342,7 @@
   }
 
   function cardHtml(item) {
-    var hasBody = !!(item.zh.content || item.en.content);
+    var hasBody = !!(item.zh.content || item.en.content || item.photoUrl || item.fileUrl);
     return (
       '<article class="announce-card' +
       (hasBody ? " has-body" : "") +
@@ -311,6 +351,9 @@
       '">' +
       cardHit("zh", item, SOURCE.zh.details) +
       cardHit("en", item, SOURCE.en.details) +
+      // Shared media outside locale hit-links to avoid nested anchors
+      '<div class="zh">' + mediaHtml(item, "zh") + "</div>" +
+      '<div class="en">' + mediaHtml(item, "en") + "</div>" +
       "</article>"
     );
   }
@@ -319,7 +362,7 @@
     var root = document.getElementById("home-announcements");
     if (!root) return;
 
-    var list = getAll();
+    var list = getPublished();
     var cards = list.map(cardHtml).join("");
     root.innerHTML =
       '<div class="announce-grid">' +
@@ -365,6 +408,7 @@
     STORAGE_KEY: STORAGE_KEY,
     getDefaults: cloneDefaults,
     getAll: getAll,
+    getPublished: getPublished,
     saveAll: saveAll,
     restoreDefaults: restoreDefaults,
     dateLabelFromIso: dateLabelFromIso,
