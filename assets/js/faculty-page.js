@@ -14,12 +14,24 @@
       .replace(/"/g, "&quot;");
   }
 
-  function line(labelZh, labelEn, value, asHtml) {
-    if (!value) return "";
+  function bilingualText(zh, en) {
+    var z = String(zh || "").trim();
+    var e = String(en || "").trim();
+    if (!z && !e) return "";
+    return (
+      '<span class="zh">' + escapeHtml(z || e) + "</span>" +
+      '<span class="en">' + escapeHtml(e || z) + "</span>"
+    );
+  }
+
+  function bilingualLine(labelZh, labelEn, valueZh, valueEn) {
+    var z = String(valueZh || "").trim();
+    var e = String(valueEn || "").trim();
+    if (!z && !e) return "";
     return (
       "<p>" +
-      '<span class="zh">' + labelZh + "：" + (asHtml || escapeHtml(value)) + "</span>" +
-      '<span class="en">' + labelEn + ": " + (asHtml || escapeHtml(value)) + "</span>" +
+      '<span class="zh">' + labelZh + "：" + escapeHtml(z || e) + "</span>" +
+      '<span class="en">' + labelEn + "： " + escapeHtml(e || z) + "</span>" +
       "</p>"
     );
   }
@@ -28,9 +40,10 @@
     var chair = api.isChair(row);
     var idAttr = chair ? ' id="chair"' : "";
     var chairClass = chair ? " is-chair" : "";
+    var displayName = row.name_en || row.name_zh || row.name || "";
     var photo = row.image_url
-      ? '<img class="faculty-photo" src="' + escapeHtml(row.image_url) + '" alt="' + escapeHtml(row.name) + '">'
-      : "";
+      ? '<img class="faculty-photo" src="' + escapeHtml(row.image_url) + '" alt="' + escapeHtml(displayName) + '">'
+      : '<div class="faculty-photo is-empty" aria-hidden="true"></div>';
     var websiteHtml = row.website
       ? '<a class="link-mark" href="' + escapeHtml(row.website) + '" target="_blank" rel="noopener">' +
         escapeHtml(row.website) + "</a>"
@@ -41,19 +54,23 @@
 
     return (
       '<article class="faculty-card' + chairClass + '" data-faculty="' + escapeHtml(row.category) + '"' + idAttr + ">" +
-      photo +
-      "<h3>" + escapeHtml(row.name) + "</h3>" +
-      (row.title ? '<div class="role">' + escapeHtml(row.title) + "</div>" : "") +
-      line("學歷", "Education", row.education) +
-      line("研究領域", "Specialties", row.research_fields) +
+      '<div class="faculty-card-inner">' +
+      '<div class="faculty-media">' + photo + "</div>" +
+      '<div class="faculty-body">' +
+      "<h3>" + bilingualText(row.name_zh, row.name_en) + "</h3>" +
+      ((row.title_zh || row.title_en)
+        ? '<div class="role">' + bilingualText(row.title_zh, row.title_en) + "</div>"
+        : "") +
+      bilingualLine("學歷", "Education", row.education_zh, row.education_en) +
+      bilingualLine("研究領域", "Specialties", row.research_fields_zh, row.research_fields_en) +
       (row.website
         ? '<p><span class="zh">個人網站：' + websiteHtml + '</span><span class="en">Personal website: ' + websiteHtml + "</span></p>"
         : "") +
-      line("聯絡電話", "TEL", row.phone) +
+      bilingualLine("聯絡電話", "TEL", row.phone_zh, row.phone_en) +
       (row.email
-        ? '<p><span class="zh">聯絡信箱：' + emailHtml + '</span><span class="en">E-mail: ' + emailHtml + "</span></p>"
+        ? '<p><span class="zh">聯絡信箱：' + emailHtml + '</span><span class="en">E-mail： ' + emailHtml + "</span></p>"
         : "") +
-      "</article>"
+      "</div></div></article>"
     );
   }
 
@@ -98,25 +115,33 @@
   (async function init() {
     setStatus("Loading faculty from Supabase…");
     try {
-      var seeded = await api.seedDefaultsIfEmpty();
-      var rows = seeded.list;
+      // Front-end is read-only for visitors; seeding/sync happens in AdminFaculty after login.
+      var rows = await api.list();
       var full = rows.filter(function (row) { return row.category !== "adjunct"; });
       var adjunct = rows.filter(function (row) { return row.category === "adjunct"; });
 
       if (fullGrid) {
         fullGrid.innerHTML = full.length
           ? full.map(renderCard).join("")
-          : '<p class="faculty-empty">No full-time faculty yet.</p>';
+          : '<p class="faculty-empty"><span class="zh">尚無專任教師資料。</span><span class="en">No full-time faculty yet.</span></p>';
       }
       if (adjunctGrid) {
         adjunctGrid.innerHTML = adjunct.length
           ? adjunct.map(renderCard).join("")
-          : '<p class="faculty-empty">No adjunct faculty yet.</p>';
+          : '<p class="faculty-empty"><span class="zh">尚無兼任教師資料。</span><span class="en">No adjunct faculty yet.</span></p>';
       }
       setStatus("");
       applyFilter();
     } catch (err) {
-      setStatus("Cannot load faculty from Supabase: " + (err.message || err), true);
+      var msg = String(err.message || err);
+      if (/name_zh|column|schema cache/i.test(msg)) {
+        setStatus(
+          "資料庫尚未加入中英欄位。請先在 Supabase SQL Editor 執行 schema-bilingual.sql，再重新整理。 / " + msg,
+          true
+        );
+      } else {
+        setStatus("Cannot load faculty from Supabase: " + msg, true);
+      }
       if (fullGrid) fullGrid.innerHTML = "";
       if (adjunctGrid) adjunctGrid.innerHTML = "";
     }

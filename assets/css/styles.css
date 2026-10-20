@@ -1288,7 +1288,7 @@ ol.apply-list li::marker {
   border: 1px solid var(--line);
   border-left: 4px solid var(--gold);
   border-radius: 14px;
-  padding: 20px 22px;
+  padding: 18px 20px;
   box-shadow: 0 8px 22px rgba(11, 31, 58, 0.04);
   transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
 }
@@ -1297,6 +1297,18 @@ ol.apply-list li::marker {
   border-left-color: #a07d3a;
   box-shadow: 0 14px 32px rgba(11, 31, 58, 0.1);
   transform: translateY(-2px);
+}
+.faculty-card-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+}
+.faculty-media {
+  flex: 0 0 auto;
+}
+.faculty-body {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .faculty-group { margin: 8px 0 28px; }
 .faculty-group h2 {
@@ -1324,13 +1336,26 @@ ol.apply-list li::marker {
   line-height: 1.5;
 }
 .faculty-photo {
-  width: 96px;
-  height: 96px;
+  display: block;
+  width: 120px;
+  height: 150px;
   object-fit: cover;
-  border-radius: 12px;
-  margin: 0 0 12px;
+  object-position: center top;
+  border-radius: 10px;
+  margin: 0;
   border: 1px solid var(--line);
   background: #f3f0ea;
+}
+.faculty-photo.is-empty {
+  background: linear-gradient(135deg, #e8e2d6, #f7f4ee);
+}
+@media (max-width: 560px) {
+  .faculty-card-inner { gap: 12px; }
+  .faculty-photo {
+    width: 88px;
+    height: 110px;
+  }
+  .faculty-card h3 { font-size: 17px; }
 }
 .faculty-load-status {
   margin: 0 0 16px;
@@ -1353,6 +1378,32 @@ ol.apply-list li::marker {
 }
 .faculty-admin-hint {
   margin: 8px 0 24px;
+  font-weight: 600;
+}
+.auth-wrap { max-width: 520px; }
+.auth-panel { margin-bottom: 18px; }
+.auth-panel-single {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.auth-mode-switch {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.auth-mode-switch .btn {
+  min-width: 120px;
+}
+.admin-auth-meta {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 14px;
   font-weight: 600;
 }
 .page-admin-faculty {

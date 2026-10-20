@@ -33,12 +33,20 @@
             <span class="zh">新增教職員</span><span class="en">Add faculty</span>
           </button>
           <button type="button" class="btn btn-outline" id="admin-btn-seed">
-            <span class="zh">匯入官方清單</span><span class="en">Import official list</span>
+            <span class="zh">同步官方中英文與照片</span><span class="en">Sync official ZH/EN + photos</span>
           </button>
           <a class="btn btn-navy" href="faculty.html">
             <span class="zh">查看前台師資</span><span class="en">View Faculty page</span>
           </a>
+          <a class="btn btn-outline" href="admin-users.html" id="admin-link-users" hidden>
+            <span class="zh">管理員審核</span><span class="en">Approve admins</span>
+          </a>
+          <a class="btn btn-outline" href="login.html"><span class="zh">登入</span><span class="en">Login</span></a>
+          <button type="button" class="btn btn-outline" id="admin-btn-logout">
+            <span class="zh">登出</span><span class="en">Sign out</span>
+          </button>
         </div>
+        <p class="admin-auth-meta" id="admin-auth-meta" hidden></p>
 
         <p class="admin-status" id="admin-status" role="status" aria-live="polite" hidden></p>
 
@@ -52,8 +60,12 @@
 
             <div class="admin-form-grid">
               <div class="field">
-                <label for="admin-name"><span class="zh">姓名</span><span class="en">Name</span></label>
-                <input type="text" id="admin-name" name="name" required maxlength="120" autocomplete="name">
+                <label for="admin-name-zh"><span class="zh">中文姓名</span><span class="en">Chinese name</span></label>
+                <input type="text" id="admin-name-zh" name="name_zh" required maxlength="120" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="admin-name-en"><span class="zh">英文姓名</span><span class="en">English name</span></label>
+                <input type="text" id="admin-name-en" name="name_en" required maxlength="120" autocomplete="name">
               </div>
               <div class="field">
                 <label for="admin-category"><span class="zh">分類</span><span class="en">Category</span></label>
@@ -62,25 +74,45 @@
                   <option value="adjunct">兼任 / Adjunct</option>
                 </select>
               </div>
-              <div class="field admin-field-full">
-                <label for="admin-title"><span class="zh">職稱</span><span class="en">Title</span></label>
-                <input type="text" id="admin-title" name="title" maxlength="240">
+              <div class="field">
+                <label for="admin-sort"><span class="zh">排序數字</span><span class="en">Sort order</span></label>
+                <input type="number" id="admin-sort" name="sort_order" step="1" value="0">
               </div>
               <div class="field admin-field-full">
-                <label for="admin-education"><span class="zh">學歷</span><span class="en">Education</span></label>
-                <textarea id="admin-education" name="education" rows="2" maxlength="800"></textarea>
+                <label for="admin-title-zh"><span class="zh">中文職稱</span><span class="en">Chinese title</span></label>
+                <input type="text" id="admin-title-zh" name="title_zh" maxlength="240">
               </div>
               <div class="field admin-field-full">
-                <label for="admin-research"><span class="zh">研究領域</span><span class="en">Research fields</span></label>
-                <textarea id="admin-research" name="research_fields" rows="2" maxlength="800"></textarea>
+                <label for="admin-title-en"><span class="zh">英文職稱</span><span class="en">English title</span></label>
+                <input type="text" id="admin-title-en" name="title_en" maxlength="240">
+              </div>
+              <div class="field admin-field-full">
+                <label for="admin-education-zh"><span class="zh">中文學歷</span><span class="en">Chinese education</span></label>
+                <textarea id="admin-education-zh" name="education_zh" rows="2" maxlength="800"></textarea>
+              </div>
+              <div class="field admin-field-full">
+                <label for="admin-education-en"><span class="zh">英文學歷</span><span class="en">English education</span></label>
+                <textarea id="admin-education-en" name="education_en" rows="2" maxlength="800"></textarea>
+              </div>
+              <div class="field admin-field-full">
+                <label for="admin-research-zh"><span class="zh">中文研究領域</span><span class="en">Chinese research fields</span></label>
+                <textarea id="admin-research-zh" name="research_fields_zh" rows="2" maxlength="800"></textarea>
+              </div>
+              <div class="field admin-field-full">
+                <label for="admin-research-en"><span class="zh">英文研究領域</span><span class="en">English research fields</span></label>
+                <textarea id="admin-research-en" name="research_fields_en" rows="2" maxlength="800"></textarea>
               </div>
               <div class="field">
                 <label for="admin-email"><span class="zh">電子郵件</span><span class="en">Email</span></label>
                 <input type="email" id="admin-email" name="email" maxlength="160">
               </div>
               <div class="field">
-                <label for="admin-phone"><span class="zh">電話</span><span class="en">Phone</span></label>
-                <input type="text" id="admin-phone" name="phone" maxlength="120">
+                <label for="admin-phone-zh"><span class="zh">中文電話</span><span class="en">Chinese phone</span></label>
+                <input type="text" id="admin-phone-zh" name="phone_zh" maxlength="120">
+              </div>
+              <div class="field">
+                <label for="admin-phone-en"><span class="zh">英文電話</span><span class="en">English phone</span></label>
+                <input type="text" id="admin-phone-en" name="phone_en" maxlength="120">
               </div>
               <div class="field admin-field-full">
                 <label for="admin-website"><span class="zh">個人網站</span><span class="en">Personal website</span></label>
@@ -103,10 +135,6 @@
               <div class="field admin-field-full">
                 <label for="admin-image"><span class="zh">照片網址（可手動貼上或由上傳帶入）</span><span class="en">Photo URL (manual or from upload)</span></label>
                 <input type="url" id="admin-image" name="image_url" placeholder="https://…supabase.co/storage/…">
-              </div>
-              <div class="field">
-                <label for="admin-sort"><span class="zh">排序數字</span><span class="en">Sort order</span></label>
-                <input type="number" id="admin-sort" name="sort_order" step="1" value="0">
               </div>
             </div>
 
@@ -135,8 +163,9 @@
   <div id="site-footer"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase-config.js"></script>
-  <script src="assets/js/faculty-api.js?v=storage-err"></script>
-  <script src="assets/js/site.js?v=admin-faculty"></script>
-  <script src="assets/js/admin-faculty.js?v=storage-err"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/faculty-api.js?v=auth"></script>
+  <script src="assets/js/site.js?v=auth"></script>
+  <script src="assets/js/admin-faculty.js?v=auth"></script>
 </body>
 </html>

@@ -33,6 +33,8 @@
       contact: file === "contact.html",
       adminNews: file === "admin-news.html",
       adminFaculty: file === "admin-faculty.html",
+      adminUsers: file === "admin-users.html",
+      login: file === "login.html",
     };
   }
 
@@ -124,6 +126,8 @@
       navLink("news.html", "最新公告", "News", false) + "<br>" +
       navLink("admin-news.html", "公告後台管理", "AdminNews", c.adminNews) + "<br>" +
       navLink("admin-faculty.html", "教職員後台管理", "AdminFaculty", c.adminFaculty) + "<br>" +
+      navLink("admin-users.html", "管理員審核", "Admin approval", c.adminUsers) + "<br>" +
+      navLink("login.html", "管理員登入", "Admin login", c.login) + "<br>" +
       navLink("contact.html", "聯絡我們", "Contact", false) +
       "</div>" +
       "<div><h3>" + t("聯絡", "Contact") + "</h3>" +

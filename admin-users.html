@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-locale="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Users | International Management (imMBA)</title>
+  <meta name="description" content="Super admin approval for pending administrators.">
+  <link rel="icon" href="assets/img/immba-logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=auth">
+</head>
+<body class="page-admin-faculty">
+  <a class="skip" href="#main">Skip to content</a>
+  <div id="site-header"></div>
+  <main id="main">
+    <header class="page-hero">
+      <div class="wrap">
+        <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">管理員審核</span><span class="en">Admin approval</span></p>
+        <h1><span class="zh">管理員角色與存取控制</span><span class="en">Admin roles &amp; access control</span></h1>
+        <p class="lead">
+          <span class="zh">僅 super_admin 可核准或拒絕申請。流程：註冊 →（驗證信箱）→ pending → 核准 → admin。</span>
+          <span class="en">Only super_admin can approve or reject. Flow: register → (verify email) → pending → approval → admin.</span>
+        </p>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="wrap admin-news-wrap">
+        <div class="admin-toolbar">
+          <a class="btn btn-outline" href="admin-faculty.html"><span class="zh">回到 AdminFaculty</span><span class="en">Back to AdminFaculty</span></a>
+          <a class="btn btn-navy" href="login.html"><span class="zh">登入頁</span><span class="en">Login</span></a>
+          <button type="button" class="btn btn-outline" id="users-btn-logout"><span class="zh">登出</span><span class="en">Sign out</span></button>
+        </div>
+        <p class="admin-status" id="users-status" role="status" aria-live="polite" hidden></p>
+        <div class="admin-list-head">
+          <h2><span class="zh">帳號清單</span><span class="en">Accounts</span></h2>
+          <p class="admin-count" id="users-count"></p>
+        </div>
+        <div class="admin-list" id="users-list"></div>
+      </div>
+    </section>
+  </main>
+  <div id="site-footer"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/site.js?v=auth"></script>
+  <script src="assets/js/admin-users.js"></script>
+</body>
+</html>

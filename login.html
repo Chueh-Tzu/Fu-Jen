@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-locale="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login | International Management (imMBA)</title>
+  <meta name="description" content="Admin login and registration for the imMBA teaching site.">
+  <link rel="icon" href="assets/img/immba-logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=auth-tabs">
+</head>
+<body class="page-admin-faculty">
+  <a class="skip" href="#main">Skip to content</a>
+  <div id="site-header"></div>
+  <main id="main">
+    <header class="page-hero">
+      <div class="wrap">
+        <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">管理員登入</span><span class="en">Admin login</span></p>
+        <h1><span class="zh">身分驗證</span><span class="en">Authentication</span></h1>
+        <p class="lead">
+          <span class="zh">註冊後預設為待審核。經超級管理員核准為管理員後，才能進入教職員後台。</span>
+          <span class="en">New accounts start as pending. After a super_admin approves you as admin, you can open AdminFaculty.</span>
+        </p>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="wrap auth-wrap">
+        <p class="admin-status" id="auth-status" role="status" aria-live="polite" hidden></p>
+
+        <div class="admin-form-panel auth-panel auth-panel-single" data-auth-mode="login">
+          <div class="auth-view" id="auth-view-login">
+            <h2 class="admin-form-title"><span class="zh">登入</span><span class="en">Sign in</span></h2>
+            <form class="form admin-form" id="login-form" novalidate>
+              <div class="field">
+                <label for="login-email"><span class="zh">電子郵件</span><span class="en">Email</span></label>
+                <input type="email" id="login-email" required autocomplete="username">
+              </div>
+              <div class="field">
+                <label for="login-password"><span class="zh">密碼</span><span class="en">Password</span></label>
+                <input type="password" id="login-password" required minlength="6" autocomplete="current-password">
+              </div>
+            </form>
+          </div>
+
+          <div class="auth-view" id="auth-view-register" hidden>
+            <h2 class="admin-form-title"><span class="zh">註冊</span><span class="en">Register</span></h2>
+            <form class="form admin-form" id="register-form" novalidate>
+              <div class="field">
+                <label for="reg-name"><span class="zh">顯示名稱</span><span class="en">Display name</span></label>
+                <input type="text" id="reg-name" maxlength="80" autocomplete="nickname">
+              </div>
+              <div class="field">
+                <label for="reg-email"><span class="zh">電子郵件</span><span class="en">Email</span></label>
+                <input type="email" id="reg-email" required autocomplete="username">
+              </div>
+              <div class="field">
+                <label for="reg-password"><span class="zh">密碼（至少 6 碼）</span><span class="en">Password (min 6)</span></label>
+                <input type="password" id="reg-password" required minlength="6" autocomplete="new-password">
+              </div>
+            </form>
+          </div>
+
+          <div class="auth-mode-switch" role="group" aria-label="Login or register">
+            <button type="button" class="btn btn-gold" id="auth-tab-login" data-auth-tab="login" aria-pressed="true">
+              <span class="zh">登入</span><span class="en">Sign in</span>
+            </button>
+            <button type="button" class="btn btn-outline" id="auth-tab-register" data-auth-tab="register" aria-pressed="false">
+              <span class="zh">註冊</span><span class="en">Register</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-form-panel auth-session" id="auth-session" hidden>
+          <h2 class="admin-form-title"><span class="zh">目前工作階段</span><span class="en">Current session</span></h2>
+          <p id="auth-session-text"></p>
+          <div class="admin-form-actions">
+            <a class="btn btn-gold" href="admin-faculty.html" id="auth-link-faculty" hidden>
+              <span class="zh">前往 AdminFaculty</span><span class="en">Open AdminFaculty</span>
+            </a>
+            <a class="btn btn-outline" href="admin-users.html" id="auth-link-users" hidden>
+              <span class="zh">管理員審核</span><span class="en">Approve admins</span>
+            </a>
+            <button type="button" class="btn btn-outline" id="auth-btn-logout">
+              <span class="zh">登出</span><span class="en">Sign out</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div id="site-footer"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/site.js?v=auth"></script>
+  <script src="assets/js/login-page.js?v=auth-tabs"></script>
+</body>
+</html>
