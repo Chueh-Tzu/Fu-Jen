@@ -124,6 +124,14 @@ body.page-home {
   min-height: 36px;
 }
 .notice-text { margin: 0; }
+.notice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px 14px;
+  flex-shrink: 0;
+}
 .notice-link {
   color: var(--navy);
   font-weight: 700;
@@ -132,6 +140,34 @@ body.page-home {
   text-underline-offset: 3px;
 }
 .notice-link:hover { color: var(--accent); }
+.notice-collapse-btn {
+  appearance: none;
+  border: 1px solid #d4c29a;
+  background: #fff;
+  color: var(--navy);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+.notice-collapse-btn:hover {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+body.menu-collapsed .chrome-sticky,
+body.menu-collapsed .nav-bar[data-main-nav],
+body.menu-collapsed .menu-toggle {
+  display: none !important;
+}
+body.menu-collapsed {
+  --sticky: 0px;
+}
 
 .branding-header {
   background: #fff;

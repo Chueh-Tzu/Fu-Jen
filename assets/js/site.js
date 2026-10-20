@@ -48,9 +48,15 @@
       '<span class="zh">本網頁為學生 Zoe Chueh 製作之課程教學網。This is not the official website.</span>' +
       '<span class="en">Teaching-site notice by student Zoe Chueh. This is not the official website.</span>' +
       "</p>" +
+      '<div class="notice-actions">' +
       '<a class="notice-link" href="https://www.management.fju.edu.tw/subweb/immba/">' +
       t("官方網站請點此連結", "Official website") +
       "</a>" +
+      '<button type="button" class="notice-collapse-btn" data-collapse-menu aria-controls="site-main-nav" aria-expanded="true">' +
+      '<span class="zh" data-collapse-label-zh>隱藏主選單</span>' +
+      '<span class="en" data-collapse-label-en>Collapse this menu</span>' +
+      "</button>" +
+      "</div>" +
       "</div></div>" +
       /* 2. Branding header */
       '<div class="branding-header">' +
@@ -67,7 +73,7 @@
       "</div></div>" +
       '<div class="chrome-sticky">' +
       /* 3. Navigation bar */
-      '<div class="nav-bar">' +
+      '<div class="nav-bar" id="site-main-nav" data-main-nav>' +
       '<div class="wrap nav-bar-inner">' +
       '<nav class="nav" data-nav aria-label="Primary">' +
       '<div class="drop' + (c.about || c.environment ? " is-current" : "") + '">' +
@@ -169,6 +175,39 @@
   if (toggle) {
     toggle.addEventListener("click", function () {
       document.body.classList.toggle("nav-open");
+    });
+  }
+
+  var MENU_COLLAPSE_KEY = "immba-menu-collapsed";
+  var collapseBtn = document.querySelector("[data-collapse-menu]");
+  var mainNav = document.querySelector("[data-main-nav]");
+
+  function applyMenuCollapsed(collapsed) {
+    document.body.classList.toggle("menu-collapsed", collapsed);
+    if (mainNav) {
+      if (collapsed) mainNav.setAttribute("hidden", "");
+      else mainNav.removeAttribute("hidden");
+    }
+    if (collapseBtn) {
+      collapseBtn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      var zhLabel = collapseBtn.querySelector("[data-collapse-label-zh]");
+      var enLabel = collapseBtn.querySelector("[data-collapse-label-en]");
+      if (zhLabel) zhLabel.textContent = collapsed ? "顯示主選單" : "隱藏主選單";
+      if (enLabel) enLabel.textContent = collapsed ? "Expand this menu" : "Collapse this menu";
+    }
+    try {
+      localStorage.setItem(MENU_COLLAPSE_KEY, collapsed ? "1" : "0");
+    } catch (err) {}
+  }
+
+  if (collapseBtn) {
+    var savedCollapsed = false;
+    try {
+      savedCollapsed = localStorage.getItem(MENU_COLLAPSE_KEY) === "1";
+    } catch (err) {}
+    applyMenuCollapsed(savedCollapsed);
+    collapseBtn.addEventListener("click", function () {
+      applyMenuCollapsed(!document.body.classList.contains("menu-collapsed"));
     });
   }
 
