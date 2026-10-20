@@ -286,6 +286,26 @@ body.menu-collapsed {
   cursor: pointer;
   font-family: inherit;
 }
+.nav .drop-trigger {
+  gap: 6px;
+}
+.nav .drop-trigger::after {
+  content: "";
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  opacity: 0.85;
+  flex-shrink: 0;
+  transform: translateY(1px);
+  transition: transform 0.2s ease;
+}
+.nav .drop:hover .drop-trigger::after,
+.nav .drop:focus-within .drop-trigger::after {
+  transform: translateY(1px) rotate(180deg);
+}
 .nav > a:hover,
 .nav .drop-trigger:hover {
   color: #fff;
@@ -364,9 +384,12 @@ body.menu-collapsed {
 }
 .btn-gold {
   background: var(--gold);
-  color: var(--navy);
+  color: #081628;
 }
-.btn-gold:hover { filter: brightness(.96); }
+.btn-gold:hover {
+  filter: brightness(.96);
+  color: #050e18;
+}
 .btn-navy {
   background: var(--navy);
   color: #fff;
@@ -499,6 +522,59 @@ body.menu-collapsed {
   white-space: nowrap;
 }
 .home-block { padding: 48px 0 64px; }
+.home-highlights-block {
+  padding: 28px 0 12px;
+  background:
+    linear-gradient(180deg, #f3efe6 0%, var(--paper) 55%, #fff 100%);
+}
+.home-highlights {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.home-highlight-card {
+  margin: 0;
+  padding: 22px 20px 20px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow:
+    0 10px 24px rgba(26, 61, 102, 0.08),
+    0 2px 6px rgba(26, 61, 102, 0.04);
+  transform: translateY(-4px);
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+}
+.home-highlight-card:hover {
+  transform: translateY(-10px);
+  border-color: var(--gold);
+  box-shadow:
+    0 20px 40px rgba(26, 61, 102, 0.14),
+    0 6px 14px rgba(196, 163, 90, 0.18);
+}
+.home-highlight-title {
+  margin: 0 0 8px;
+  color: var(--navy);
+  font-family: "Cormorant Garamond", "Noto Serif TC", serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.home-highlight-text {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+@media (max-width: 900px) {
+  .home-highlights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .home-highlights {
+    grid-template-columns: 1fr;
+  }
+}
 .home-panel {
   max-width: 920px;
   margin: 0 auto;
