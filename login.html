@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=nav-caret">
+  <link rel="stylesheet" href="assets/css/styles.css?v=password-toggle">
 </head>
 <body class="page-admin-faculty">
   <a class="skip" href="#main">Skip to content</a>
@@ -36,7 +36,12 @@
               </div>
               <div class="field">
                 <label for="login-password"><span class="zh">密碼</span><span class="en">Password</span></label>
-                <input type="password" id="login-password" required minlength="6" autocomplete="current-password">
+                <div class="password-field">
+                  <input type="password" id="login-password" required minlength="6" autocomplete="current-password">
+                  <button type="button" class="password-toggle" data-password-toggle="login-password" aria-label="Show password" aria-pressed="false" title="Show / hide password">
+                    <span class="password-toggle-icon" aria-hidden="true"></span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -54,7 +59,21 @@
               </div>
               <div class="field">
                 <label for="reg-password"><span class="zh">密碼（至少 6 碼）</span><span class="en">Password (min 6)</span></label>
-                <input type="password" id="reg-password" required minlength="6" autocomplete="new-password">
+                <div class="password-field">
+                  <input type="password" id="reg-password" required minlength="6" autocomplete="new-password">
+                  <button type="button" class="password-toggle" data-password-toggle="reg-password" aria-label="Show password" aria-pressed="false" title="Show / hide password">
+                    <span class="password-toggle-icon" aria-hidden="true"></span>
+                  </button>
+                </div>
+              </div>
+              <div class="field">
+                <label for="reg-password2"><span class="zh">確認密碼</span><span class="en">Confirm password</span></label>
+                <div class="password-field">
+                  <input type="password" id="reg-password2" required minlength="6" autocomplete="new-password">
+                  <button type="button" class="password-toggle" data-password-toggle="reg-password2" aria-label="Show password" aria-pressed="false" title="Show / hide password">
+                    <span class="password-toggle-icon" aria-hidden="true"></span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -82,11 +101,21 @@
             <form class="form admin-form" id="reset-form" novalidate>
               <div class="field">
                 <label for="reset-password"><span class="zh">新密碼</span><span class="en">New password</span></label>
-                <input type="password" id="reset-password" required minlength="6" autocomplete="new-password">
+                <div class="password-field">
+                  <input type="password" id="reset-password" required minlength="6" autocomplete="new-password">
+                  <button type="button" class="password-toggle" data-password-toggle="reset-password" aria-label="Show password" aria-pressed="false" title="Show / hide password">
+                    <span class="password-toggle-icon" aria-hidden="true"></span>
+                  </button>
+                </div>
               </div>
               <div class="field">
                 <label for="reset-password2"><span class="zh">確認新密碼</span><span class="en">Confirm new password</span></label>
-                <input type="password" id="reset-password2" required minlength="6" autocomplete="new-password">
+                <div class="password-field">
+                  <input type="password" id="reset-password2" required minlength="6" autocomplete="new-password">
+                  <button type="button" class="password-toggle" data-password-toggle="reset-password2" aria-label="Show password" aria-pressed="false" title="Show / hide password">
+                    <span class="password-toggle-icon" aria-hidden="true"></span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -100,6 +129,9 @@
             </button>
             <button type="button" class="btn btn-outline" id="auth-tab-forgot" data-auth-tab="forgot" aria-pressed="false">
               <span class="zh">忘記密碼</span><span class="en">Forgot password</span>
+            </button>
+            <button type="button" class="btn btn-outline" id="auth-btn-resend-confirm">
+              <span class="zh">重寄確認信</span><span class="en">Resend confirmation</span>
             </button>
             <a class="btn btn-outline" href="index.html" id="auth-tab-home">
               <span class="zh">回首頁</span><span class="en">Home</span>
@@ -136,8 +168,8 @@
   <div id="site-footer"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase-config.js"></script>
-  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/auth.js?v=email-confirm"></script>
   <script src="assets/js/site.js?v=footer-clean"></script>
-  <script src="assets/js/login-page.js?v=no-backend-panel"></script>
+  <script src="assets/js/login-page.js?v=email-confirm"></script>
 </body>
 </html>

@@ -45,6 +45,69 @@
     return role === "admin" || role === "super_admin";
   }
 
+  /** Absolute URL for login.html on this site (used for email redirects). */
+  function loginPageUrl(query) {
+    var base =
+      location.origin +
+      location.pathname.replace(/[^/]+$/, "") +
+      "login.html";
+    if (!query) return base;
+    return base + (query.charAt(0) === "?" ? query : "?" + query);
+  }
+
+  /**
+   * Map Supabase Auth errors to bilingual user-facing text.
+   * @returns {{ zh: string, en: string }}
+   */
+  function mapAuthError(err) {
+    var code = String((err && err.code) || "");
+    var msg = String((err && err.message) || err || "");
+    var lower = msg.toLowerCase();
+    if (
+      code === "email_not_confirmed" ||
+      lower.indexOf("email not confirmed") !== -1
+    ) {
+      return {
+        zh: "信箱尚未驗證。請先到信箱點擊確認連結，完成後再登入。",
+        en: "Email not confirmed. Open the confirmation link in your inbox, then sign in."
+      };
+    }
+    if (
+      code === "over_email_send_rate_limit" ||
+      lower.indexOf("rate limit") !== -1
+    ) {
+      return {
+        zh: "寄信次數已達上限，請稍後再試（或於 Supabase 設定自訂 SMTP）。",
+        en: "Email rate limit reached. Try again later (or configure custom SMTP in Supabase)."
+      };
+    }
+    if (
+      code === "email_address_not_authorized" ||
+      lower.indexOf("not authorized") !== -1
+    ) {
+      return {
+        zh: "目前內建寄信無法寄到此信箱。請在 Supabase 設定自訂 SMTP，或改用專案成員信箱測試。",
+        en: "Built-in email cannot send to this address. Configure custom SMTP in Supabase, or test with a team-member inbox."
+      };
+    }
+    if (
+      lower.indexOf("user already registered") !== -1 ||
+      lower.indexOf("already been registered") !== -1
+    ) {
+      return {
+        zh: "此信箱已註冊。請直接登入，或使用忘記密碼。",
+        en: "This email is already registered. Sign in, or use Forgot password."
+      };
+    }
+    if (lower.indexOf("invalid login credentials") !== -1) {
+      return {
+        zh: "帳號或密碼錯誤。",
+        en: "Invalid email or password."
+      };
+    }
+    return { zh: msg, en: msg };
+  }
+
   async function getSession() {
     var sb = getClient();
     var result = await sb.auth.getSession();
@@ -90,16 +153,31 @@
 
   async function signUp(email, password, displayName) {
     var sb = getClient();
+    // Confirm-email link returns users to the login page (role stays pending in profiles).
+    var emailRedirectTo = loginPageUrl("email_confirmed=1");
     var result = await sb.auth.signUp({
       email: String(email || "").trim(),
       password: String(password || ""),
       options: {
-        data: { display_name: String(displayName || "").trim() || null }
+        data: { display_name: String(displayName || "").trim() || null },
+        emailRedirectTo: emailRedirectTo
       }
     });
     if (result.error) throw result.error;
     cached.session = result.data.session || null;
     cached.profile = null;
+    return result.data;
+  }
+
+  /** Resend signup confirmation email (Confirm email must be enabled in Dashboard). */
+  async function resendConfirmation(email) {
+    var sb = getClient();
+    var result = await sb.auth.resend({
+      type: "signup",
+      email: String(email || "").trim(),
+      options: { emailRedirectTo: loginPageUrl("email_confirmed=1") }
+    });
+    if (result.error) throw result.error;
     return result.data;
   }
 
@@ -132,7 +210,7 @@
   async function resetPassword(email, redirectTo) {
     var sb = getClient();
     var result = await sb.auth.resetPasswordForEmail(String(email || "").trim(), {
-      redirectTo: redirectTo || (location.origin + location.pathname.replace(/[^/]+$/, "") + "login.html?mode=reset")
+      redirectTo: redirectTo || loginPageUrl("mode=reset")
     });
     if (result.error) throw result.error;
     return result.data;
@@ -207,6 +285,7 @@
     signUp: signUp,
     signIn: signIn,
     signOut: signOut,
+    resendConfirmation: resendConfirmation,
     resetPassword: resetPassword,
     updatePassword: updatePassword,
     listProfiles: listProfiles,
@@ -214,7 +293,10 @@
     requireAdmin: requireAdmin,
     requireSuperAdmin: requireSuperAdmin,
     isAdminRole: isAdminRole,
+    mapAuthError: mapAuthError,
+    loginPageUrl: loginPageUrl,
     setAdminNavAccess: setAdminNavAccess,
     ADMIN_NAV_KEY: ADMIN_NAV_KEY
   };
 })(window);
+

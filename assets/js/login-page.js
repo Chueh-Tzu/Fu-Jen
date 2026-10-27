@@ -45,6 +45,42 @@
     statusEl.textContent = message;
   }
 
+  function syncPasswordToggleLabel(btn, visible) {
+    var label = visible
+      ? t("隱藏密碼", "Hide password")
+      : t("顯示密碼", "Show password");
+    btn.setAttribute("aria-label", label);
+    btn.setAttribute("title", label);
+    btn.setAttribute("aria-pressed", visible ? "true" : "false");
+  }
+
+  function bindPasswordToggles() {
+    document.querySelectorAll("[data-password-toggle]").forEach(function (btn) {
+      syncPasswordToggleLabel(btn, false);
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-password-toggle");
+        var input = id ? document.getElementById(id) : null;
+        if (!input) return;
+        var show = input.type === "password";
+        input.type = show ? "text" : "password";
+        syncPasswordToggleLabel(btn, show);
+      });
+    });
+  }
+
+  bindPasswordToggles();
+
+  var localeToggle = document.querySelector("[data-locale-toggle]");
+  if (localeToggle) {
+    localeToggle.addEventListener("click", function () {
+      setTimeout(function () {
+        document.querySelectorAll("[data-password-toggle]").forEach(function (btn) {
+          syncPasswordToggleLabel(btn, btn.getAttribute("aria-pressed") === "true");
+        });
+      }, 0);
+    });
+  }
+
   function nextPage() {
     var next = params.get("next") || "admin-news.html";
     if (!/^[a-z0-9\-]+\.html$/i.test(next)) next = "admin-news.html";
@@ -148,6 +184,23 @@
     }
   }
 
+  function authErrorText(err) {
+    if (auth.mapAuthError) {
+      var mapped = auth.mapAuthError(err);
+      return t(mapped.zh, mapped.en);
+    }
+    return String((err && err.message) || err || "");
+  }
+
+  function isEmailConfirmLanding() {
+    var type = params.get("type") || hashParams.get("type") || "";
+    return (
+      params.get("email_confirmed") === "1" ||
+      type === "signup" ||
+      type === "email"
+    );
+  }
+
   async function doLogin() {
     try {
       await auth.signIn(
@@ -161,37 +214,88 @@
       }
       await refreshSessionBox();
     } catch (err) {
-      showStatus(t("登入失敗：", "Sign-in failed: ") + (err.message || err), "err");
+      showStatus(t("登入失敗：", "Sign-in failed: ") + authErrorText(err), "err");
     }
   }
 
   async function doRegister() {
+    var email = document.getElementById("reg-email").value;
+    var pw = document.getElementById("reg-password").value;
+    var pw2 = document.getElementById("reg-password2").value;
+    if (pw !== pw2) {
+      showStatus(t("兩次輸入的密碼不一致。", "Passwords do not match."), "err");
+      return;
+    }
     try {
-      var data = await auth.signUp(
-        document.getElementById("reg-email").value,
-        document.getElementById("reg-password").value,
-        document.getElementById("reg-name").value
-      );
-      if (data.session) {
+      var data = await auth.signUp(email, pw, document.getElementById("reg-name").value);
+      var identities = (data.user && data.user.identities) || [];
+      // Supabase may return an obfuscated user when the email is already registered.
+      if (data.user && identities.length === 0) {
         showStatus(
           t(
-            "註冊成功。角色為「待審核」，請等待核准後再進後台。",
+            "此信箱可能已註冊。請直接登入，或使用忘記密碼／重寄確認信。",
+            "This email may already be registered. Sign in, or use Forgot password / resend confirmation."
+          ),
+          "err"
+        );
+        setMode("login");
+        var loginEmailEl = document.getElementById("login-email");
+        if (loginEmailEl) loginEmailEl.value = String(email || "").trim();
+        return;
+      }
+      if (data.session) {
+        // Confirm email is OFF in Dashboard — still keep role pending for Super Admin.
+        showStatus(
+          t(
+            "註冊成功。角色為「待審核」，請等待超級管理員核准後再進後台。",
             "Registered. Role is pending until a super_admin approves you."
           ),
           "ok"
         );
         await refreshSessionBox();
       } else {
+        // Confirm email is ON — user must verify before sign-in.
+        setMode("login");
+        var loginEmail = document.getElementById("login-email");
+        if (loginEmail) loginEmail.value = String(email || "").trim();
         showStatus(
           t(
-            "註冊成功。若啟用信箱驗證，請先到信箱點連結，再回來登入。",
-            "Registered. If email confirmation is on, verify your inbox, then sign in."
+            "註冊成功！確認信已寄出，請到信箱點擊連結完成驗證後再登入。驗證後角色仍為「待審核」，需超級管理員核准。",
+            "Registered! Check your inbox and click the confirmation link, then sign in. After verification your role stays pending until a super_admin approves you."
           ),
           "ok"
         );
       }
     } catch (err) {
-      showStatus(t("註冊失敗：", "Registration failed: ") + (err.message || err), "err");
+      showStatus(t("註冊失敗：", "Registration failed: ") + authErrorText(err), "err");
+    }
+  }
+
+  async function doResendConfirmation() {
+    var emailEl = document.getElementById("login-email");
+    var email = emailEl ? String(emailEl.value || "").trim() : "";
+    if (!email) {
+      showStatus(
+        t("請先在登入欄填入電子郵件，再重寄確認信。", "Enter your email in the sign-in field, then resend."),
+        "err"
+      );
+      return;
+    }
+    if (!auth.resendConfirmation) {
+      showStatus(t("此功能無法使用。", "Resend is unavailable."), "err");
+      return;
+    }
+    try {
+      await auth.resendConfirmation(email);
+      showStatus(
+        t(
+          "若此信箱已註冊且尚未驗證，確認信已重新寄出。請檢查信箱（含垃圾郵件）。",
+          "If this email is registered and unverified, a new confirmation email was sent. Check inbox (and spam)."
+        ),
+        "ok"
+      );
+    } catch (err) {
+      showStatus(t("重寄失敗：", "Resend failed: ") + authErrorText(err), "err");
     }
   }
 
@@ -212,7 +316,7 @@
         "ok"
       );
     } catch (err) {
-      showStatus(t("寄送失敗：", "Could not send reset email: ") + (err.message || err), "err");
+      showStatus(t("寄送失敗：", "Could not send reset email: ") + authErrorText(err), "err");
     }
   }
 
@@ -238,7 +342,7 @@
         history.replaceState({}, "", "login.html?next=" + encodeURIComponent(nextPage()));
       }
     } catch (err) {
-      showStatus(t("更新密碼失敗：", "Could not update password: ") + (err.message || err), "err");
+      showStatus(t("更新密碼失敗：", "Could not update password: ") + authErrorText(err), "err");
     }
   }
 
@@ -302,6 +406,13 @@
     });
   }
 
+  var resendBtn = document.getElementById("auth-btn-resend-confirm");
+  if (resendBtn) {
+    resendBtn.addEventListener("click", function () {
+      doResendConfirmation();
+    });
+  }
+
   document.getElementById("auth-btn-logout").addEventListener("click", async function () {
     try {
       await auth.signOut();
@@ -344,7 +455,7 @@
     }
 
     try {
-      // Let Supabase pick up recovery tokens from the URL hash first.
+      // Let Supabase pick up confirm / recovery tokens from the URL hash first.
       await auth.getSession();
       if (isRecoveryLanding()) {
         var session = await auth.getSession();
@@ -367,10 +478,37 @@
             "err"
           );
         }
+      } else if (isEmailConfirmLanding()) {
+        setMode("login");
+        var confirmedSession = await auth.getSession();
+        if (confirmedSession) {
+          showStatus(
+            t(
+              "信箱驗證成功！角色仍為「待審核」，請等待超級管理員核准後再進入後台。",
+              "Email verified! Your role stays pending until a super_admin approves you."
+            ),
+            "ok"
+          );
+        } else {
+          showStatus(
+            t(
+              "信箱已驗證（或連結已處理）。請使用帳密登入；角色仍為「待審核」，需超級管理員核准。",
+              "Email confirmed. Please sign in; your role stays pending until a super_admin approves you."
+            ),
+            "ok"
+          );
+        }
+        if (history.replaceState) {
+          history.replaceState(
+            {},
+            "",
+            "login.html?next=" + encodeURIComponent(nextPage())
+          );
+        }
       }
       await refreshSessionBox();
     } catch (err) {
-      showStatus(t("無法讀取登入狀態：", "Cannot read session: ") + (err.message || err), "err");
+      showStatus(t("無法讀取登入狀態：", "Cannot read session: ") + authErrorText(err), "err");
     }
   })();
 })();
