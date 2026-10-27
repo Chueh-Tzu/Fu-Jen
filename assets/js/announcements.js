@@ -1,5 +1,9 @@
 (function (global) {
   var STORAGE_KEY = "immba-announcements-v1";
+  var TABLE = "announcements";
+  var cache = null;
+  var loadPromise = null;
+  var client = null;
 
   /** Default announcements collected from the official imMBA news page. */
   var DEFAULT_ANNOUNCEMENTS = [
@@ -223,33 +227,154 @@
     };
   }
 
+  function getClient() {
+    if (client) return client;
+    if (global.ImMbaAuth && typeof global.ImMbaAuth.getClient === "function") {
+      client = global.ImMbaAuth.getClient();
+      return client;
+    }
+    var cfg = global.ImMbaSupabaseConfig;
+    if (!cfg || !cfg.url || !cfg.anonKey) {
+      throw new Error("Missing ImMbaSupabaseConfig (url / anonKey).");
+    }
+    if (!global.supabase || typeof global.supabase.createClient !== "function") {
+      throw new Error("Supabase JS SDK not loaded.");
+    }
+    client = global.supabase.createClient(cfg.url, cfg.anonKey);
+    return client;
+  }
+
+  function rowToItem(row) {
+    return normalizeItem({
+      id: row.id,
+      date: row.date,
+      top: row.top,
+      published: row.published,
+      photoUrl: row.photo_url,
+      fileUrl: row.file_url,
+      fileName: row.file_name,
+      zh: {
+        title: row.title_zh,
+        url: row.url_zh,
+        content: row.content_zh
+      },
+      en: {
+        title: row.title_en,
+        url: row.url_en,
+        content: row.content_en
+      }
+    });
+  }
+
+  function itemToRow(item, sortOrder) {
+    var n = normalizeItem(item);
+    return {
+      id: n.id,
+      date: n.date,
+      top: !!n.top,
+      published: n.published !== false,
+      sort_order: sortOrder != null ? sortOrder : 0,
+      photo_url: n.photoUrl || null,
+      file_url: n.fileUrl || null,
+      file_name: n.fileName || null,
+      title_zh: n.zh.title || "",
+      url_zh: n.zh.url || null,
+      content_zh: n.zh.content || null,
+      title_en: n.en.title || "",
+      url_en: n.en.url || null,
+      content_en: n.en.content || null
+    };
+  }
+
+  function clearLocalMirror() {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (err) {}
+  }
+
   function getPublished() {
     return getAll().filter(function (item) {
       return item.published !== false;
     });
   }
 
+  /** Sync snapshot after cloud load; before load, built-in defaults (temporary). */
   function getAll() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return cloneDefaults();
-      var parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return cloneDefaults();
-      return parsed.map(normalizeItem);
-    } catch (err) {
-      return cloneDefaults();
-    }
-  }
-
-  function saveAll(list) {
-    var normalized = (list || []).map(normalizeItem);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-    return normalized;
-  }
-
-  function restoreDefaults() {
-    localStorage.removeItem(STORAGE_KEY);
+    if (cache) return cache.map(normalizeItem);
     return cloneDefaults();
+  }
+
+  async function refreshFromCloud() {
+    var sb = getClient();
+    var result = await sb
+      .from(TABLE)
+      .select("*")
+      .order("sort_order", { ascending: true })
+      .order("date", { ascending: false });
+    if (result.error) throw result.error;
+    cache = (result.data || []).map(rowToItem);
+    clearLocalMirror();
+    return cache.slice();
+  }
+
+  function ensureLoaded() {
+    if (cache) return Promise.resolve(cache.slice());
+    if (loadPromise) return loadPromise;
+    loadPromise = refreshFromCloud()
+      .catch(function (err) {
+        console.warn("[ImMbaAnnouncements] cloud load failed; using built-in defaults.", err);
+        cache = cloneDefaults();
+        return cache.slice();
+      })
+      .finally(function () {
+        loadPromise = null;
+      });
+    return loadPromise;
+  }
+
+  /**
+   * Replace the full announcements set in Supabase (create / update / reorder / delete).
+   * Requires an admin session (RLS).
+   */
+  async function saveAll(list) {
+    var normalized = (list || []).map(normalizeItem).filter(function (item) {
+      return !!item.id;
+    });
+    var sb = getClient();
+    var rows = normalized.map(function (item, index) {
+      return itemToRow(item, (index + 1) * 10);
+    });
+
+    var existing = await sb.from(TABLE).select("id");
+    if (existing.error) throw existing.error;
+    var keep = {};
+    rows.forEach(function (row) {
+      keep[row.id] = true;
+    });
+    var toDelete = (existing.data || [])
+      .map(function (row) {
+        return row.id;
+      })
+      .filter(function (id) {
+        return !keep[id];
+      });
+
+    if (rows.length) {
+      var upsert = await sb.from(TABLE).upsert(rows, { onConflict: "id" });
+      if (upsert.error) throw upsert.error;
+    }
+    if (toDelete.length) {
+      var del = await sb.from(TABLE).delete().in("id", toDelete);
+      if (del.error) throw del.error;
+    }
+
+    cache = normalized;
+    clearLocalMirror();
+    return cache.slice();
+  }
+
+  async function restoreDefaults() {
+    return saveAll(cloneDefaults());
   }
 
   function escapeHtml(str) {
@@ -430,10 +555,13 @@
     getPublished: getPublished,
     saveAll: saveAll,
     restoreDefaults: restoreDefaults,
+    refreshFromCloud: refreshFromCloud,
+    ensureLoaded: ensureLoaded,
     dateLabelFromIso: dateLabelFromIso,
     normalizeItem: normalizeItem,
     renderHome: renderHome,
     renderNewsPage: renderNewsPage,
+    renderAllFront: renderAllFront,
     detailHref: detailHref,
     bodyHtml: bodyHtml,
     mediaHtml: mediaHtml,
@@ -441,7 +569,13 @@
   };
 
   function boot() {
-    renderAllFront();
+    ensureLoaded()
+      .then(function () {
+        renderAllFront();
+      })
+      .catch(function () {
+        renderAllFront();
+      });
   }
 
   if (document.readyState === "loading") {
@@ -449,8 +583,4 @@
   } else {
     boot();
   }
-
-  global.addEventListener("storage", function (event) {
-    if (event.key === STORAGE_KEY) renderAllFront();
-  });
 })(window);

@@ -221,9 +221,21 @@
 
   function persist(list, messageZh, messageEn) {
     var next = syncListOrder(list);
-    api.saveAll(next);
-    renderList();
-    showStatus(t(messageZh, messageEn), "ok");
+    return api
+      .saveAll(next)
+      .then(function () {
+        if (typeof api.renderAllFront === "function") api.renderAllFront();
+        renderList();
+        showStatus(t(messageZh, messageEn), "ok");
+      })
+      .catch(function (err) {
+        console.error(err);
+        showStatus(
+          t("雲端儲存失敗：", "Cloud save failed: ") + (err.message || err),
+          "err"
+        );
+        return Promise.reject(err);
+      });
   }
 
   /** Sync check: both languages present as one paired record (URLs optional). */
@@ -623,12 +635,24 @@
     );
     if (!ok) return;
     closeForm();
-    api.restoreDefaults();
-    renderList();
-    showStatus(
-      t("已還原預設公告清單，並同步到前台。", "Default list restored and synced to the homepage."),
-      "ok"
-    );
+    showStatus(t("正在還原並寫入雲端…", "Restoring defaults to the cloud…"), "ok");
+    api
+      .restoreDefaults()
+      .then(function () {
+        if (typeof api.renderAllFront === "function") api.renderAllFront();
+        renderList();
+        showStatus(
+          t("已還原預設公告清單，並同步到雲端／前台。", "Default list restored and synced to the cloud."),
+          "ok"
+        );
+      })
+      .catch(function (err) {
+        console.error(err);
+        showStatus(
+          t("還原失敗：", "Restore failed: ") + (err.message || err),
+          "err"
+        );
+      });
   });
 
   document.getElementById("admin-btn-translate").addEventListener("click", function () {
@@ -675,6 +699,7 @@
     }
 
     var list = api.getAll();
+    var saving;
     if (editingId) {
       var updated = false;
       list = list.map(function (row) {
@@ -683,20 +708,22 @@
         return item;
       });
       if (!updated) list.unshift(item);
-      persist(
+      saving = persist(
         list,
-        "雙語公告已更新（同一則紀錄），並同步到前台最新消息。",
-        "Bilingual announcement updated as one record and synced to the homepage."
+        "雙語公告已更新，並同步到雲端（其他人重新整理即可看到）。",
+        "Bilingual announcement updated and synced to the cloud."
       );
     } else {
       list.unshift(item);
-      persist(
+      saving = persist(
         list,
-        "雙語公告已新增（同一則紀錄），並同步到前台最新消息。",
-        "Bilingual announcement added as one record and synced to the homepage."
+        "雙語公告已新增，並同步到雲端（其他人重新整理即可看到）。",
+        "Bilingual announcement added and synced to the cloud."
       );
     }
-    closeForm();
+    saving.then(function () {
+      closeForm();
+    });
   });
 
   listEl.addEventListener("click", function (event) {
@@ -769,10 +796,6 @@
     });
   }
 
-  window.addEventListener("storage", function (event) {
-    if (event.key === api.STORAGE_KEY) renderList();
-  });
-
   var logoutBtn = document.getElementById("admin-news-btn-logout");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", async function () {
@@ -800,11 +823,27 @@
       );
     }
     if (usersLink) usersLink.hidden = gate.profile.role !== "super_admin";
-    renderList();
-    showStatus(
-      t("已通過身分驗證，可管理公告。", "Authenticated — you can manage announcements."),
-      "ok"
-    );
+    try {
+      await api.refreshFromCloud();
+      renderList();
+      showStatus(
+        t(
+          "已連接雲端公告資料庫，新增／修改會同步給所有訪客。",
+          "Connected to cloud announcements — changes sync for all visitors."
+        ),
+        "ok"
+      );
+    } catch (err) {
+      console.error(err);
+      renderList();
+      showStatus(
+        t(
+          "無法讀取雲端公告（請確認已執行 schema-announcements.sql）：",
+          "Could not load cloud announcements (confirm schema-announcements.sql ran): "
+        ) + (err.message || err),
+        "err"
+      );
+    }
   }
 
   function roleLabel(role) {

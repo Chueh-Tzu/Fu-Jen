@@ -149,14 +149,24 @@
       showMissing();
       return;
     }
-    var item = api.getPublished().find(function (row) {
-      return String(row.id) === id;
-    });
-    if (!item) {
-      showMissing();
-      return;
-    }
-    render(item);
+    var ready =
+      typeof api.ensureLoaded === "function"
+        ? api.ensureLoaded()
+        : Promise.resolve();
+    ready
+      .then(function () {
+        var item = api.getPublished().find(function (row) {
+          return String(row.id) === id;
+        });
+        if (!item) {
+          showMissing();
+          return;
+        }
+        render(item);
+      })
+      .catch(function () {
+        showMissing();
+      });
   }
 
   document.querySelectorAll("[data-locale-toggle]").forEach(function (btn) {
