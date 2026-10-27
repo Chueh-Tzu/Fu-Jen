@@ -323,15 +323,10 @@
     return loc.url || other.url || detailHref(item);
   }
 
-  function isExternalHref(href) {
-    return /^https?:\/\//i.test(String(href || ""));
-  }
-
   /** List cards show title only; body/photo open on the detail page. */
   function cardHit(locale, item, detailsLabel) {
     var loc = item[locale] || {};
     var href = cardHref(locale, item);
-    var external = isExternalHref(href);
     var topBadge = item.top ? '<span class="announce-top">TOP</span>' : "";
     var inner =
       '<span class="announce-meta">' +
@@ -355,9 +350,7 @@
       locale +
       '" href="' +
       escapeHtml(href) +
-      '"' +
-      (external ? ' target="_blank" rel="noopener"' : "") +
-      ">" +
+      '">' +
       inner +
       "</a>"
     );

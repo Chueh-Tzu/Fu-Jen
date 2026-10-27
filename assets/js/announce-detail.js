@@ -125,7 +125,7 @@
       html +=
         '<a class="btn btn-gold" href="' +
         escapeHtml(sourceUrl) +
-        '" target="_blank" rel="noopener">' +
+        '">' +
         '<span class="zh">查看原文</span><span class="en">View original</span></a> ';
     }
     html +=
