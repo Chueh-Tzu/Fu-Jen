@@ -2336,3 +2336,59 @@ ol.apply-list li::marker {
   .brand-kicker { display: none; }
   .notice-link { white-space: normal; }
 }
+
+/* Announcement detail page */
+.announce-detail-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 8px;
+  color: var(--gold-2);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.announce-detail-wrap {
+  max-width: 820px;
+}
+.announce-detail-photo {
+  margin: 0 0 24px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 28px rgba(26, 61, 102, 0.08);
+  background: #fff;
+}
+.announce-detail-photo img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.announce-detail-body {
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 1.75;
+}
+.announce-detail-empty {
+  color: var(--muted);
+  font-size: 15px;
+}
+.announce-detail-file {
+  margin: 18px 0 0;
+}
+.announce-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+}
+.announce-detail-status {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.page-announce-detail .page-hero h1 {
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.25;
+}

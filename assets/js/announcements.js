@@ -298,8 +298,40 @@
     return bits.length ? '<span class="announce-media">' + bits.join("") + "</span>" : "";
   }
 
+  function detailHref(item) {
+    return "announcement.html?id=" + encodeURIComponent(item.id);
+  }
+
+  function hasOnSiteBody(item) {
+    return !!(
+      (item.zh && item.zh.content) ||
+      (item.en && item.en.content) ||
+      item.photoUrl ||
+      item.fileUrl
+    );
+  }
+
+  /**
+   * Link target for list cards:
+   * - If there is on-site content/photo/file → detail page
+   * - If only an external URL (no body) → open that URL directly
+   */
+  function cardHref(locale, item) {
+    var loc = item[locale] || {};
+    var other = item[locale === "en" ? "zh" : "en"] || {};
+    if (hasOnSiteBody(item)) return detailHref(item);
+    return loc.url || other.url || detailHref(item);
+  }
+
+  function isExternalHref(href) {
+    return /^https?:\/\//i.test(String(href || ""));
+  }
+
+  /** List cards show title only; body/photo open on the detail page. */
   function cardHit(locale, item, detailsLabel) {
     var loc = item[locale] || {};
+    var href = cardHref(locale, item);
+    var external = isExternalHref(href);
     var topBadge = item.top ? '<span class="announce-top">TOP</span>' : "";
     var inner =
       '<span class="announce-meta">' +
@@ -312,46 +344,32 @@
       "</span>" +
       '<span class="announce-main">' +
       '<span class="announce-title">' +
-      escapeHtml(loc.title) +
+      escapeHtml(loc.title || "—") +
       "</span>" +
-      bodyHtml(loc.content) +
       "</span>" +
-      (loc.url
-        ? '<span class="announce-link">' + detailsLabel + "</span>"
-        : "");
-    if (loc.url) {
-      return (
-        '<a class="announce-card-hit ' +
-        locale +
-        '" href="' +
-        escapeHtml(loc.url) +
-        '">' +
-        inner +
-        "</a>"
-      );
-    }
+      '<span class="announce-link">' +
+      detailsLabel +
+      "</span>";
     return (
-      '<div class="announce-card-hit announce-card-hit-static ' +
+      '<a class="announce-card-hit ' +
       locale +
-      '">' +
+      '" href="' +
+      escapeHtml(href) +
+      '"' +
+      (external ? ' target="_blank" rel="noopener"' : "") +
+      ">" +
       inner +
-      "</div>"
+      "</a>"
     );
   }
 
   function cardHtml(item) {
-    var hasBody = !!(item.zh.content || item.en.content || item.photoUrl || item.fileUrl);
     return (
-      '<article class="announce-card' +
-      (hasBody ? " has-body" : "") +
-      '" data-announce="' +
+      '<article class="announce-card" data-announce="' +
       escapeHtml(item.id) +
       '">' +
       cardHit("zh", item, SOURCE.zh.details) +
       cardHit("en", item, SOURCE.en.details) +
-      // Shared media outside locale hit-links to avoid nested anchors
-      '<div class="zh">' + mediaHtml(item, "zh") + "</div>" +
-      '<div class="en">' + mediaHtml(item, "en") + "</div>" +
       "</article>"
     );
   }
@@ -422,7 +440,11 @@
     dateLabelFromIso: dateLabelFromIso,
     normalizeItem: normalizeItem,
     renderHome: renderHome,
-    renderNewsPage: renderNewsPage
+    renderNewsPage: renderNewsPage,
+    detailHref: detailHref,
+    bodyHtml: bodyHtml,
+    mediaHtml: mediaHtml,
+    escapeHtml: escapeHtml
   };
 
   function boot() {

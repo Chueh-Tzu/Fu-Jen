@@ -37,7 +37,7 @@
       graduation: file === "graduation.html",
       dual: file === "dual-degree.html",
       exchange: file === "exchange.html",
-      news: file === "news.html" || inNews,
+      news: file === "news.html" || file === "announcement.html" || inNews,
       scholarships: file === "scholarships.html",
       contact: file === "contact.html",
       adminNews: file === "admin-news.html",
