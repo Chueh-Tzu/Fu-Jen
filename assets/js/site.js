@@ -186,6 +186,26 @@
       langToggle.textContent = isEn ? "中文" : "EN";
       langToggle.setAttribute("aria-label", isEn ? "切換為中文" : "Switch to English");
     }
+    var homeSearch = document.getElementById("home-news-q");
+    if (homeSearch) homeSearch.placeholder = isEn ? "Search" : "搜尋";
+    scrollToHash();
+  }
+
+  function scrollToHash() {
+    var id = "";
+    try {
+      id = decodeURIComponent(String(location.hash || "").replace(/^#/, ""));
+    } catch (err) {
+      id = String(location.hash || "").replace(/^#/, "");
+    }
+    if (!id) return;
+    var el = document.getElementById(id);
+    if (!el) return;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        el.scrollIntoView({ block: "start" });
+      });
+    });
   }
 
   var toggle = document.querySelector("[data-menu-toggle]");

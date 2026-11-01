@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=announce-detail-v2">
+  <link rel="stylesheet" href="assets/css/styles.css?v=site-search">
 </head>
 <body class="page-home">
   <a class="skip" href="#main">Skip to content</a>
@@ -71,13 +71,32 @@
     </section>
 
     <section class="section home-block" aria-labelledby="home-announce-heading">
-      <div class="wrap home-panel announce-panel">
+      <div class="wrap home-news-frame">
+        <div class="home-news-search">
+          <label class="home-news-search-label" for="home-news-q">
+            <span class="zh">搜尋全站</span><span class="en">Search this site</span>
+          </label>
+          <input
+            id="home-news-q"
+            class="search"
+            type="search"
+            placeholder="搜尋"
+            autocomplete="off"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-controls="home-news-suggest"
+          >
+          <ul id="home-news-suggest" class="home-news-suggest" role="listbox" hidden></ul>
+        </div>
+        <div class="home-panel announce-panel">
         <h2 id="home-announce-heading" class="home-news-head"><span class="zh">最新消息</span><span class="en">Announcements</span></h2>
         <p class="announce-lead">
           <span class="zh">以下公告整理自輔大國際經管(imMBA)官方網站，點選「查看詳細內容」可閱讀內文與照片。</span>
           <span class="en">These announcements are collected from the official Fu Jen imMBA news page. Use View Details to read the full text and photos.</span>
         </p>
         <div id="home-announcements"></div>
+        </div>
       </div>
     </section>
 
@@ -109,7 +128,7 @@
   <div id="site-footer"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase-config.js"></script>
-  <script src="assets/js/announcements.js?v=cloud"></script>
-  <script src="assets/js/site.js?v=footer-clean"></script>
+  <script src="assets/js/announcements.js?v=scholarship-go"></script>
+  <script src="assets/js/site.js?v=hash-scroll"></script>
 </body>
 </html>

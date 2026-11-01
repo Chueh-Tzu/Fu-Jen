@@ -536,6 +536,355 @@
     root.innerHTML = listMarkup();
   }
 
+  function pageLocale() {
+    return document.documentElement.getAttribute("data-locale") === "en" ? "en" : "zh";
+  }
+
+  function itemSearchBlob(item) {
+    return [
+      item.date,
+      item.dateLabel,
+      item.zh && item.zh.title,
+      item.zh && item.zh.content,
+      item.en && item.en.title,
+      item.en && item.en.content
+    ]
+      .join("\n")
+      .toLowerCase();
+  }
+
+  function suggestionTitle(item, locale) {
+    var loc = item[locale] || {};
+    var other = item[locale === "en" ? "zh" : "en"] || {};
+    return loc.title || other.title || "—";
+  }
+
+  /** Public pages whose visible copy is included in homepage search. */
+  var SITE_PAGES = [
+    { href: "index.html", zh: "首頁", en: "Home" },
+    { href: "about.html", zh: "特色與排名", en: "Overview and Ranking" },
+    { href: "environment.html", zh: "學習環境", en: "Learning Environment" },
+    { href: "apply.html", zh: "申請輔大 imMBA", en: "Apply" },
+    { href: "curriculum.html", zh: "課程與修業規定", en: "Curriculum" },
+    { href: "faculty.html", zh: "師資介紹", en: "Faculty" },
+    { href: "guide.html", zh: "imMBA全攻略", en: "Student Guide" },
+    { href: "graduation.html", zh: "畢業與離校", en: "Graduation" },
+    { href: "dual-degree.html", zh: "跨國雙碩士", en: "Dual Master’s" },
+    { href: "exchange.html", zh: "海外交換", en: "Exchange" },
+    { href: "news.html", zh: "公告", en: "News" },
+    { href: "books.html", zh: "書籍與教材市集", en: "Books and Materials" },
+    { href: "gallery.html", zh: "相片集錦", en: "Photo Gallery" },
+    { href: "contact.html", zh: "聯絡我們", en: "Contact" }
+  ];
+
+  var siteEntries = [];
+  var siteIndexPromise = null;
+
+  function extractMainText(html) {
+    if (!html) return "";
+    var doc = new DOMParser().parseFromString(html, "text/html");
+    var main = doc.querySelector("main") || doc.body;
+    if (!main) return "";
+    main.querySelectorAll("script, style").forEach(function (node) {
+      node.remove();
+    });
+    return String(main.textContent || "").replace(/\s+/g, " ").trim();
+  }
+
+  function snippetAround(text, query) {
+    var source = String(text || "").replace(/\s+/g, " ").trim();
+    var q = String(query || "").trim().toLowerCase();
+    if (!source || !q) return "";
+    var at = source.toLowerCase().indexOf(q);
+    if (at < 0) return "";
+    var start = Math.max(0, at - 16);
+    var end = Math.min(source.length, at + q.length + 36);
+    var slice = source.slice(start, end).trim();
+    return (start > 0 ? "…" : "") + slice + (end < source.length ? "…" : "");
+  }
+
+  function loadSiteIndex() {
+    if (siteIndexPromise) return siteIndexPromise;
+    var pages = Promise.all(
+      SITE_PAGES.map(function (page) {
+        return fetch(page.href)
+          .then(function (res) {
+            return res.ok ? res.text() : "";
+          })
+          .then(function (html) {
+            return {
+              kind: "page",
+              href: page.href,
+              zh: page.zh,
+              en: page.en,
+              text: page.zh + " " + page.en + " " + extractMainText(html)
+            };
+          })
+          .catch(function () {
+            return {
+              kind: "page",
+              href: page.href,
+              zh: page.zh,
+              en: page.en,
+              text: page.zh + " " + page.en
+            };
+          });
+      })
+    );
+    var faculty = Promise.resolve([]);
+    try {
+      faculty = getClient()
+        .from("faculty")
+        .select(
+          "name_zh,name_en,title_zh,title_en,education_zh,education_en,research_fields_zh,research_fields_en"
+        )
+        .then(function (result) {
+          return (result.data || []).map(function (row) {
+            var zh = row.name_zh || row.name_en || "師資";
+            var en = row.name_en || row.name_zh || "Faculty";
+            return {
+              kind: "faculty",
+              href: "faculty.html",
+              zh: zh,
+              en: en,
+              text: [
+                zh,
+                en,
+                row.title_zh,
+                row.title_en,
+                row.education_zh,
+                row.education_en,
+                row.research_fields_zh,
+                row.research_fields_en
+              ].join(" ")
+            };
+          });
+        })
+        .catch(function () {
+          return [];
+        });
+    } catch (err) {
+      faculty = Promise.resolve([]);
+    }
+    siteIndexPromise = Promise.all([pages, faculty]).then(function (parts) {
+      siteEntries = parts[0].concat(parts[1]);
+      return siteEntries;
+    });
+    return siteIndexPromise;
+  }
+
+  var homeSearchBound = false;
+  var suggestActive = -1;
+
+  function hideHomeSuggestions() {
+    var list = document.getElementById("home-news-suggest");
+    var input = document.getElementById("home-news-q");
+    if (list) {
+      list.hidden = true;
+      list.innerHTML = "";
+    }
+    if (input) input.setAttribute("aria-expanded", "false");
+    suggestActive = -1;
+  }
+
+  function setSuggestActive(index) {
+    var list = document.getElementById("home-news-suggest");
+    if (!list) return;
+    var links = list.querySelectorAll("a");
+    if (!links.length) {
+      suggestActive = -1;
+      return;
+    }
+    if (index < 0) index = links.length - 1;
+    if (index >= links.length) index = 0;
+    suggestActive = index;
+    links.forEach(function (link, i) {
+      if (i === suggestActive) link.classList.add("is-active");
+      else link.classList.remove("is-active");
+    });
+    var current = links[suggestActive];
+    var input = document.getElementById("home-news-q");
+    if (current.id && input) input.setAttribute("aria-activedescendant", current.id);
+    if (current.scrollIntoView) current.scrollIntoView({ block: "nearest" });
+  }
+
+  function renderHomeSuggestions(query) {
+    var list = document.getElementById("home-news-suggest");
+    var input = document.getElementById("home-news-q");
+    if (!list || !input) return;
+    var q = String(query || "").trim().toLowerCase();
+    if (!q) {
+      hideHomeSuggestions();
+      return;
+    }
+    var locale = pageLocale();
+    var results = [];
+    getPublished().forEach(function (item) {
+      var blob = itemSearchBlob(item);
+      if (blob.indexOf(q) === -1) return;
+      var title = suggestionTitle(item, locale);
+      results.push({
+        href: cardHref(locale, item),
+        title: title,
+        meta: item.dateLabel || item.date || (locale === "en" ? "News" : "公告"),
+        snippet: snippetAround(
+          ((item[locale] && item[locale].content) || "") + " " + title,
+          q
+        ),
+        rank: title.toLowerCase().indexOf(q) !== -1 ? 0 : 1
+      });
+    });
+    var scholarshipQuery =
+      q.indexOf("獎學金") !== -1 ||
+      q.indexOf("獎助") !== -1 ||
+      q.indexOf("scholarship") !== -1;
+    var scholarshipTarget = null;
+    if (scholarshipQuery) {
+      var englishScholarship = q.indexOf("scholarship") !== -1 && locale === "en";
+      scholarshipTarget = englishScholarship
+        ? {
+            href: "apply.html#tuition-scholarships",
+            title: "Apply for Fu Jen imMBA",
+            meta: "Admissions",
+            snippet: "Tuition Fees and Scholarships",
+            rank: -1
+          }
+        : {
+            href: "apply.html#scholarships",
+            title: "申請輔大 imMBA",
+            meta: "招生資訊",
+            snippet: "獎助學金資訊",
+            rank: -1
+          };
+    }
+    siteEntries.forEach(function (entry) {
+      var blob = String(entry.text || "").toLowerCase();
+      if (blob.indexOf(q) === -1) return;
+      if (entry.href === "scholarships.html") return;
+      if (scholarshipQuery && entry.href === "apply.html") return;
+      var title = locale === "en" ? entry.en : entry.zh;
+      var meta =
+        entry.kind === "faculty"
+          ? locale === "en"
+            ? "Faculty"
+            : "師資"
+          : locale === "en"
+            ? "Page"
+            : "頁面";
+      results.push({
+        href: entry.href,
+        title: title || entry.zh || entry.en,
+        meta: meta,
+        snippet: snippetAround(entry.text, q),
+        rank: String(title || "").toLowerCase().indexOf(q) !== -1 ? 0 : 2
+      });
+    });
+    if (scholarshipTarget) results.unshift(scholarshipTarget);
+    results.sort(function (a, b) {
+      return a.rank - b.rank;
+    });
+    results = results.slice(0, 8);
+    suggestActive = -1;
+    input.removeAttribute("aria-activedescendant");
+    if (!results.length) {
+      list.innerHTML =
+        '<li class="home-news-suggest-empty" role="presentation">' +
+        (locale === "en" ? "No matching content" : "沒有符合的內容") +
+        "</li>";
+    } else {
+      list.innerHTML = results
+        .map(function (item, index) {
+          var snippet =
+            item.snippet && item.snippet !== item.title
+              ? '<span class="home-news-suggest-snippet">' +
+                escapeHtml(item.snippet) +
+                "</span>"
+              : "";
+          return (
+            '<li role="presentation">' +
+            '<a role="option" id="home-news-opt-' +
+            index +
+            '" href="' +
+            escapeHtml(item.href) +
+            '">' +
+            '<span class="home-news-suggest-date">' +
+            escapeHtml(item.meta) +
+            "</span>" +
+            '<span class="home-news-suggest-title">' +
+            escapeHtml(item.title) +
+            "</span>" +
+            snippet +
+            "</a></li>"
+          );
+        })
+        .join("");
+    }
+    list.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+  }
+
+  function bindHomeNewsSearch() {
+    var input = document.getElementById("home-news-q");
+    if (!input || homeSearchBound) return;
+    homeSearchBound = true;
+    input.addEventListener("input", function () {
+      var typed = String(input.value || "").trim().toLowerCase();
+      if (
+        pageLocale() === "en" &&
+        (typed === "scholarship" || typed === "scholarships")
+      ) {
+        location.href = "apply.html#tuition-scholarships";
+        return;
+      }
+      renderHomeSuggestions(input.value);
+    });
+    input.addEventListener("keydown", function (event) {
+      var list = document.getElementById("home-news-suggest");
+      var open = list && !list.hidden;
+      if (event.key === "ArrowDown" && open) {
+        event.preventDefault();
+        setSuggestActive(suggestActive + 1);
+      } else if (event.key === "ArrowUp" && open) {
+        event.preventDefault();
+        setSuggestActive(suggestActive - 1);
+      } else if (event.key === "Enter") {
+        var typed = String(input.value || "").trim().toLowerCase();
+        var goScholarship =
+          typed.indexOf("獎學金") !== -1 ||
+          typed.indexOf("獎助") !== -1 ||
+          typed.indexOf("scholarship") !== -1;
+        if (open && suggestActive >= 0) {
+          var picked = list.querySelectorAll("a")[suggestActive];
+          if (picked) {
+            event.preventDefault();
+            location.href = picked.getAttribute("href");
+          }
+        } else if (goScholarship) {
+          event.preventDefault();
+          location.href =
+            pageLocale() === "en" && typed.indexOf("scholarship") !== -1
+              ? "apply.html#tuition-scholarships"
+              : "apply.html#scholarships";
+        }
+      } else if (event.key === "Escape") {
+        hideHomeSuggestions();
+      }
+    });
+    document.addEventListener("click", function (event) {
+      var box = document.querySelector(".home-news-search");
+      if (!box || box.contains(event.target)) return;
+      hideHomeSuggestions();
+    });
+    document.querySelectorAll("[data-locale-toggle]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        setTimeout(function () {
+          input.placeholder = pageLocale() === "en" ? "Search" : "搜尋";
+          if (input.value.trim()) renderHomeSuggestions(input.value);
+        }, 0);
+      });
+    });
+  }
+
   /** News page uses the same published list and card markup as homepage「最新消息」. */
   function renderNewsPage() {
     var root = document.getElementById("news-announcements");
@@ -569,13 +918,20 @@
   };
 
   function boot() {
+    bindHomeNewsSearch();
     ensureLoaded()
       .then(function () {
         renderAllFront();
+        var input = document.getElementById("home-news-q");
+        if (input && input.value.trim()) renderHomeSuggestions(input.value);
       })
       .catch(function () {
         renderAllFront();
       });
+    loadSiteIndex().then(function () {
+      var input = document.getElementById("home-news-q");
+      if (input && input.value.trim()) renderHomeSuggestions(input.value);
+    });
   }
 
   if (document.readyState === "loading") {
