@@ -387,14 +387,6 @@
     }
   });
 
-  var logoutBtn = document.getElementById("admin-btn-logout");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async function () {
-      await auth.signOut();
-      location.href = "login.html";
-    });
-  }
-
   (async function init() {
     setBusy(true);
     try {

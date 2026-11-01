@@ -796,18 +796,6 @@
     });
   }
 
-  var logoutBtn = document.getElementById("admin-news-btn-logout");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async function () {
-      if (!auth) {
-        location.href = "login.html?next=admin-news.html";
-        return;
-      }
-      await auth.signOut();
-      location.href = "login.html?next=admin-news.html";
-    });
-  }
-
   async function boot() {
     if (!auth) {
       location.replace("login.html?next=admin-news.html");

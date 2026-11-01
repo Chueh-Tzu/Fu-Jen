@@ -77,34 +77,6 @@
     return t(minutes + " 分 " + remain + " 秒", minutes + " min " + remain + " sec");
   }
 
-  function pageName(path) {
-    var file = String(path || "").split("/").pop() || "index.html";
-    var names = {
-      "index.html": ["首頁", "Home"],
-      "": ["首頁", "Home"],
-      "about.html": ["關於學程", "About"],
-      "environment.html": ["學習環境", "Environment"],
-      "apply.html": ["招生報名", "Apply"],
-      "admissions.html": ["招生報名", "Apply"],
-      "curriculum.html": ["課程規劃", "Curriculum"],
-      "faculty.html": ["師資介紹", "Faculty"],
-      "guide.html": ["修業指引", "Study guide"],
-      "graduation.html": ["畢業門檻", "Graduation"],
-      "dual-degree.html": ["跨國雙碩士", "Dual degree"],
-      "exchange.html": ["交換學生", "Exchange"],
-      "news.html": ["最新公告", "News"],
-      "announcement.html": ["公告內容", "Announcement"],
-      "scholarships.html": ["獎學金", "Scholarships"],
-      "books.html": ["推薦書單", "Books"],
-      "gallery.html": ["活動花絮", "Gallery"],
-      "contact.html": ["聯絡我們", "Contact"],
-      "login.html": ["登入", "Login"]
-    };
-    var pair = names[file];
-    if (pair) return t(pair[0], pair[1]);
-    return file || path || "—";
-  }
-
   function dayKey(iso) {
     var date = new Date(iso);
     if (isNaN(date.getTime())) return "";
@@ -346,28 +318,12 @@
     }).join("");
   }
 
-  function barChart(pageRows) {
-    if (!pageRows.length) return emptyMessage();
-    var top = pageRows[0].count || 1;
-    return pageRows.map(function (row) {
-      var width = Math.max(4, Math.round((row.count / top) * 100));
-      return (
-        '<div class="db-bar-row">' +
-        '<span class="db-bar-label">' + escapeHtml(pageName(row.path)) + "</span>" +
-        '<span class="db-bar-track"><span class="db-bar-fill" style="width:' + width + '%"></span></span>' +
-        '<span class="db-bar-value">' + row.count + "</span>" +
-        "</div>"
-      );
-    }).join("");
-  }
-
   function render(rows) {
     var visitors = {};
     var views = 0;
     var sessionTime = {};
     var clicks = {};
     var clickTotal = 0;
-    var pages = {};
     var downloads = { brochure: 0, map: 0, form: 0 };
     var sectionCounts = {};
     MENU_SECTIONS.forEach(function (item) { sectionCounts[item.id] = 0; });
@@ -384,9 +340,6 @@
       if (row.event_type === "pageview") {
         views += 1;
         if (row.visitor_id) visitors[row.visitor_id] = true;
-        var pageKey = row.path || "";
-        if (!pages[pageKey]) pages[pageKey] = { path: pageKey, count: 0 };
-        pages[pageKey].count += 1;
         var key = dayKey(row.created_at);
         if (Object.prototype.hasOwnProperty.call(dayViews, key)) {
           dayViews[key] += 1;
@@ -437,12 +390,15 @@
     noteEl.textContent = t("主選單這十個頁面的點閱占比", "Share of visits to these ten menu pages");
     pieEl.innerHTML = donutChart(pieSlices, sectionTotal);
 
-    var pageRows = Object.keys(pages).map(function (key) { return pages[key]; });
-    pageRows.sort(function (a, b) { return b.count - a.count; });
-    pageNote.textContent = pageRows.length
-      ? t("最長的長條是被看最多次的頁面", "The longest bar is the most viewed page")
-      : t("尚無瀏覽", "No page views yet");
-    barsEl.innerHTML = barChart(pageRows.slice(0, 8));
+    var sectionBars = MENU_SECTIONS.map(function (item, index) {
+      return { label: t(item.zh, item.en), count: sectionCounts[item.id], order: index };
+    });
+    sectionBars.sort(function (a, b) {
+      if (b.count !== a.count) return b.count - a.count;
+      return a.order - b.order;
+    });
+    pageNote.textContent = t("這十個主選單頁面的瀏覽次數", "Views of these ten menu pages");
+    barsEl.innerHTML = downloadChart(sectionBars);
 
     var downloadItems = [
       { id: "brochure", count: downloads.brochure, label: t("簡章 PDF", "Brochure PDF") },
