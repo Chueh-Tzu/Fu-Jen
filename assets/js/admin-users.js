@@ -23,6 +23,12 @@
       .replace(/"/g, "&quot;");
   }
 
+  function roleLabel(role) {
+    if (role === "super_admin") return t("超級管理員", "Super admin");
+    if (role === "admin") return t("管理員", "Admin");
+    return t("一般訪客", "Visitor");
+  }
+
   function showStatus(message, kind) {
     statusEl.hidden = false;
     statusEl.className = "admin-status is-" + (kind || "ok");
@@ -41,7 +47,7 @@
         '<article class="admin-row" data-id="' + escapeHtml(row.id) + '">' +
         "<div>" +
         '<div class="admin-row-meta">' +
-        '<span class="admin-pill">' + escapeHtml(row.role) + "</span>" +
+        '<span class="admin-pill">' + escapeHtml(roleLabel(row.role)) + "</span>" +
         (isSelf ? '<span class="admin-pill">you</span>' : "") +
         "</div>" +
         '<h3 class="admin-row-title">' + escapeHtml(row.display_name || row.email || row.id) + "</h3>" +
@@ -50,13 +56,13 @@
         '<div class="admin-row-actions">' +
         '<button type="button" class="btn btn-gold" data-role="admin"' +
         (row.role === "admin" ? " disabled" : "") + ">" +
-        t("核准為 admin", "Approve admin") + "</button>" +
-        '<button type="button" class="btn btn-outline" data-role="pending"' +
-        (row.role === "pending" ? " disabled" : "") + ">" +
-        t("設為 pending", "Set pending") + "</button>" +
+        t("核准為管理員", "Approve as admin") + "</button>" +
+        '<button type="button" class="btn btn-outline" data-role="visitor"' +
+        (row.role === "visitor" ? " disabled" : "") + ">" +
+        t("設為一般訪客", "Set as visitor") + "</button>" +
         '<button type="button" class="btn btn-outline" data-role="super_admin"' +
         (row.role === "super_admin" ? " disabled" : "") + ">" +
-        t("設為 super_admin", "Make super_admin") + "</button>" +
+        t("設為超級管理員", "Make super admin") + "</button>" +
         "</div></article>"
       );
     }).join("");
@@ -76,12 +82,29 @@
     var role = btn.getAttribute("data-role");
     try {
       await auth.setRole(id, role);
-      showStatus(t("已更新角色為 ", "Role updated to ") + role, "ok");
+      showStatus(t("已更新身分為", "Role updated to ") + roleLabel(role) + "。", "ok");
       await refresh();
     } catch (err) {
       showStatus(t("更新失敗：", "Update failed: ") + (err.message || err), "err");
     }
   });
+
+  var localeToggle = document.querySelector("[data-locale-toggle]");
+  if (localeToggle) {
+    localeToggle.addEventListener("click", function () {
+      setTimeout(function () {
+        if (!listEl.querySelector("[data-id]")) return;
+        refresh().then(function () {
+          if (statusEl.classList.contains("is-ok")) {
+            showStatus(
+              t("以超級管理員身分管理帳號。", "Managing accounts as super admin."),
+              "ok"
+            );
+          }
+        }).catch(function () {});
+      }, 0);
+    });
+  }
 
   document.getElementById("users-btn-logout").addEventListener("click", async function () {
     await auth.signOut();
@@ -94,7 +117,7 @@
     try {
       await refresh();
       showStatus(
-        t("以 super_admin 身分管理角色。", "Managing roles as super_admin."),
+        t("以超級管理員身分管理帳號。", "Managing accounts as super admin."),
         "ok"
       );
     } catch (err) {

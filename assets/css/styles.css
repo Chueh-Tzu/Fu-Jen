@@ -940,8 +940,50 @@ h2 {
   color: var(--navy);
 }
 .muted { color: var(--muted); }
+.visitor-note {
+  background: #eaf6ee;
+  color: #215c38;
+  text-align: center;
+  padding: 12px 20px;
+  font-weight: 700;
+}
 
 .grid-2 { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: start; }
+.contact-layout {
+  display: grid;
+  grid-template-columns: 1.05fr .95fr;
+  gap: 36px;
+  align-items: start;
+}
+.contact-card h2,
+.contact-layout .form h2 {
+  font-size: clamp(26px, 3vw, 34px);
+  margin-bottom: 8px;
+}
+.contact-facts {
+  display: grid;
+  gap: 0;
+  margin: 18px 0 0;
+}
+.contact-facts > div {
+  display: grid;
+  gap: 4px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.contact-facts dt {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.contact-facts dd {
+  margin: 0;
+  color: var(--ink);
+}
+.contact-facts a { color: var(--navy); font-weight: 700; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 
@@ -1730,6 +1772,25 @@ body.has-admin-side .page-hero .wrap {
 }
 .admin-side-link[hidden] {
   display: none !important;
+}
+.admin-side-logout {
+  width: 100%;
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.admin-side-logout svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 @media (max-width: 720px) {
   :root { --admin-rail: 156px; }
@@ -2527,7 +2588,7 @@ body.has-admin-side .page-hero .wrap {
     background: transparent;
     color: #fff;
   }
-  .stats .wrap, .grid-2, .grid-3, .grid-4, .partners, .faculty-grid, .footer-grid, .gallery-grid, .overview-row {
+  .stats .wrap, .grid-2, .grid-3, .grid-4, .contact-layout, .partners, .faculty-grid, .footer-grid, .gallery-grid, .overview-row {
     grid-template-columns: 1fr;
   }
   .overview-row { gap: 12px; padding: 24px 0; }

@@ -1,20 +1,20 @@
 -- imMBA Authentication + Admin roles
 -- Run in Supabase → SQL Editor → Run
--- Roles: pending | admin | super_admin
+-- Roles: visitor | admin | super_admin
 
 -- 1) Profiles (one row per auth user)
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text,
   display_name text,
-  role text not null default 'pending'
-    check (role in ('pending', 'admin', 'super_admin')),
+  role text not null default 'visitor'
+    check (role in ('visitor', 'admin', 'super_admin')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 comment on table public.profiles is 'Admin access roles for the imMBA teaching site';
-comment on column public.profiles.role is 'pending = awaiting approval; admin = content manager; super_admin = can approve admins';
+comment on column public.profiles.role is 'visitor = browse, forms, and search only; admin = content manager; super_admin = can approve admins';
 
 create index if not exists profiles_role_idx on public.profiles (role);
 
@@ -35,7 +35,7 @@ before update on public.profiles
 for each row
 execute function public.set_updated_at();
 
--- 3) Auto-create profile as pending on sign-up
+-- 3) Auto-create profile as visitor on sign-up
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -48,7 +48,7 @@ begin
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)),
-    'pending'
+    'visitor'
   )
   on conflict (id) do nothing;
   return new;
@@ -107,7 +107,7 @@ create policy "Users can insert own profile"
   on public.profiles
   for insert
   to authenticated
-  with check (id = auth.uid() and role = 'pending');
+  with check (id = auth.uid() and role = 'visitor');
 
 drop policy if exists "Users can update own display name" on public.profiles;
 create policy "Users can update own display name"

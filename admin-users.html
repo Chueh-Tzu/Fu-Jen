@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=admin-rail3">
+  <link rel="stylesheet" href="assets/css/styles.css?v=login-log">
 </head>
 <body class="page-admin-faculty">
   <a class="skip" href="#main">Skip to content</a>
@@ -20,8 +20,8 @@
         <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">管理員審核</span><span class="en">Admin approval</span></p>
         <h1><span class="zh">管理員角色與存取控制</span><span class="en">Admin roles &amp; access control</span></h1>
         <p class="lead">
-          <span class="zh">僅 super_admin 可核准或拒絕申請。流程：註冊 →（驗證信箱）→ pending → 核准 → admin。</span>
-          <span class="en">Only super_admin can approve or reject. Flow: register → (verify email) → pending → approval → admin.</span>
+          <span class="zh">未核准的註冊者是一般訪客，只能瀏覽、提交表單與查詢。管理員可登入後台並維護資料。僅超級管理員可變更身分。</span>
+          <span class="en">Unapproved accounts are visitors: they can browse, submit forms, and search. Admins can sign in and maintain the site. Only a super admin can change roles.</span>
         </p>
       </div>
     </header>
@@ -45,8 +45,8 @@
   <div id="site-footer"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase-config.js"></script>
-  <script src="assets/js/auth.js"></script>
-  <script src="assets/js/site.js?v=admin-rail3"></script>
-  <script src="assets/js/admin-users.js"></script>
+  <script src="assets/js/auth.js?v=visitor-role"></script>
+  <script src="assets/js/site.js?v=login-log"></script>
+  <script src="assets/js/admin-users.js?v=visitor-role2"></script>
 </body>
 </html>

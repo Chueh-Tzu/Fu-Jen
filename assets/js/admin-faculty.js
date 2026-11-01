@@ -403,8 +403,8 @@
       if (authMeta) {
         authMeta.hidden = false;
         authMeta.textContent = t(
-          "已登入：" + gate.profile.email + "（" + gate.profile.role + "）",
-          "Signed in: " + gate.profile.email + " (" + gate.profile.role + ")"
+          "已登入：" + gate.profile.email + "（" + (gate.profile.role === "super_admin" ? t("超級管理員", "Super admin") : t("管理員", "Admin")) + "）",
+          "Signed in: " + gate.profile.email + " (" + (gate.profile.role === "super_admin" ? "Super admin" : "Admin") + ")"
         );
       }
       if (usersLink) usersLink.hidden = gate.profile.role !== "super_admin";

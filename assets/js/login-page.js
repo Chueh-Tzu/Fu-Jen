@@ -3,11 +3,6 @@
   if (!auth) return;
 
   var statusEl = document.getElementById("auth-status");
-  var sessionBox = document.getElementById("auth-session");
-  var sessionText = document.getElementById("auth-session-text");
-  var usersLink = document.getElementById("auth-link-users");
-  var facultyLink = document.getElementById("auth-link-faculty");
-  var newsLink = document.getElementById("auth-link-news");
   var panel = document.querySelector(".auth-panel-single");
   var viewLogin = document.getElementById("auth-view-login");
   var viewRegister = document.getElementById("auth-view-register");
@@ -30,12 +25,6 @@
 
   function t(zh, en) {
     return isEn() ? en : zh;
-  }
-
-  function roleLabel(role) {
-    if (role === "admin") return t("管理員", "admin");
-    if (role === "super_admin") return t("超級管理員", "super_admin");
-    return t("待審核", "pending");
   }
 
   function showStatus(message, kind) {
@@ -137,10 +126,6 @@
   async function refreshSessionBox() {
     var session = await auth.getSession();
     if (!session) {
-      sessionBox.hidden = true;
-      if (facultyLink) facultyLink.hidden = true;
-      if (newsLink) newsLink.hidden = true;
-      if (usersLink) usersLink.hidden = true;
       if (mode !== "reset") setGuestAuthVisible(true);
       return;
     }
@@ -148,40 +133,25 @@
     // Password-recovery session: keep the reset form visible.
     if (mode === "reset") {
       if (panel) panel.hidden = false;
-      sessionBox.hidden = true;
       return;
     }
 
-    setGuestAuthVisible(false);
     var profile = await auth.getProfile(true);
-    var role = profile ? profile.role : "pending";
-    var email = (profile && profile.email) || session.user.email || "";
-    sessionBox.hidden = false;
-    sessionText.textContent = t(
-      "已登入：" + email + "｜角色：" + roleLabel(role),
-      "Signed in as " + email + " · role: " + roleLabel(role)
-    );
-    if (newsLink) newsLink.hidden = !auth.isAdminRole(role);
-    if (facultyLink) facultyLink.hidden = !auth.isAdminRole(role);
-    if (usersLink) usersLink.hidden = role !== "super_admin";
-
-    if (role === "pending") {
-      showStatus(
-        t(
-          "帳號為「待審核」，尚不能進入後台。請等待超級管理員核准。",
-          "Your role is pending. Wait for a super_admin to approve you."
-        ),
-        "err"
-      );
-    } else if (auth.isAdminRole(role)) {
-      showStatus(
-        t(
-          "已登入，可進入公告後台或教職員後台。",
-          "Signed in — you can open announcement or faculty admin."
-        ),
-        "ok"
-      );
+    var role = profile ? profile.role : "visitor";
+    if (auth.isAdminRole(role)) {
+      location.replace(nextPage());
+      return;
     }
+
+    if (params.get("denied") === "1") {
+      try { sessionStorage.setItem("immba-visitor-note", "denied"); } catch (err) {}
+    }
+    location.replace("index.html");
+  }
+
+  function sendVisitorHome() {
+    try { sessionStorage.setItem("immba-visitor-note", "1"); } catch (err) {}
+    location.href = "index.html";
   }
 
   function authErrorText(err) {
@@ -212,7 +182,7 @@
         location.href = nextPage();
         return;
       }
-      await refreshSessionBox();
+      sendVisitorHome();
     } catch (err) {
       showStatus(t("登入失敗：", "Sign-in failed: ") + authErrorText(err), "err");
     }
@@ -244,24 +214,21 @@
         return;
       }
       if (data.session) {
-        // Confirm email is OFF in Dashboard — still keep role pending for Super Admin.
-        showStatus(
-          t(
-            "註冊成功。角色為「待審核」，請等待超級管理員核准後再進後台。",
-            "Registered. Role is pending until a super_admin approves you."
-          ),
-          "ok"
-        );
-        await refreshSessionBox();
+        var signedUp = await auth.getProfile(true);
+        if (auth.recordLogin) await auth.recordLogin(signedUp);
+        if (signedUp && auth.isAdminRole(signedUp.role)) {
+          location.href = nextPage();
+          return;
+        }
+        sendVisitorHome();
       } else {
-        // Confirm email is ON — user must verify before sign-in.
         setMode("login");
         var loginEmail = document.getElementById("login-email");
         if (loginEmail) loginEmail.value = String(email || "").trim();
         showStatus(
           t(
-            "註冊成功！確認信已寄出，請到信箱點擊連結完成驗證後再登入。驗證後角色仍為「待審核」，需超級管理員核准。",
-            "Registered! Check your inbox and click the confirmation link, then sign in. After verification your role stays pending until a super_admin approves you."
+            "註冊成功！確認信已寄出，請到信箱點擊連結完成驗證後再登入。未核准前身分是一般訪客，可以瀏覽、提交表單與查詢資料。",
+            "Registered! Check your inbox and click the confirmation link, then sign in. Until you are approved you are a visitor: you can browse, submit forms, and search."
           ),
           "ok"
         );
@@ -336,7 +303,6 @@
       try {
         await auth.signOut();
       } catch (e) {}
-      sessionBox.hidden = true;
       setMode("login");
       if (history.replaceState) {
         history.replaceState({}, "", "login.html?next=" + encodeURIComponent(nextPage()));
@@ -413,21 +379,6 @@
     });
   }
 
-  document.getElementById("auth-btn-logout").addEventListener("click", async function () {
-    try {
-      await auth.signOut();
-      sessionBox.hidden = true;
-      if (facultyLink) facultyLink.hidden = true;
-      if (newsLink) newsLink.hidden = true;
-      if (usersLink) usersLink.hidden = true;
-      setGuestAuthVisible(true);
-      showStatus(t("已登出。", "Signed out."), "ok");
-      setMode("login");
-    } catch (err) {
-      showStatus(t("登出失敗：", "Sign-out failed: ") + (err.message || err), "err");
-    }
-  });
-
   document.querySelectorAll("[data-locale-toggle]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       setTimeout(function () {
@@ -482,18 +433,16 @@
         setMode("login");
         var confirmedSession = await auth.getSession();
         if (confirmedSession) {
-          showStatus(
-            t(
-              "信箱驗證成功！角色仍為「待審核」，請等待超級管理員核准後再進入後台。",
-              "Email verified! Your role stays pending until a super_admin approves you."
-            ),
-            "ok"
-          );
+          var confirmedProfile = await auth.getProfile(true);
+          if (auth.recordLogin) await auth.recordLogin(confirmedProfile);
+          if (!(confirmedProfile && auth.isAdminRole(confirmedProfile.role))) {
+            try { sessionStorage.setItem("immba-visitor-note", "1"); } catch (err) {}
+          }
         } else {
           showStatus(
             t(
-              "信箱已驗證（或連結已處理）。請使用帳密登入；角色仍為「待審核」，需超級管理員核准。",
-              "Email confirmed. Please sign in; your role stays pending until a super_admin approves you."
+              "信箱已驗證。請使用帳密登入。未核准前身分是一般訪客，可以瀏覽、提交表單與查詢資料。",
+              "Email confirmed. Please sign in. Until you are approved you are a visitor: you can browse, submit forms, and search."
             ),
             "ok"
           );

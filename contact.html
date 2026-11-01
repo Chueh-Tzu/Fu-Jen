@@ -8,60 +8,89 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=nav-caret">
+  <link rel="stylesheet" href="assets/css/styles.css?v=contact-office">
 </head>
 <body>
   <div id="site-header"></div>
   <main id="main">
     <header class="page-hero">
       <div class="wrap">
-        <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">?舐窗??/span><span class="en">Contact</span></p>
-        <h1><span class="zh">?舐窗??/span><span class="en">Contact the office</span></h1>
-        <p class="lead"><span class="zh">甇∟?靘縑??閮嚗?????閬?/span><span class="en">Write to the office ??we will respond as soon as we can.</span></p>
+        <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">聯絡我們</span><span class="en">Contact Us</span></p>
+        <h1><span class="zh">聯絡我們</span><span class="en">Contact Us</span></h1>
+        <p class="lead">
+          <span class="zh">感謝您拜訪，如果您有任何聯絡事項，歡迎留言至服務信箱，我們將會用最快的速度與您聯絡。</span>
+          <span class="en">Please e-mail us and we will get back to you as soon as possible.</span>
+        </p>
       </div>
     </header>
     <section class="section">
-      <div class="wrap grid-2">
-        <div>
-          <p><strong>T</strong> +886-2-2905-2750?<span class="zh">撘萇???/span><span class="en">Ms. Chang</span></p>
-          <p><strong>E</strong> <a href="mailto:imMBA@mail.fju.edu.tw">imMBA@mail.fju.edu.tw</a></p>
-          <p><strong>A</strong> <span class="zh">242 ?啣?撣??銝剜迤頝?510 ??LM208-1嚗?/span><span class="en">LM208-1, No. 510 Zhongzheng Road, Xinzhuang, New Taipei City 242</span></p>
-          <p class="muted"><span class="zh">銵典????摮隞嗥?撘??單?颲虫縑蝞晞?/span><span class="en">The form opens your email client to the program inbox.</span></p>
-        </div>
+      <div class="wrap contact-layout">
+        <article class="card contact-card">
+          <h2>
+            <span class="zh">輔仁大學國際經營管理碩士班(imMBA)</span>
+            <span class="en">MBA Program in International Management(imMBA)</span>
+          </h2>
+          <dl class="contact-facts">
+            <div>
+              <dt><span class="zh">電話</span><span class="en">TEL</span></dt>
+              <dd>
+                <a href="tel:+886229052750"><span class="zh">02-2905-2750</span><span class="en">+886-2-2905-2750</span></a>
+                <span class="zh">張秘書</span><span class="en">Ms. Chang</span>
+              </dd>
+            </div>
+            <div>
+              <dt><span class="zh">服務信箱</span><span class="en">E-mail</span></dt>
+              <dd><a href="mailto:imMBA@mail.fju.edu.tw">imMBA@mail.fju.edu.tw</a></dd>
+            </div>
+            <div>
+              <dt><span class="zh">地址</span><span class="en">Address</span></dt>
+              <dd>
+                <span class="zh">242新北市新莊區中正路510號(LM208-1)</span>
+                <span class="en">No.510, Zhongzheng Rd., Xinzhuang Dist., New Taipei City 24205, Taiwan (Office: LM208-1)</span>
+              </dd>
+            </div>
+          </dl>
+        </article>
+
         <form class="form card" id="contact-form">
-          <div id="form-success" class="success"><span class="zh">撌脩?冽??隞塚?隢?萎辣蝔?銝剝??/span><span class="en">Your mail draft is ready ??please send it from your email app.</span></div>
+          <h2><span class="zh">留言至服務信箱</span><span class="en">E-mail the office</span></h2>
+          <div id="form-success" class="success">
+            <span class="zh">已為您準備郵件，請在郵件程式中寄出。</span>
+            <span class="en">Your mail draft is ready. Please send it from your email app.</span>
+          </div>
           <div class="field">
-            <label for="topic"><span class="zh">銝餅憿?</span><span class="en">Topic</span></label>
+            <label for="topic"><span class="zh">主旨</span><span class="en">Subject</span></label>
             <select id="topic" name="topic" required>
-              <option value="???蝬恣">About the program</option>
-              <option value="???唾?">Admissions</option>
-              <option value="隤脩??隤?>Curriculum</option>
-              <option value="?◣憯恬?鈭斗?">Dual degree / exchange</option>
-              <option value="?嗡?">Other</option>
+              <option value="" selected disabled>--請選擇*--</option>
+              <option value="immba">關於國際經管</option>
             </select>
           </div>
           <div class="field">
-            <label for="name"><span class="zh">憪?</span><span class="en">Name</span></label>
-            <input id="name" name="name" required>
+            <label for="name"><span class="zh">姓名*</span><span class="en">Name*</span></label>
+            <input id="name" name="name" required autocomplete="name">
           </div>
           <div class="field">
-            <label for="email"><span class="zh">?餃?靽∠拳</span><span class="en">Email</span></label>
-            <input id="email" name="email" type="email" required>
+            <label for="phone"><span class="zh">聯絡電話*</span><span class="en">TEL*</span></label>
+            <input id="phone" name="phone" type="tel" required autocomplete="tel">
           </div>
           <div class="field">
-            <label for="phone"><span class="zh">?餉店</span><span class="en">Phone</span></label>
-            <input id="phone" name="phone" type="tel">
+            <label for="email"><span class="zh">E-mail*</span><span class="en">E-mail*</span></label>
+            <input id="email" name="email" type="email" required autocomplete="email">
           </div>
           <div class="field">
-            <label for="message"><span class="zh">??</span><span class="en">Message</span></label>
+            <label for="address"><span class="zh">詳細住址</span><span class="en">Address</span></label>
+            <input id="address" name="address" autocomplete="street-address">
+          </div>
+          <div class="field">
+            <label for="message"><span class="zh">訊息*</span><span class="en">Message*</span></label>
             <textarea id="message" name="message" required></textarea>
           </div>
-          <button class="btn btn-navy" type="submit"><span class="zh">?</span><span class="en">Send</span></button>
+          <button class="btn btn-navy" type="submit"><span class="zh">送出</span><span class="en">Submit</span></button>
         </form>
       </div>
     </section>
   </main>
   <div id="site-footer"></div>
-  <script src="assets/js/site.js?v=footer-clean"></script>
+  <script src="assets/js/site.js?v=contact-office"></script>
 </body>
 </html>

@@ -43,6 +43,7 @@
       adminNews: file === "admin-news.html",
       adminFaculty: file === "admin-faculty.html",
       adminUsers: file === "admin-users.html",
+      adminLogins: file === "admin-logins.html",
       login: file === "login.html",
     };
   }
@@ -188,7 +189,18 @@
     }
     var homeSearch = document.getElementById("home-news-q");
     if (homeSearch) homeSearch.placeholder = isEn ? "Search" : "搜尋";
+    syncContactTopic();
     scrollToHash();
+  }
+
+  function syncContactTopic() {
+    var topicSelect = document.getElementById("topic");
+    if (!topicSelect) return;
+    var isEn = document.documentElement.getAttribute("data-locale") === "en";
+    var placeholder = topicSelect.querySelector("option[value='']");
+    var immba = topicSelect.querySelector("option[value='immba']");
+    if (placeholder) placeholder.textContent = isEn ? "--Please Select*--" : "--請選擇*--";
+    if (immba) immba.textContent = isEn ? "imMBA related" : "關於國際經管";
   }
 
   function scrollToHash() {
@@ -252,17 +264,19 @@
   if (form) {
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      var topic = form.topic.value;
+      var topic = form.topic.options[form.topic.selectedIndex].text.replace(/\s+/g, " ").trim();
       var name = form.name.value.trim();
       var email = form.email.value.trim();
       var phone = form.phone.value.trim();
+      var address = form.address ? form.address.value.trim() : "";
       var message = form.message.value.trim();
       var subject = encodeURIComponent("[imMBA] " + topic + " / " + name);
-      var body = encodeURIComponent("Name: " + name + "\nEmail: " + email + "\nPhone: " + phone + "\nTopic: " + topic + "\n\n" + message);
+      var body = encodeURIComponent("Name: " + name + "\nEmail: " + email + "\nTEL: " + phone + "\nAddress: " + address + "\nSubject: " + topic + "\n\n" + message);
       window.location.href = "mailto:imMBA@mail.fju.edu.tw?subject=" + subject + "&body=" + body;
       var ok = document.getElementById("form-success");
       if (ok) ok.style.display = "block";
       form.reset();
+      syncContactTopic();
     });
   }
 
@@ -301,7 +315,7 @@
     else if (!(c.faculty || (isAdmin && c.adminFaculty))) link.removeAttribute("aria-current");
   }
 
-  if (c.adminNews || c.adminFaculty || c.adminUsers) {
+  if (c.adminNews || c.adminFaculty || c.adminUsers || c.adminLogins) {
     document.body.classList.add("has-admin-side");
     var side = document.createElement("nav");
     side.className = "admin-side";
@@ -314,13 +328,34 @@
       (c.adminFaculty ? ' aria-current="page"' : "") + ">" +
       t("師資管理", "Faculty") + "</a>" +
       '<a class="admin-side-link" href="' + prefix + 'admin-users.html" id="admin-side-users" hidden>' +
-      t("管理員審核", "Admin approval") + "</a>";
+      t("管理員審核", "Admin approval") + "</a>" +
+      '<a class="admin-side-link' + (c.adminLogins ? " is-current" : "") + '" href="' + prefix + 'admin-logins.html"' +
+      (c.adminLogins ? ' aria-current="page"' : "") + ">" +
+      t("登入總覽", "Login overview") + "</a>" +
+      '<button type="button" class="admin-side-link admin-side-logout" id="admin-side-logout">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+      '<path d="M10 7V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2"/>' +
+      '<path d="M15 12H3"/><path d="M6 9 3 12l3 3"/>' +
+      "</svg>" +
+      t("登出", "Sign out") +
+      "</button>";
     document.body.appendChild(side);
     var usersSide = document.getElementById("admin-side-users");
     if (usersSide && c.adminUsers) {
       usersSide.hidden = false;
       usersSide.classList.add("is-current");
       usersSide.setAttribute("aria-current", "page");
+    }
+    var sideLogout = document.getElementById("admin-side-logout");
+    if (sideLogout) {
+      sideLogout.addEventListener("click", async function () {
+        try {
+          if (window.ImMbaAuth && typeof window.ImMbaAuth.signOut === "function") {
+            await window.ImMbaAuth.signOut();
+          }
+        } catch (err) {}
+        location.href = prefix + "login.html?next=admin-news.html";
+      });
     }
     if (window.ImMbaAuth && typeof window.ImMbaAuth.getProfile === "function" && usersSide) {
       window.ImMbaAuth.getProfile(true)
@@ -353,6 +388,29 @@
       if (heroWatch) new ResizeObserver(placeAdminSide).observe(heroWatch);
     }
   }
+
+  try {
+    var visitorNote = sessionStorage.getItem("immba-visitor-note");
+    if (visitorNote) {
+      sessionStorage.removeItem("immba-visitor-note");
+      var note = document.createElement("div");
+      note.className = "visitor-note";
+      note.setAttribute("role", "status");
+      note.innerHTML =
+        visitorNote === "denied"
+          ? t(
+              "一般訪客無法進入後台。您可以瀏覽網站、提交表單與查詢資料。",
+              "Visitors cannot open the admin area. You can browse, submit forms, and search."
+            )
+          : t(
+              "您目前是一般訪客，可以瀏覽網站、提交表單與查詢資料。",
+              "You are signed in as a visitor. You can browse, submit forms, and search."
+            );
+      var headerEl = document.getElementById("site-header");
+      if (headerEl && headerEl.parentNode) headerEl.parentNode.insertBefore(note, headerEl.nextSibling);
+      else document.body.insertBefore(note, document.body.firstChild);
+    }
+  } catch (err) {}
 
   // Keep「師資介紹 / Faculty」pointing at faculty admin after admin login.
   if (window.ImMbaAuth && typeof window.ImMbaAuth.getProfile === "function") {

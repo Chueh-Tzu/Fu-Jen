@@ -819,7 +819,7 @@
       authMeta.hidden = false;
       authMeta.textContent = t(
         "已登入：" + gate.profile.email + "（" + roleLabel(gate.profile.role) + "）",
-        "Signed in: " + gate.profile.email + " (" + gate.profile.role + ")"
+        "Signed in: " + gate.profile.email + " (" + roleLabel(gate.profile.role) + ")"
       );
     }
     if (usersLink) usersLink.hidden = gate.profile.role !== "super_admin";
@@ -847,9 +847,9 @@
   }
 
   function roleLabel(role) {
-    if (role === "admin") return t("管理員", "admin");
-    if (role === "super_admin") return t("超級管理員", "super_admin");
-    return t("待審核", "pending");
+    if (role === "admin") return t("管理員", "Admin");
+    if (role === "super_admin") return t("超級管理員", "Super admin");
+    return t("一般訪客", "Visitor");
   }
 
   if (document.readyState === "loading") {

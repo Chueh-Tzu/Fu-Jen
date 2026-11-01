@@ -35,7 +35,7 @@
       id: row.id,
       email: String(row.email || "").trim(),
       display_name: String(row.display_name || "").trim(),
-      role: row.role === "admin" || row.role === "super_admin" ? row.role : "pending",
+      role: row.role === "admin" || row.role === "super_admin" ? row.role : "visitor",
       created_at: row.created_at || null,
       updated_at: row.updated_at || null
     };
@@ -135,25 +135,61 @@
       .maybeSingle();
     if (result.error) throw result.error;
     cached.profile = normalizeProfile(result.data);
-    // If trigger lagged, create a pending profile row once.
     if (!cached.profile) {
-      var upsert = await sb.from("profiles").upsert({
-        id: session.user.id,
-        email: session.user.email,
-        display_name: (session.user.user_metadata && session.user.user_metadata.display_name) ||
-          String(session.user.email || "").split("@")[0],
-        role: "pending"
-      }).select().maybeSingle();
-      if (upsert.error) throw upsert.error;
-      cached.profile = normalizeProfile(upsert.data);
+      cached.profile = await insertOwnProfile(sb, session);
     }
     setAdminNavAccess(cached.profile && isAdminRole(cached.profile.role));
     return cached.profile;
   }
 
+  async function insertOwnProfile(sb, session) {
+    var row = {
+      id: session.user.id,
+      email: session.user.email,
+      display_name: (session.user.user_metadata && session.user.user_metadata.display_name) ||
+        String(session.user.email || "").split("@")[0]
+    };
+    var created = await sb.from("profiles").insert(Object.assign({ role: "visitor" }, row)).select().maybeSingle();
+    if (created.error) {
+      created = await sb.from("profiles").insert(Object.assign({ role: "pending" }, row)).select().maybeSingle();
+    }
+    if (created.error) throw created.error;
+    return normalizeProfile(created.data);
+  }
+
+  async function recordLogin(profile) {
+    try {
+      var session = cached.session || (await getSession());
+      if (!session || !session.user) return;
+      var role = profile && isAdminRole(profile.role) ? profile.role : "visitor";
+      var name =
+        (profile && profile.display_name) ||
+        (session.user.user_metadata && session.user.user_metadata.display_name) ||
+        String(session.user.email || "").split("@")[0];
+      var sb = getClient();
+      await sb.from("login_logs").insert({
+        user_id: session.user.id,
+        display_name: name,
+        email: (profile && profile.email) || session.user.email || "",
+        role: role
+      });
+    } catch (err) {}
+  }
+
+  async function listLoginLogs() {
+    var sb = getClient();
+    var result = await sb
+      .from("login_logs")
+      .select("*")
+      .order("logged_in_at", { ascending: false })
+      .limit(300);
+    if (result.error) throw result.error;
+    return result.data || [];
+  }
+
   async function signUp(email, password, displayName) {
     var sb = getClient();
-    // Confirm-email link returns users to the login page (role stays pending in profiles).
+    // Confirm-email link returns users to the login page (role stays visitor until approval).
     var emailRedirectTo = loginPageUrl("email_confirmed=1");
     var result = await sb.auth.signUp({
       email: String(email || "").trim(),
@@ -190,6 +226,11 @@
     if (result.error) throw result.error;
     cached.session = result.data.session || null;
     cached.profile = null;
+    var profile = null;
+    try {
+      profile = await getProfile(true);
+    } catch (err) {}
+    await recordLogin(profile);
     return result.data;
   }
 
@@ -234,7 +275,7 @@
   }
 
   async function setRole(userId, role) {
-    if (!/^(pending|admin|super_admin)$/.test(role)) {
+    if (!/^(visitor|admin|super_admin)$/.test(role)) {
       throw new Error("Invalid role.");
     }
     var sb = getClient();
@@ -289,6 +330,8 @@
     resetPassword: resetPassword,
     updatePassword: updatePassword,
     listProfiles: listProfiles,
+    listLoginLogs: listLoginLogs,
+    recordLogin: recordLogin,
     setRole: setRole,
     requireAdmin: requireAdmin,
     requireSuperAdmin: requireSuperAdmin,
