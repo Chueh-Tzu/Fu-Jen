@@ -301,6 +301,59 @@
     else if (!(c.faculty || (isAdmin && c.adminFaculty))) link.removeAttribute("aria-current");
   }
 
+  if (c.adminNews || c.adminFaculty || c.adminUsers) {
+    document.body.classList.add("has-admin-side");
+    var side = document.createElement("nav");
+    side.className = "admin-side";
+    side.setAttribute("aria-label", "Admin sections");
+    side.innerHTML =
+      '<a class="admin-side-link' + (c.adminNews ? " is-current" : "") + '" href="' + prefix + 'admin-news.html"' +
+      (c.adminNews ? ' aria-current="page"' : "") + ">" +
+      t("公告管理", "Announcements") + "</a>" +
+      '<a class="admin-side-link' + (c.adminFaculty ? " is-current" : "") + '" href="' + prefix + 'admin-faculty.html"' +
+      (c.adminFaculty ? ' aria-current="page"' : "") + ">" +
+      t("師資管理", "Faculty") + "</a>" +
+      '<a class="admin-side-link" href="' + prefix + 'admin-users.html" id="admin-side-users" hidden>' +
+      t("管理員審核", "Admin approval") + "</a>";
+    document.body.appendChild(side);
+    var usersSide = document.getElementById("admin-side-users");
+    if (usersSide && c.adminUsers) {
+      usersSide.hidden = false;
+      usersSide.classList.add("is-current");
+      usersSide.setAttribute("aria-current", "page");
+    }
+    if (window.ImMbaAuth && typeof window.ImMbaAuth.getProfile === "function" && usersSide) {
+      window.ImMbaAuth.getProfile(true)
+        .then(function (profile) {
+          if (profile && profile.role === "super_admin") usersSide.hidden = false;
+        })
+        .catch(function () {});
+    }
+
+    function placeAdminSide() {
+      var headerEl = document.getElementById("site-header");
+      var heroEl = document.querySelector(".page-hero");
+      var stickyBottom = 0;
+      if (headerEl) {
+        var stickyEl = headerEl.querySelector(".chrome-sticky");
+        if (stickyEl && stickyEl.getClientRects().length) {
+          stickyBottom = stickyEl.getBoundingClientRect().bottom;
+        }
+      }
+      var heroBottom = heroEl ? heroEl.getBoundingClientRect().bottom : 16;
+      var top = Math.max(8, stickyBottom, heroBottom);
+      document.documentElement.style.setProperty("--admin-rail-top", Math.ceil(top) + "px");
+    }
+    placeAdminSide();
+    window.addEventListener("scroll", placeAdminSide, { passive: true });
+    window.addEventListener("resize", placeAdminSide);
+    if (window.ResizeObserver) {
+      if (header) new ResizeObserver(placeAdminSide).observe(header);
+      var heroWatch = document.querySelector(".page-hero");
+      if (heroWatch) new ResizeObserver(placeAdminSide).observe(heroWatch);
+    }
+  }
+
   // Keep「師資介紹 / Faculty」pointing at faculty admin after admin login.
   if (window.ImMbaAuth && typeof window.ImMbaAuth.getProfile === "function") {
     window.ImMbaAuth.getProfile(true)
