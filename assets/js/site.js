@@ -44,6 +44,7 @@
       adminFaculty: file === "admin-faculty.html",
       adminUsers: file === "admin-users.html",
       adminLogins: file === "admin-logins.html",
+      adminDatabase: file === "admin-database.html",
       login: file === "login.html",
     };
   }
@@ -315,7 +316,7 @@
     else if (!(c.faculty || (isAdmin && c.adminFaculty))) link.removeAttribute("aria-current");
   }
 
-  if (c.adminNews || c.adminFaculty || c.adminUsers || c.adminLogins) {
+  if (c.adminNews || c.adminFaculty || c.adminUsers || c.adminLogins || c.adminDatabase) {
     document.body.classList.add("has-admin-side");
     var side = document.createElement("nav");
     side.className = "admin-side";
@@ -332,6 +333,9 @@
       '<a class="admin-side-link' + (c.adminLogins ? " is-current" : "") + '" href="' + prefix + 'admin-logins.html"' +
       (c.adminLogins ? ' aria-current="page"' : "") + ">" +
       t("登入總覽", "Login overview") + "</a>" +
+      '<a class="admin-side-link' + (c.adminDatabase ? " is-current" : "") + '" href="' + prefix + 'admin-database.html"' +
+      (c.adminDatabase ? ' aria-current="page"' : "") + ">" +
+      t("資料庫", "Database") + "</a>" +
       '<button type="button" class="admin-side-link admin-side-logout" id="admin-side-logout">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
       '<path d="M10 7V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2"/>' +
@@ -423,5 +427,104 @@
       });
   } else {
     applyFacultyNavLink(hasAdminNavAccess());
+  }
+
+  trackVisit();
+
+  function trackVisit() {
+    if (file.indexOf("admin-") === 0) return;
+    var cfg = window.ImMbaSupabaseConfig;
+    if (!cfg || !cfg.url || !cfg.anonKey) return;
+
+    function storageGet(store, key) {
+      try { return store.getItem(key); } catch (err) { return ""; }
+    }
+    function storageSet(store, key, value) {
+      try { store.setItem(key, value); } catch (err) {}
+    }
+    function makeId() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return "v-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+    }
+
+    var visitorId = storageGet(localStorage, "immba-visitor-id");
+    if (!visitorId) {
+      visitorId = makeId();
+      storageSet(localStorage, "immba-visitor-id", visitorId);
+    }
+    var sessionId = storageGet(sessionStorage, "immba-session-id");
+    if (!sessionId) {
+      sessionId = makeId();
+      storageSet(sessionStorage, "immba-session-id", sessionId);
+    }
+
+    function send(row) {
+      var body = {
+        visitor_id: visitorId,
+        session_id: sessionId,
+        event_type: row.event_type,
+        path: (location.pathname || "/").slice(0, 200),
+        label: row.label ? String(row.label).slice(0, 160) : null,
+        href: row.href ? String(row.href).slice(0, 300) : null,
+        duration_seconds: row.duration_seconds == null ? null : row.duration_seconds
+      };
+      fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/site_events", {
+        method: "POST",
+        headers: {
+          apikey: cfg.anonKey,
+          Authorization: "Bearer " + cfg.anonKey,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal"
+        },
+        body: JSON.stringify(body),
+        keepalive: true
+      }).catch(function () {});
+    }
+
+    var pageLabel = "";
+    var heading = document.querySelector("h1");
+    if (heading && heading.innerText) pageLabel = heading.innerText.replace(/\s+/g, " ").trim();
+    if (!pageLabel) pageLabel = document.title;
+    send({ event_type: "pageview", label: pageLabel });
+
+    var lastTick = Date.now();
+    var sentSeconds = 0;
+    function flushDuration() {
+      var now = Date.now();
+      var delta = Math.round((now - lastTick) / 1000);
+      lastTick = now;
+      if (delta < 1) return;
+      if (delta > 90) delta = 90;
+      if (sentSeconds >= 1800) return;
+      sentSeconds += delta;
+      send({ event_type: "duration", duration_seconds: delta, label: pageLabel });
+    }
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") flushDuration();
+      else lastTick = Date.now();
+    });
+    window.addEventListener("pagehide", flushDuration);
+    setInterval(function () {
+      if (document.visibilityState === "visible") flushDuration();
+    }, 30000);
+
+    document.addEventListener("click", function (event) {
+      var link = event.target && event.target.closest ? event.target.closest("a[href]") : null;
+      if (!link || link.closest(".admin-side")) return;
+      var href = link.getAttribute("href") || "";
+      if (!href || href.charAt(0) === "#" || href.indexOf("javascript:") === 0) return;
+      var label = (link.innerText || "").replace(/\s+/g, " ").trim();
+      if (!label) label = link.getAttribute("aria-label") || href;
+      var kind = link.getAttribute("data-download");
+      if (!kind && link.closest) {
+        var group = link.closest("[data-download-group]");
+        if (group) kind = group.getAttribute("data-download-group");
+      }
+      if (kind === "brochure" || kind === "map" || kind === "form") {
+        send({ event_type: "click", label: "download:" + kind, href: href });
+        return;
+      }
+      send({ event_type: "click", label: label, href: href });
+    }, true);
   }
 })();

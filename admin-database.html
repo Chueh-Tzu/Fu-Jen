@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-locale="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Database | International Management (imMBA)</title>
+  <meta name="description" content="Visitors, page views, time on site, and the most opened content.">
+  <link rel="icon" href="assets/img/immba-logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=db-daily">
+</head>
+<body class="page-admin-news">
+  <a class="skip" href="#main">Skip to content</a>
+  <div id="site-header"></div>
+  <main id="main">
+    <header class="page-hero">
+      <div class="wrap">
+        <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">資料庫</span><span class="en">Database</span></p>
+        <h1><span class="zh">資料庫</span><span class="en">Database</span></h1>
+      </div>
+    </header>
+    <section class="section">
+      <div class="wrap admin-news-wrap">
+        <p class="admin-status" id="db-status" role="status" aria-live="polite" hidden></p>
+        <div class="db-stats" id="db-stats"></div>
+        <div class="db-charts">
+          <article class="db-panel">
+            <div class="admin-list-head">
+              <h2><span class="zh">瀏覽趨勢</span><span class="en">Browsing trend</span></h2>
+              <p class="admin-count" id="db-trend-note"></p>
+            </div>
+            <div id="db-line" class="db-chart"></div>
+          </article>
+          <article class="db-panel">
+            <div class="admin-list-head">
+              <h2><span class="zh">內容點閱占比</span><span class="en">Click share</span></h2>
+              <p class="admin-count" id="db-click-note"></p>
+            </div>
+            <div id="db-pie" class="db-chart"></div>
+          </article>
+        </div>
+        <article class="db-panel db-daily">
+          <div class="admin-list-head">
+            <h2><span class="zh">每日瀏覽人數</span><span class="en">Daily visitors</span></h2>
+            <p class="admin-count" id="db-daily-note"></p>
+          </div>
+          <div id="db-daily" class="db-chart"></div>
+        </article>
+        <article class="db-panel db-panel-wide">
+          <div class="admin-list-head">
+            <h2><span class="zh">頁面瀏覽</span><span class="en">Page views</span></h2>
+            <p class="admin-count" id="db-page-note"></p>
+          </div>
+          <div id="db-bars" class="db-chart"></div>
+        </article>
+        <article class="db-panel db-panel-wide db-daily">
+          <div class="admin-list-head">
+            <h2><span class="zh">熱門下載次數</span><span class="en">Popular downloads</span></h2>
+            <p class="admin-count" id="db-download-note"></p>
+          </div>
+          <div id="db-downloads" class="db-chart"></div>
+        </article>
+      </div>
+    </section>
+  </main>
+  <div id="site-footer"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/auth.js?v=visitor-role"></script>
+  <script src="assets/js/site.js?v=site-downloads"></script>
+  <script src="assets/js/admin-database.js?v=db-sections"></script>
+</body>
+</html>
