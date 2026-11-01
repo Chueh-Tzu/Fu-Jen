@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-locale="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profile | International Management (imMBA)</title>
+  <meta name="description" content="Complete your profile the first time you enter the back office.">
+  <link rel="icon" href="assets/img/immba-logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=alumni">
+</head>
+<body class="page-admin-faculty">
+  <a class="skip" href="#main">Skip to content</a>
+  <div id="site-header"></div>
+  <main id="main">
+    <header class="page-hero">
+      <div class="wrap">
+        <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">個人資料</span><span class="en">Profile</span></p>
+        <h1><span class="zh">填寫個人資料</span><span class="en">Complete your profile</span></h1>
+        <p class="lead">
+          <span class="zh">第一次進入後台請先填寫資料。系所、學位、入學年與畢業年請用下拉選單。</span>
+          <span class="en">The first time you enter the back office, fill in your details. Choose department, degree, admission year, and graduation year from the lists.</span>
+        </p>
+      </div>
+    </header>
+    <section class="section">
+      <div class="wrap admin-news-wrap">
+        <p class="admin-status" id="profile-status" role="status" aria-live="polite" hidden></p>
+        <form class="form admin-form admin-form-panel" id="profile-form" novalidate>
+          <div class="admin-form-grid">
+            <div class="field">
+              <label for="profile-name"><span class="zh">姓名</span><span class="en">Name</span></label>
+              <input type="text" id="profile-name" required maxlength="160" autocomplete="name">
+            </div>
+            <div class="field">
+              <label for="profile-student-id"><span class="zh">學號</span><span class="en">Student ID</span></label>
+              <input type="text" id="profile-student-id" maxlength="40" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="profile-email"><span class="zh">電子郵件</span><span class="en">Email</span></label>
+              <input type="email" id="profile-email" readonly>
+            </div>
+            <div class="field">
+              <label for="profile-phone"><span class="zh">電話</span><span class="en">Phone</span></label>
+              <input type="text" id="profile-phone" maxlength="40" autocomplete="tel">
+            </div>
+            <div class="field">
+              <label for="profile-department"><span class="zh">系所</span><span class="en">Department</span></label>
+              <select id="profile-department" required></select>
+            </div>
+            <div class="field">
+              <label for="profile-degree"><span class="zh">學位</span><span class="en">Degree program</span></label>
+              <select id="profile-degree" required></select>
+            </div>
+            <div class="field">
+              <label for="profile-admission"><span class="zh">入學年</span><span class="en">Admission year</span></label>
+              <select id="profile-admission" required></select>
+            </div>
+            <div class="field">
+              <label for="profile-graduation"><span class="zh">畢業年</span><span class="en">Graduation year</span></label>
+              <select id="profile-graduation"></select>
+            </div>
+            <div class="field">
+              <label for="profile-company"><span class="zh">公司</span><span class="en">Company</span></label>
+              <input type="text" id="profile-company" maxlength="160">
+            </div>
+            <div class="field">
+              <label for="profile-job"><span class="zh">職稱</span><span class="en">Job title</span></label>
+              <input type="text" id="profile-job" maxlength="160">
+            </div>
+          </div>
+          <div class="admin-form-actions">
+            <button type="submit" class="btn btn-gold" id="profile-save">
+              <span class="zh">儲存並進入</span><span class="en">Save and continue</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+  <div id="site-footer"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/auth.js?v=profile-setup"></script>
+  <script src="assets/js/site.js?v=alumni-rail2"></script>
+  <script src="assets/js/alumni-options.js?v=year-plain"></script>
+  <script src="assets/js/profile-setup.js?v=year-plain"></script>
+</body>
+</html>

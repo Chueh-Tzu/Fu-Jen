@@ -36,6 +36,15 @@
       email: String(row.email || "").trim(),
       display_name: String(row.display_name || "").trim(),
       role: row.role === "admin" || row.role === "super_admin" ? row.role : "visitor",
+      profile_completed: row.profile_completed === false ? false : true,
+      student_id: row.student_id || "",
+      department: row.department || "",
+      degree_program: row.degree_program || "",
+      admission_year: row.admission_year == null ? null : row.admission_year,
+      graduation_year: row.graduation_year == null ? null : row.graduation_year,
+      phone: row.phone || "",
+      company: row.company || "",
+      job_title: row.job_title || "",
       created_at: row.created_at || null,
       updated_at: row.updated_at || null
     };
@@ -149,7 +158,10 @@
       display_name: (session.user.user_metadata && session.user.user_metadata.display_name) ||
         String(session.user.email || "").split("@")[0]
     };
-    var created = await sb.from("profiles").insert(Object.assign({ role: "visitor" }, row)).select().maybeSingle();
+    var created = await sb.from("profiles").insert(Object.assign({ role: "visitor", profile_completed: false }, row)).select().maybeSingle();
+    if (created.error && String(created.error.message || "").indexOf("profile_completed") !== -1) {
+      created = await sb.from("profiles").insert(Object.assign({ role: "visitor" }, row)).select().maybeSingle();
+    }
     if (created.error) {
       created = await sb.from("profiles").insert(Object.assign({ role: "pending" }, row)).select().maybeSingle();
     }
@@ -289,6 +301,64 @@
     return normalizeProfile(result.data);
   }
 
+  async function saveOwnProfile(fields) {
+    var session = await getSession();
+    if (!session || !session.user) throw new Error("Not signed in.");
+    var sb = getClient();
+    var patch = {
+      display_name: fields.full_name,
+      student_id: fields.student_id || null,
+      department: fields.department || null,
+      degree_program: fields.degree_program || null,
+      admission_year: fields.admission_year,
+      graduation_year: fields.graduation_year,
+      phone: fields.phone || null,
+      company: fields.company || null,
+      job_title: fields.job_title || null,
+      profile_completed: true
+    };
+    var result = await sb.from("profiles").update(patch).eq("id", session.user.id).select("*").single();
+    if (result.error) throw result.error;
+    cached.profile = normalizeProfile(result.data);
+    try {
+      if (!isAdminRole(cached.profile.role)) return cached.profile;
+      var alumniRow = {
+        full_name: fields.full_name,
+        student_id: fields.student_id || null,
+        department: fields.department || null,
+        degree_program: fields.degree_program || null,
+        admission_year: fields.admission_year,
+        graduation_year: fields.graduation_year,
+        email: session.user.email || null,
+        phone: fields.phone || null,
+        company: fields.company || null,
+        job_title: fields.job_title || null,
+        updated_by: session.user.id
+      };
+      var existing = await sb.from("alumni").select("id").eq("created_by", session.user.id).limit(1);
+      if (existing.error) return cached.profile;
+      if (existing.data && existing.data[0]) {
+        await sb.from("alumni").update(alumniRow).eq("id", existing.data[0].id);
+      } else {
+        alumniRow.created_by = session.user.id;
+        var inserted = await sb.from("alumni").insert(alumniRow).select("id,full_name").single();
+        if (!inserted.error && inserted.data) {
+          await sb.from("audit_logs").insert({
+            actor_id: session.user.id,
+            actor_email: session.user.email,
+            action: "CREATE",
+            entity_type: "alumni",
+            entity_id: String(inserted.data.id),
+            entity_label: inserted.data.full_name,
+            summary: "profile",
+            changes: { after: alumniRow }
+          });
+        }
+      }
+    } catch (err) {}
+    return cached.profile;
+  }
+
   /**
    * Guard for admin pages. Returns { session, profile } or redirects.
    * @param {{ redirectTo?: string, allowPendingPage?: boolean }} [opts]
@@ -305,6 +375,13 @@
     if (!profile || !isAdminRole(profile.role)) {
       location.replace("login.html?denied=1");
       return null;
+    }
+    if (profile.profile_completed === false && opts.skipProfile !== true) {
+      var here = location.pathname.split("/").pop() || "admin-news.html";
+      if (here !== "profile-setup.html") {
+        location.replace("profile-setup.html?next=" + encodeURIComponent(here));
+        return null;
+      }
     }
     return { session: session, profile: profile };
   }
@@ -335,6 +412,7 @@
     setRole: setRole,
     requireAdmin: requireAdmin,
     requireSuperAdmin: requireSuperAdmin,
+    saveOwnProfile: saveOwnProfile,
     isAdminRole: isAdminRole,
     mapAuthError: mapAuthError,
     loginPageUrl: loginPageUrl,

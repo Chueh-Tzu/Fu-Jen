@@ -14,9 +14,17 @@ create table if not exists public.alumni (
       or degree_program in ('Bachelor', 'Master', 'Doctoral', 'Other')
     ),
   admission_year integer
-    check (admission_year is null or (admission_year >= 1950 and admission_year <= 2100)),
+    check (
+      admission_year is null
+      or (admission_year >= 90 and admission_year <= 130)
+      or (admission_year >= 1950 and admission_year <= 2100)
+    ),
   graduation_year integer
-    check (graduation_year is null or (graduation_year >= 1950 and graduation_year <= 2100)),
+    check (
+      graduation_year is null
+      or (graduation_year >= 90 and graduation_year <= 130)
+      or (graduation_year >= 1950 and graduation_year <= 2100)
+    ),
   email text,
   phone text,
   company text,
@@ -127,3 +135,6 @@ create policy "Admins can insert audit logs"
 -- Optional: prevent clients from updating/deleting audit history
 drop policy if exists "No update audit logs" on public.audit_logs;
 -- (no update/delete policies = admins cannot modify or erase audit rows via anon key)
+
+grant select, insert, update, delete on public.alumni to authenticated;
+grant select, insert on public.audit_logs to authenticated;

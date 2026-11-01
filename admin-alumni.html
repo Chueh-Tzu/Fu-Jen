@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-locale="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AdminAlumni | International Management (imMBA)</title>
+  <meta name="description" content="AdminAlumni — alumni records, search, CSV import, and audit trail.">
+  <link rel="icon" href="assets/img/immba-logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=alumni">
+</head>
+<body class="page-admin-faculty">
+  <a class="skip" href="#main">Skip to content</a>
+  <div id="site-header"></div>
+  <main id="main">
+    <header class="page-hero">
+      <div class="wrap">
+        <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">校友管理</span><span class="en">Alumni</span></p>
+        <h1><span class="zh">校友管理</span><span class="en">Alumni</span></h1>
+        <p class="lead">
+          <span class="zh">管理員可新增、修改、刪除與批次匯入校友。每一次異動都會留下活動紀錄。</span>
+          <span class="en">Admins can add, edit, delete, and import alumni. Every change is written to the activity log.</span>
+        </p>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="wrap admin-news-wrap">
+        <div class="admin-toolbar" role="toolbar" aria-label="Alumni actions">
+          <button type="button" class="btn btn-gold" id="alumni-add">
+            <span class="zh">新增校友</span><span class="en">Add alumni</span>
+          </button>
+          <button type="button" class="btn btn-outline" id="alumni-template">
+            <span class="zh">下載 CSV 範本</span><span class="en">CSV template</span>
+          </button>
+          <button type="button" class="btn btn-outline" id="alumni-import-pick">
+            <span class="zh">匯入 CSV</span><span class="en">Import CSV</span>
+          </button>
+          <input type="file" id="alumni-import-file" accept=".csv,text/csv" hidden>
+          <button type="button" class="btn btn-outline" id="alumni-export">
+            <span class="zh">匯出篩選結果</span><span class="en">Export filtered CSV</span>
+          </button>
+          <button type="button" class="btn btn-navy" id="alumni-columns-btn" aria-expanded="false" aria-controls="alumni-columns">
+            <span class="zh">顯示欄位</span><span class="en">Columns</span>
+          </button>
+        </div>
+        <div class="alumni-columns" id="alumni-columns" hidden></div>
+        <p class="admin-auth-meta" id="admin-auth-meta" hidden></p>
+        <p class="admin-status" id="admin-status" role="status" aria-live="polite" hidden></p>
+        <div class="alumni-import-panel" id="alumni-import-panel" hidden></div>
+
+        <div class="admin-form-panel" id="alumni-form-panel" hidden>
+          <h2 class="admin-form-title" id="alumni-form-title">
+            <span class="zh">新增校友</span><span class="en">Add alumni</span>
+          </h2>
+          <form class="form admin-form" id="alumni-form" novalidate>
+            <input type="hidden" id="alumni-id" value="">
+            <div class="admin-form-grid">
+              <div class="field">
+                <label for="alumni-full-name"><span class="zh">姓名</span><span class="en">Name</span></label>
+                <input type="text" id="alumni-full-name" required maxlength="160" autocomplete="name">
+              </div>
+              <div class="field">
+                <label for="alumni-student-id"><span class="zh">學號</span><span class="en">Student ID</span></label>
+                <input type="text" id="alumni-student-id" maxlength="40" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="alumni-department"><span class="zh">系所</span><span class="en">Department</span></label>
+                <select id="alumni-department"></select>
+              </div>
+              <div class="field">
+                <label for="alumni-degree"><span class="zh">學位</span><span class="en">Degree program</span></label>
+                <select id="alumni-degree"></select>
+              </div>
+              <div class="field">
+                <label for="alumni-admission-year"><span class="zh">入學年</span><span class="en">Admission year</span></label>
+                <select id="alumni-admission-year"></select>
+              </div>
+              <div class="field">
+                <label for="alumni-graduation-year"><span class="zh">畢業年</span><span class="en">Graduation year</span></label>
+                <select id="alumni-graduation-year"></select>
+              </div>
+              <div class="field">
+                <label for="alumni-email"><span class="zh">電子郵件</span><span class="en">Email</span></label>
+                <input type="email" id="alumni-email" maxlength="160" autocomplete="email">
+              </div>
+              <div class="field">
+                <label for="alumni-phone"><span class="zh">電話</span><span class="en">Phone</span></label>
+                <input type="text" id="alumni-phone" maxlength="40" autocomplete="tel">
+              </div>
+              <div class="field">
+                <label for="alumni-company"><span class="zh">公司</span><span class="en">Company</span></label>
+                <input type="text" id="alumni-company" maxlength="160">
+              </div>
+              <div class="field">
+                <label for="alumni-job-title"><span class="zh">職稱</span><span class="en">Job title</span></label>
+                <input type="text" id="alumni-job-title" maxlength="160">
+              </div>
+              <div class="field admin-field-full">
+                <label for="alumni-notes"><span class="zh">備註</span><span class="en">Notes</span></label>
+                <textarea id="alumni-notes" maxlength="2000"></textarea>
+              </div>
+            </div>
+            <div class="admin-form-actions">
+              <button type="submit" class="btn btn-gold" id="alumni-save">
+                <span class="zh">儲存</span><span class="en">Save</span>
+              </button>
+              <button type="button" class="btn btn-outline" id="alumni-cancel">
+                <span class="zh">取消</span><span class="en">Cancel</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="alumni-filters">
+          <div class="field">
+            <label for="alumni-q"><span class="zh">姓名</span><span class="en">Name</span></label>
+            <input type="search" id="alumni-q" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="alumni-filter-degree"><span class="zh">學位</span><span class="en">Degree program</span></label>
+            <select id="alumni-filter-degree"></select>
+          </div>
+          <div class="field">
+            <label for="alumni-filter-year"><span class="zh">畢業年</span><span class="en">Graduation year</span></label>
+            <select id="alumni-filter-year"></select>
+          </div>
+          <div class="field">
+            <label for="alumni-filter-dept"><span class="zh">系所</span><span class="en">Department</span></label>
+            <select id="alumni-filter-dept"></select>
+          </div>
+          <div class="field">
+            <label for="alumni-filter-company"><span class="zh">公司</span><span class="en">Company</span></label>
+            <input type="search" id="alumni-filter-company" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="admin-list-head">
+          <h2><span class="zh">校友清單</span><span class="en">Alumni list</span></h2>
+          <p class="admin-count" id="alumni-count"></p>
+        </div>
+        <div class="alumni-table-wrap">
+          <table class="alumni-table" id="alumni-table"></table>
+        </div>
+
+        <div class="admin-list-head alumni-audit-head">
+          <h2><span class="zh">活動紀錄</span><span class="en">Activity log</span></h2>
+          <p class="admin-count" id="alumni-audit-count"></p>
+        </div>
+        <div class="alumni-table-wrap">
+          <table class="alumni-table" id="alumni-audit"></table>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div id="site-footer"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/auth.js?v=profile-setup"></script>
+  <script src="assets/js/site.js?v=alumni-rail2"></script>
+  <script src="assets/js/alumni-options.js?v=year-plain"></script>
+  <script src="assets/js/admin-alumni.js?v=year-plain"></script>
+</body>
+</html>

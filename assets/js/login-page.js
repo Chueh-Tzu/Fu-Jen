@@ -137,8 +137,11 @@
     }
 
     var profile = await auth.getProfile(true);
-    var role = profile ? profile.role : "visitor";
-    if (auth.isAdminRole(role)) {
+    if (profile && profile.profile_completed === false) {
+      location.replace("profile-setup.html?next=" + encodeURIComponent(nextPage()));
+      return;
+    }
+    if (profile && auth.isAdminRole(profile.role)) {
       location.replace(nextPage());
       return;
     }
@@ -147,6 +150,18 @@
       try { sessionStorage.setItem("immba-visitor-note", "denied"); } catch (err) {}
     }
     location.replace("index.html");
+  }
+
+  function continueAfterAuth(profile) {
+    if (profile && profile.profile_completed === false) {
+      location.href = "profile-setup.html?next=" + encodeURIComponent(nextPage());
+      return;
+    }
+    if (profile && auth.isAdminRole(profile.role)) {
+      location.href = nextPage();
+      return;
+    }
+    sendVisitorHome();
   }
 
   function sendVisitorHome() {
@@ -178,11 +193,7 @@
         document.getElementById("login-password").value
       );
       var profile = await auth.getProfile(true);
-      if (profile && auth.isAdminRole(profile.role)) {
-        location.href = nextPage();
-        return;
-      }
-      sendVisitorHome();
+      continueAfterAuth(profile);
     } catch (err) {
       showStatus(t("登入失敗：", "Sign-in failed: ") + authErrorText(err), "err");
     }
@@ -216,19 +227,15 @@
       if (data.session) {
         var signedUp = await auth.getProfile(true);
         if (auth.recordLogin) await auth.recordLogin(signedUp);
-        if (signedUp && auth.isAdminRole(signedUp.role)) {
-          location.href = nextPage();
-          return;
-        }
-        sendVisitorHome();
+        continueAfterAuth(signedUp);
       } else {
         setMode("login");
         var loginEmail = document.getElementById("login-email");
         if (loginEmail) loginEmail.value = String(email || "").trim();
         showStatus(
           t(
-            "註冊成功！確認信已寄出，請到信箱點擊連結完成驗證後再登入。未核准前身分是一般訪客，可以瀏覽、提交表單與查詢資料。",
-            "Registered! Check your inbox and click the confirmation link, then sign in. Until you are approved you are a visitor: you can browse, submit forms, and search."
+            "註冊成功！確認信已寄出，請到信箱點擊連結完成驗證後再登入。第一次進入後台時，請先填寫個人資料。",
+            "Registered! Check your inbox and click the confirmation link, then sign in. The first time you enter the back office, complete your profile."
           ),
           "ok"
         );

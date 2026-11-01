@@ -45,6 +45,7 @@
       adminUsers: file === "admin-users.html",
       adminLogins: file === "admin-logins.html",
       adminDatabase: file === "admin-database.html",
+      adminAlumni: file === "admin-alumni.html",
       login: file === "login.html",
     };
   }
@@ -316,7 +317,7 @@
     else if (!(c.faculty || (isAdmin && c.adminFaculty))) link.removeAttribute("aria-current");
   }
 
-  if (c.adminNews || c.adminFaculty || c.adminUsers || c.adminLogins || c.adminDatabase) {
+  if (c.adminNews || c.adminFaculty || c.adminUsers || c.adminLogins || c.adminDatabase || c.adminAlumni) {
     document.body.classList.add("has-admin-side");
     var side = document.createElement("nav");
     side.className = "admin-side";
@@ -328,6 +329,9 @@
       '<a class="admin-side-link' + (c.adminFaculty ? " is-current" : "") + '" href="' + prefix + 'admin-faculty.html"' +
       (c.adminFaculty ? ' aria-current="page"' : "") + ">" +
       t("師資管理", "Faculty") + "</a>" +
+      '<a class="admin-side-link' + (c.adminAlumni ? " is-current" : "") + '" href="' + prefix + 'admin-alumni.html"' +
+      (c.adminAlumni ? ' aria-current="page"' : "") + ">" +
+      t("校友管理", "Alumni") + "</a>" +
       '<a class="admin-side-link" href="' + prefix + 'admin-users.html" id="admin-side-users" hidden>' +
       t("管理員審核", "Admin approval") + "</a>" +
       '<a class="admin-side-link' + (c.adminLogins ? " is-current" : "") + '" href="' + prefix + 'admin-logins.html"' +
