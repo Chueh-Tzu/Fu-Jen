@@ -203,8 +203,8 @@
       if (data.user && identities.length === 0) {
         showStatus(
           t(
-            "此信箱可能已註冊。請直接登入，或使用忘記密碼／重寄確認信。",
-            "This email may already be registered. Sign in, or use Forgot password / resend confirmation."
+            "此信箱可能已註冊。請直接登入，或使用忘記密碼。",
+            "This email may already be registered. Sign in, or use Forgot password."
           ),
           "err"
         );
@@ -235,34 +235,6 @@
       }
     } catch (err) {
       showStatus(t("註冊失敗：", "Registration failed: ") + authErrorText(err), "err");
-    }
-  }
-
-  async function doResendConfirmation() {
-    var emailEl = document.getElementById("login-email");
-    var email = emailEl ? String(emailEl.value || "").trim() : "";
-    if (!email) {
-      showStatus(
-        t("請先在登入欄填入電子郵件，再重寄確認信。", "Enter your email in the sign-in field, then resend."),
-        "err"
-      );
-      return;
-    }
-    if (!auth.resendConfirmation) {
-      showStatus(t("此功能無法使用。", "Resend is unavailable."), "err");
-      return;
-    }
-    try {
-      await auth.resendConfirmation(email);
-      showStatus(
-        t(
-          "若此信箱已註冊且尚未驗證，確認信已重新寄出。請檢查信箱（含垃圾郵件）。",
-          "If this email is registered and unverified, a new confirmation email was sent. Check inbox (and spam)."
-        ),
-        "ok"
-      );
-    } catch (err) {
-      showStatus(t("重寄失敗：", "Resend failed: ") + authErrorText(err), "err");
     }
   }
 
@@ -369,13 +341,6 @@
       } else {
         setMode("forgot");
       }
-    });
-  }
-
-  var resendBtn = document.getElementById("auth-btn-resend-confirm");
-  if (resendBtn) {
-    resendBtn.addEventListener("click", function () {
-      doResendConfirmation();
     });
   }
 
