@@ -7,8 +7,8 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text,
   display_name text,
-  role text not null default 'visitor'
-    check (role in ('visitor', 'admin', 'super_admin')),
+  role text not null default 'pending'
+    check (role in ('visitor', 'pending', 'rejected', 'admin', 'super_admin')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -48,7 +48,7 @@ begin
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)),
-    'visitor'
+    'pending'
   )
   on conflict (id) do nothing;
   return new;
@@ -107,7 +107,7 @@ create policy "Users can insert own profile"
   on public.profiles
   for insert
   to authenticated
-  with check (id = auth.uid() and role = 'visitor');
+  with check (id = auth.uid() and role in ('visitor', 'pending'));
 
 drop policy if exists "Users can update own display name" on public.profiles;
 create policy "Users can update own display name"

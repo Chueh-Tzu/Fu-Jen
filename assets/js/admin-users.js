@@ -26,6 +26,8 @@
   function roleLabel(role) {
     if (role === "super_admin") return t("超級管理員", "Super admin");
     if (role === "admin") return t("管理員", "Admin");
+    if (role === "pending") return t("待審核", "Pending");
+    if (role === "rejected") return t("已拒絕", "Rejected");
     return t("一般訪客", "Visitor");
   }
 
@@ -35,14 +37,40 @@
     statusEl.textContent = message;
   }
 
+  function roleButton(role, label, extraClass) {
+    return (
+      '<button type="button" class="btn ' + (extraClass || "btn-outline") + '" data-role="' + role + '">' +
+      label + "</button>"
+    );
+  }
+
   function render(rows) {
-    countEl.textContent = t("共 " + rows.length + " 位", rows.length + " accounts");
+    var order = { pending: 0, rejected: 1, visitor: 2, admin: 3, super_admin: 4 };
+    rows = rows.slice().sort(function (a, b) {
+      return (order[a.role] == null ? 9 : order[a.role]) - (order[b.role] == null ? 9 : order[b.role]);
+    });
+    var pendingCount = rows.filter(function (row) { return row.role === "pending"; }).length;
+    countEl.textContent = t(
+      "共 " + rows.length + " 位，待審核 " + pendingCount + " 位",
+      rows.length + " accounts, " + pendingCount + " pending"
+    );
     if (!rows.length) {
       listEl.innerHTML = '<p class="admin-empty">' + escapeHtml(t("尚無帳號。", "No accounts yet.")) + "</p>";
       return;
     }
     listEl.innerHTML = rows.map(function (row) {
       var isSelf = me && me.profile && me.profile.id === row.id;
+      var actions = "";
+      if (row.role === "pending" || row.role === "rejected") {
+        actions =
+          roleButton("admin", t("核准為管理員", "Approve as admin"), "btn-gold") +
+          (row.role === "pending" ? roleButton("rejected", t("拒絕", "Reject"), "btn-outline") : "");
+      } else {
+        actions =
+          roleButton("admin", t("核准為管理員", "Approve as admin"), "btn-gold") +
+          roleButton("visitor", t("設為一般訪客", "Set as visitor"), "btn-outline") +
+          roleButton("super_admin", t("設為超級管理員", "Make super admin"), "btn-outline");
+      }
       return (
         '<article class="admin-row" data-id="' + escapeHtml(row.id) + '">' +
         "<div>" +
@@ -53,19 +81,14 @@
         '<h3 class="admin-row-title">' + escapeHtml(row.display_name || row.email || row.id) + "</h3>" +
         '<p class="admin-row-sub">' + escapeHtml(row.email || "") + "</p>" +
         "</div>" +
-        '<div class="admin-row-actions">' +
-        '<button type="button" class="btn btn-gold" data-role="admin"' +
-        (row.role === "admin" ? " disabled" : "") + ">" +
-        t("核准為管理員", "Approve as admin") + "</button>" +
-        '<button type="button" class="btn btn-outline" data-role="visitor"' +
-        (row.role === "visitor" ? " disabled" : "") + ">" +
-        t("設為一般訪客", "Set as visitor") + "</button>" +
-        '<button type="button" class="btn btn-outline" data-role="super_admin"' +
-        (row.role === "super_admin" ? " disabled" : "") + ">" +
-        t("設為超級管理員", "Make super admin") + "</button>" +
-        "</div></article>"
+        '<div class="admin-row-actions">' + actions + "</div></article>"
       );
     }).join("");
+    listEl.querySelectorAll("[data-role]").forEach(function (btn) {
+      var row = btn.closest("[data-id]");
+      var current = rows.filter(function (item) { return item.id === row.getAttribute("data-id"); })[0];
+      if (current && btn.getAttribute("data-role") === current.role) btn.disabled = true;
+    });
   }
 
   async function refresh() {

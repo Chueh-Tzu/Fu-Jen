@@ -28,7 +28,7 @@ begin
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)),
-    'visitor',
+    'pending',
     false
   )
   on conflict (id) do nothing;

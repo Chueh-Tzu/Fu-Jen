@@ -405,7 +405,17 @@
       note.className = "visitor-note";
       note.setAttribute("role", "status");
       note.innerHTML =
-        visitorNote === "denied"
+        visitorNote === "pending"
+          ? t(
+              "帳號正在待審核（pending）。超級管理員核准後才能進入後台。",
+              "Your account is pending. A super admin must approve it before you can enter the back office."
+            )
+          : visitorNote === "rejected"
+          ? t(
+              "此申請已被拒絕，無法進入後台。",
+              "This application was rejected, so the back office is unavailable."
+            )
+          : visitorNote === "denied"
           ? t(
               "一般訪客無法進入後台。您可以瀏覽網站、提交表單與查詢資料。",
               "Visitors cannot open the admin area. You can browse, submit forms, and search."

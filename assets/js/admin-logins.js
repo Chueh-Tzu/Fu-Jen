@@ -25,6 +25,8 @@
   function roleLabel(role) {
     if (role === "super_admin") return t("超級管理員", "Super admin");
     if (role === "admin") return t("管理員", "Admin");
+    if (role === "pending") return t("待審核", "Pending");
+    if (role === "rejected") return t("已拒絕", "Rejected");
     return t("一般訪客", "Visitor");
   }
 

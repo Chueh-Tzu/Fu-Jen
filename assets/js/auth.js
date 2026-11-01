@@ -35,7 +35,9 @@
       id: row.id,
       email: String(row.email || "").trim(),
       display_name: String(row.display_name || "").trim(),
-      role: row.role === "admin" || row.role === "super_admin" ? row.role : "visitor",
+      role: row.role === "admin" || row.role === "super_admin" || row.role === "pending" || row.role === "rejected" || row.role === "visitor"
+        ? row.role
+        : "visitor",
       profile_completed: row.profile_completed === false ? false : true,
       student_id: row.student_id || "",
       department: row.department || "",
@@ -158,11 +160,8 @@
       display_name: (session.user.user_metadata && session.user.user_metadata.display_name) ||
         String(session.user.email || "").split("@")[0]
     };
-    var created = await sb.from("profiles").insert(Object.assign({ role: "visitor", profile_completed: false }, row)).select().maybeSingle();
+    var created = await sb.from("profiles").insert(Object.assign({ role: "pending", profile_completed: false }, row)).select().maybeSingle();
     if (created.error && String(created.error.message || "").indexOf("profile_completed") !== -1) {
-      created = await sb.from("profiles").insert(Object.assign({ role: "visitor" }, row)).select().maybeSingle();
-    }
-    if (created.error) {
       created = await sb.from("profiles").insert(Object.assign({ role: "pending" }, row)).select().maybeSingle();
     }
     if (created.error) throw created.error;
@@ -173,7 +172,8 @@
     try {
       var session = cached.session || (await getSession());
       if (!session || !session.user) return;
-      var role = profile && isAdminRole(profile.role) ? profile.role : "visitor";
+      var allowed = { visitor: 1, pending: 1, rejected: 1, admin: 1, super_admin: 1 };
+      var role = profile && allowed[profile.role] ? profile.role : "visitor";
       var name =
         (profile && profile.display_name) ||
         (session.user.user_metadata && session.user.user_metadata.display_name) ||
@@ -287,7 +287,7 @@
   }
 
   async function setRole(userId, role) {
-    if (!/^(visitor|admin|super_admin)$/.test(role)) {
+    if (!/^(visitor|pending|rejected|admin|super_admin)$/.test(role)) {
       throw new Error("Invalid role.");
     }
     var sb = getClient();
@@ -373,6 +373,11 @@
     }
     var profile = await getProfile(true);
     if (!profile || !isAdminRole(profile.role)) {
+      if (profile && (profile.role === "pending" || profile.role === "rejected")) {
+        try { sessionStorage.setItem("immba-visitor-note", profile.role); } catch (err) {}
+        location.replace("index.html");
+        return null;
+      }
       location.replace("login.html?denied=1");
       return null;
     }

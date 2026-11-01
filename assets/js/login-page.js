@@ -137,7 +137,7 @@
     }
 
     var profile = await auth.getProfile(true);
-    if (profile && profile.profile_completed === false) {
+    if (profile && auth.isAdminRole(profile.role) && profile.profile_completed === false) {
       location.replace("profile-setup.html?next=" + encodeURIComponent(nextPage()));
       return;
     }
@@ -145,20 +145,33 @@
       location.replace(nextPage());
       return;
     }
-
-    if (params.get("denied") === "1") {
+    if (profile && profile.role === "pending") {
+      try { sessionStorage.setItem("immba-visitor-note", "pending"); } catch (err) {}
+    } else if (profile && profile.role === "rejected") {
+      try { sessionStorage.setItem("immba-visitor-note", "rejected"); } catch (err) {}
+    } else if (params.get("denied") === "1") {
       try { sessionStorage.setItem("immba-visitor-note", "denied"); } catch (err) {}
     }
     location.replace("index.html");
   }
 
   function continueAfterAuth(profile) {
-    if (profile && profile.profile_completed === false) {
-      location.href = "profile-setup.html?next=" + encodeURIComponent(nextPage());
+    if (profile && auth.isAdminRole(profile.role)) {
+      if (profile.profile_completed === false) {
+        location.href = "profile-setup.html?next=" + encodeURIComponent(nextPage());
+        return;
+      }
+      location.href = nextPage();
       return;
     }
-    if (profile && auth.isAdminRole(profile.role)) {
-      location.href = nextPage();
+    if (profile && profile.role === "pending") {
+      try { sessionStorage.setItem("immba-visitor-note", "pending"); } catch (err) {}
+      location.href = "index.html";
+      return;
+    }
+    if (profile && profile.role === "rejected") {
+      try { sessionStorage.setItem("immba-visitor-note", "rejected"); } catch (err) {}
+      location.href = "index.html";
       return;
     }
     sendVisitorHome();
@@ -234,8 +247,8 @@
         if (loginEmail) loginEmail.value = String(email || "").trim();
         showStatus(
           t(
-            "註冊成功！確認信已寄出，請到信箱點擊連結完成驗證後再登入。第一次進入後台時，請先填寫個人資料。",
-            "Registered! Check your inbox and click the confirmation link, then sign in. The first time you enter the back office, complete your profile."
+            "註冊成功！確認信已寄出，請到信箱點擊連結完成驗證。驗證後身分是待審核（pending），需等超級管理員核准後才能進入後台。",
+            "Registered! Check your inbox and click the confirmation link. Your role will be pending until a super admin approves it."
           ),
           "ok"
         );

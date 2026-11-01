@@ -20,8 +20,8 @@
         <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">管理員審核</span><span class="en">Admin approval</span></p>
         <h1><span class="zh">管理員角色與存取控制</span><span class="en">Admin roles &amp; access control</span></h1>
         <p class="lead">
-          <span class="zh">未核准的註冊者是一般訪客，只能瀏覽、提交表單與查詢。管理員可登入後台並維護資料。僅超級管理員可變更身分。</span>
-          <span class="en">Unapproved accounts are visitors: they can browse, submit forms, and search. Admins can sign in and maintain the site. Only a super admin can change roles.</span>
+          <span class="zh">新註冊的帳號是待審核（pending）。超級管理員可核准為管理員，或拒絕申請。已存在的訪客與管理員身分維持不變。</span>
+          <span class="en">New accounts are pending. A super admin can approve them as admins or reject the application. Existing visitors and admins stay as they are.</span>
         </p>
       </div>
     </header>
@@ -45,8 +45,8 @@
   <div id="site-footer"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase-config.js"></script>
-  <script src="assets/js/auth.js?v=profile-setup"></script>
-  <script src="assets/js/site.js?v=alumni-rail2"></script>
-  <script src="assets/js/admin-users.js?v=visitor-role2"></script>
+  <script src="assets/js/auth.js?v=pending-role"></script>
+  <script src="assets/js/site.js?v=pending-role"></script>
+  <script src="assets/js/admin-users.js?v=pending-role"></script>
 </body>
 </html>
