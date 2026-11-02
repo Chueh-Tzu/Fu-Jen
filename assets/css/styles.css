@@ -2897,3 +2897,4 @@ body.has-admin-side .page-hero .wrap {
 @media (max-width: 640px) {
   .alumni-filters { grid-template-columns: 1fr; }
 }
+.activity-log-block { margin-top: 36px; }

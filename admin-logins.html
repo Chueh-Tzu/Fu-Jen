@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=login-log">
+  <link rel="stylesheet" href="assets/css/styles.css?v=activity-log">
 </head>
 <body class="page-admin-news">
   <a class="skip" href="#main">Skip to content</a>
@@ -41,14 +41,35 @@
             <tbody id="log-body"></tbody>
           </table>
         </div>
+        <div class="activity-log-block">
+          <div class="admin-list-head">
+            <h2><span class="zh">活動紀錄（編輯／更新）</span><span class="en">Activity log (edit / update)</span></h2>
+            <p class="admin-count" id="activity-count"></p>
+          </div>
+          <div class="admin-news-table-wrap">
+            <table class="admin-news-table">
+              <thead>
+                <tr>
+                  <th><span class="zh">顯示名稱</span><span class="en">Name</span></th>
+                  <th><span class="zh">帳號</span><span class="en">Account</span></th>
+                  <th><span class="zh">時間</span><span class="en">Time</span></th>
+                  <th><span class="zh">身分</span><span class="en">Role</span></th>
+                  <th><span class="zh">新增、修改或刪除</span><span class="en">Add, edit, or delete</span></th>
+                  <th><span class="zh">哪一筆資料</span><span class="en">Record</span></th>
+                </tr>
+              </thead>
+              <tbody id="activity-body"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </section>
   </main>
   <div id="site-footer"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase-config.js"></script>
-  <script src="assets/js/auth.js?v=pending-role"></script>
+  <script src="assets/js/auth.js?v=activity-log"></script>
   <script src="assets/js/site.js?v=alumni-rail2"></script>
-  <script src="assets/js/admin-logins.js?v=pending-role2"></script>
+  <script src="assets/js/admin-logins.js?v=activity-log"></script>
 </body>
 </html>

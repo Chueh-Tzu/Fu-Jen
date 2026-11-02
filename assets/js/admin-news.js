@@ -219,6 +219,21 @@
     formPanel.hidden = true;
   }
 
+  function newsTitle(item) {
+    return (item && item.zh && item.zh.title) || (item && item.en && item.en.title) || (item && item.id) || "";
+  }
+
+  function logNews(action, item) {
+    if (!auth.writeActivity || !item) return Promise.resolve();
+    return auth.writeActivity({
+      action: action,
+      entity_type: "announcement",
+      entity_id: item.id,
+      entity_label: newsTitle(item),
+      summary: action
+    });
+  }
+
   function persist(list, messageZh, messageEn) {
     var next = syncListOrder(list);
     return api
@@ -712,14 +727,18 @@
         list,
         "雙語公告已更新，並同步到雲端（其他人重新整理即可看到）。",
         "Bilingual announcement updated and synced to the cloud."
-      );
+      ).then(function () {
+        return logNews("UPDATE", item);
+      });
     } else {
       list.unshift(item);
       saving = persist(
         list,
         "雙語公告已新增，並同步到雲端（其他人重新整理即可看到）。",
         "Bilingual announcement added and synced to the cloud."
-      );
+      ).then(function () {
+        return logNews("CREATE", item);
+      });
     }
     saving.then(function () {
       closeForm();
@@ -782,7 +801,9 @@
         next,
         "公告已刪除（中英文一併移除），並同步到前台。",
         "Announcement deleted (both languages removed) and synced to the homepage."
-      );
+      ).then(function () {
+        return logNews("DELETE", target || { id: id });
+      });
     }
   });
 

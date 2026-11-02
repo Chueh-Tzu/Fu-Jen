@@ -362,18 +362,14 @@
   }
 
   async function writeAudit(entry) {
-    var sb = auth.getClient();
-    var result = await sb.from("audit_logs").insert({
-      actor_id: gate.session.user.id,
-      actor_email: gate.profile.email,
+    await auth.writeActivity({
       action: entry.action,
       entity_type: "alumni",
-      entity_id: entry.entity_id ? String(entry.entity_id) : null,
-      entity_label: entry.entity_label || null,
-      summary: entry.summary || null,
+      entity_id: entry.entity_id,
+      entity_label: entry.entity_label,
+      summary: entry.summary,
       changes: entry.changes || {}
     });
-    if (result.error) throw result.error;
   }
 
   async function refresh() {
@@ -604,16 +600,14 @@
         inserted = inserted.concat(result.data || []);
       }
       var audits = inserted.map(function (row) {
-        return {
-          actor_id: gate.session.user.id,
-          actor_email: gate.profile.email,
+        return auth.activityInsertRow({
           action: "CREATE",
           entity_type: "alumni",
-          entity_id: String(row.id),
+          entity_id: row.id,
           entity_label: row.full_name,
           summary: "created",
           changes: { after: { full_name: row.full_name, student_id: row.student_id } }
-        };
+        });
       });
       for (i = 0; i < audits.length; i += 100) {
         var auditResult = await sb.from("audit_logs").insert(audits.slice(i, i + 100));

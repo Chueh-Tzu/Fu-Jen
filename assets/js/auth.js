@@ -199,6 +199,79 @@
     return result.data || [];
   }
 
+  function activityActor() {
+    var profile = cached.profile || {};
+    var session = cached.session;
+    var email = profile.email || (session && session.user && session.user.email) || "";
+    var name =
+      profile.display_name ||
+      (session && session.user && session.user.user_metadata && session.user.user_metadata.display_name) ||
+      String(email || "").split("@")[0] ||
+      "";
+    return {
+      actor_id: (session && session.user && session.user.id) || profile.id || null,
+      actor_email: email,
+      actor_name: name,
+      actor_role: profile.role || ""
+    };
+  }
+
+  function activityInsertRow(entry) {
+    var actor = activityActor();
+    var changes = Object.assign({}, entry.changes || {});
+    if (actor.actor_name) changes.actor_name = actor.actor_name;
+    if (actor.actor_role) changes.actor_role = actor.actor_role;
+    return {
+      actor_id: actor.actor_id,
+      actor_email: actor.actor_email,
+      action: entry.action,
+      entity_type: entry.entity_type || "record",
+      entity_id: entry.entity_id == null || entry.entity_id === "" ? null : String(entry.entity_id),
+      entity_label: entry.entity_label || null,
+      summary: entry.summary || null,
+      changes: changes
+    };
+  }
+
+  async function writeActivity(entry) {
+    if (!cached.session) await getSession();
+    if (!cached.profile) await getProfile(true);
+    var sb = getClient();
+    var result = await sb.from("audit_logs").insert(activityInsertRow(entry));
+    if (result.error) throw result.error;
+  }
+
+  async function listActivityLogs() {
+    var sb = getClient();
+    var result = await sb
+      .from("audit_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(300);
+    if (result.error) throw result.error;
+    var profiles = await sb.from("profiles").select("id, display_name, email, role");
+    var byId = {};
+    if (!profiles.error) {
+      (profiles.data || []).forEach(function (profile) {
+        byId[profile.id] = profile;
+      });
+    }
+    return (result.data || []).map(function (row) {
+      var changes = row.changes || {};
+      var profile = byId[row.actor_id] || {};
+      return {
+        display_name: changes.actor_name || profile.display_name || "",
+        email: row.actor_email || profile.email || "",
+        logged_at: row.created_at,
+        role: changes.actor_role || profile.role || "",
+        action: row.action,
+        entity_type: row.entity_type || "",
+        entity_label: row.entity_label || "",
+        entity_id: row.entity_id || ""
+      };
+    });
+  }
+
   async function signUp(email, password, displayName) {
     var sb = getClient();
     // Confirm-email link returns users to the login page (role stays visitor until approval).
@@ -413,6 +486,9 @@
     updatePassword: updatePassword,
     listProfiles: listProfiles,
     listLoginLogs: listLoginLogs,
+    listActivityLogs: listActivityLogs,
+    writeActivity: writeActivity,
+    activityInsertRow: activityInsertRow,
     recordLogin: recordLogin,
     setRole: setRole,
     requireAdmin: requireAdmin,

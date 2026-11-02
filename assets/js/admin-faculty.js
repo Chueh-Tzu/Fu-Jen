@@ -339,11 +339,26 @@
     }
     setBusy(true);
     try {
+      var saved;
       if (editingId != null) {
-        await api.update(editingId, data);
+        saved = await api.update(editingId, data);
+        await auth.writeActivity({
+          action: "UPDATE",
+          entity_type: "faculty",
+          entity_id: saved.id,
+          entity_label: saved.name_zh || saved.name_en || "",
+          summary: "updated"
+        });
         showStatus(t("已更新並同步至 Supabase。", "Updated and synced to Supabase."), "ok");
       } else {
-        await api.create(data);
+        saved = await api.create(data);
+        await auth.writeActivity({
+          action: "CREATE",
+          entity_type: "faculty",
+          entity_id: saved.id,
+          entity_label: saved.name_zh || saved.name_en || "",
+          summary: "created"
+        });
         showStatus(t("已新增並同步至 Supabase。", "Created and synced to Supabase."), "ok");
       }
       closeForm();
@@ -377,6 +392,13 @@
       setBusy(true);
       try {
         await api.remove(id);
+        await auth.writeActivity({
+          action: "DELETE",
+          entity_type: "faculty",
+          entity_id: id,
+          entity_label: (row && (row.name_zh || row.name_en)) || "",
+          summary: "deleted"
+        });
         showStatus(t("已刪除。", "Deleted."), "ok");
         await refresh();
       } catch (err) {
