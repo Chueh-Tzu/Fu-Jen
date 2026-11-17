@@ -354,6 +354,8 @@
   if (registerForm) {
     registerForm.addEventListener("submit", function (event) {
       event.preventDefault();
+      var submit = document.getElementById("register-submit");
+      if (!submit || submit.hidden) return;
       doRegister();
     });
   }
@@ -361,6 +363,8 @@
   if (forgotForm) {
     forgotForm.addEventListener("submit", function (event) {
       event.preventDefault();
+      var submit = document.getElementById("forgot-submit");
+      if (!submit || submit.hidden) return;
       doForgot();
     });
   }
@@ -385,25 +389,21 @@
 
   if (tabRegister) {
     tabRegister.addEventListener("click", function () {
-      if (mode === "register") {
-        if (registerForm && registerForm.reportValidity()) doRegister();
-      } else {
-        clearStatus();
-        setMode("register");
-      }
+      if (mode === "register") return;
+      clearStatus();
+      setMode("register");
     });
   }
 
   if (tabForgot) {
     tabForgot.addEventListener("click", function () {
-      if (mode === "forgot") {
-        if (forgotForm && forgotForm.reportValidity()) doForgot();
-      } else if (mode === "reset") {
+      if (mode === "forgot") return;
+      if (mode === "reset") {
         if (resetForm && resetForm.reportValidity()) doResetPassword();
-      } else {
-        clearStatus();
-        setMode("forgot");
+        return;
       }
+      clearStatus();
+      setMode("forgot");
     });
   }
 
