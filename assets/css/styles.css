@@ -1678,6 +1678,19 @@ ol.apply-list li::marker {
   font-size: 14px;
   line-height: 1.55;
 }
+.auth-view .admin-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.auth-submit {
+  margin-top: 16px;
+  align-self: center;
+  min-width: 160px;
+}
+.auth-submit[hidden] {
+  display: none !important;
+}
 .password-field {
   position: relative;
   display: block;

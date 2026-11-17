@@ -34,6 +34,12 @@
     statusEl.textContent = message;
   }
 
+  function clearStatus() {
+    if (!statusEl) return;
+    statusEl.hidden = true;
+    statusEl.textContent = "";
+  }
+
   function syncPasswordToggleLabel(btn, visible) {
     var label = visible
       ? t("隱藏密碼", "Hide password")
@@ -58,6 +64,40 @@
   }
 
   bindPasswordToggles();
+
+  function fieldValue(id) {
+    var el = document.getElementById(id);
+    return el ? String(el.value || "").trim() : "";
+  }
+
+  function emailReady(id) {
+    var el = document.getElementById(id);
+    if (!el) return false;
+    return fieldValue(id) !== "" && el.checkValidity();
+  }
+
+  function syncSubmitButtons() {
+    var registerSubmit = document.getElementById("register-submit");
+    var forgotSubmit = document.getElementById("forgot-submit");
+    if (registerSubmit) {
+      var ready = fieldValue("reg-name") !== ""
+        && emailReady("reg-email")
+        && fieldValue("reg-password").length >= 6
+        && fieldValue("reg-password2").length >= 6;
+      registerSubmit.hidden = !ready;
+    }
+    if (forgotSubmit) {
+      forgotSubmit.hidden = !emailReady("forgot-email");
+    }
+  }
+
+  ["reg-name", "reg-email", "reg-password", "reg-password2", "forgot-email"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input", syncSubmitButtons);
+    el.addEventListener("change", syncSubmitButtons);
+  });
+  syncSubmitButtons();
 
   var localeToggle = document.querySelector("[data-locale-toggle]");
   if (localeToggle) {
@@ -337,6 +377,7 @@
       if (mode === "login") {
         if (loginForm && loginForm.reportValidity()) doLogin();
       } else {
+        clearStatus();
         setMode("login");
       }
     });
@@ -347,6 +388,7 @@
       if (mode === "register") {
         if (registerForm && registerForm.reportValidity()) doRegister();
       } else {
+        clearStatus();
         setMode("register");
       }
     });
@@ -359,6 +401,7 @@
       } else if (mode === "reset") {
         if (resetForm && resetForm.reportValidity()) doResetPassword();
       } else {
+        clearStatus();
         setMode("forgot");
       }
     });
