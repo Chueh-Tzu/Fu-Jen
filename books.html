@@ -3,56 +3,186 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Books &amp; Materials marketplace | International Management (imMBA)</title>
+  <title>C2C Marketplace | International Management (imMBA)</title>
+  <meta name="description" content="Student C2C marketplace for browsing, selling, and tracking orders.">
   <link rel="icon" href="assets/img/immba-logo.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=nav-caret">
+  <link rel="stylesheet" href="assets/css/styles.css?v=market-orders2">
 </head>
 <body>
+  <a class="skip" href="#main"><span class="zh">跳至主要內容</span><span class="en">Skip to content</span></a>
   <div id="site-header"></div>
   <main id="main">
     <header class="page-hero">
       <div class="wrap">
-        <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">書籍與教材市集</span><span class="en">Books &amp; Materials marketplace</span></p>
-        <h1><span class="zh">書籍與教材市集</span><span class="en">Books &amp; Materials marketplace</span></h1>
-        <p class="lead"><span class="zh">imMBA 同學之間的二手課本、個案與課堂教材交流。請自行與刊登者聯繫。</span><span class="en">A student-to-student board for textbooks, cases, and course materials. Contact the poster directly.</span></p>
+        <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">同學市集</span><span class="en">C2C marketplace</span></p>
+        <h1><span class="zh">同學市集</span><span class="en">C2C marketplace</span></h1>
+        <p class="lead"><span class="zh">同一個帳號可以切換買家或賣家。訪客只能瀏覽上架商品。這是課程教學示範，不是正式交易平台。</span><span class="en">The same account can switch between buyer and seller. Visitors can only browse listings. This is a course demo, not an official store.</span></p>
       </div>
     </header>
     <section class="section">
-      <div class="wrap">
-        <div class="grid-3" style="margin-bottom:40px">
-          <article class="card">
-            <p class="kicker">Marketing</p>
-            <h3>International Marketing</h3>
-            <p><span class="zh">近全新，含課堂筆記。希望面交輔大 LM 樓。</span><span class="en">Like new, with lecture notes. Prefer meetup at Fu Jen LM building.</span></p>
-            <p style="margin-top:12px"><strong>NT$ 450</strong></p>
-          </article>
-          <article class="card">
-            <p class="kicker">Analytics</p>
-            <h3>Data Analytics for International Business</h3>
-            <p><span class="zh">電子檔與練習題，可分享給同班同學。</span><span class="en">Digital pack and exercises, for classmates in the same cohort.</span></p>
-            <p style="margin-top:12px"><strong>NT$ 200</strong></p>
-          </article>
-          <article class="card">
-            <p class="kicker">Strategy</p>
-            <h3>Global Supply Chain cases</h3>
-            <p><span class="zh">學期個案合輯，已劃重點。</span><span class="en">Semester case pack, annotated.</span></p>
-            <p style="margin-top:12px"><strong>NT$ 300</strong></p>
-          </article>
+      <div class="wrap market-wrap">
+        <p class="admin-status" id="market-status" role="status" aria-live="polite" hidden></p>
+        <div class="market-toolbar">
+          <button type="button" class="btn btn-outline" id="market-listings-btn" data-view="listings"><span class="zh">瀏覽商品</span><span class="en">Browse products</span></button>
+          <button type="button" class="btn btn-outline" id="market-cart-btn" data-view="cart"><span class="zh">購物車</span><span class="en">Cart</span></button>
+          <button type="button" class="btn btn-outline" id="market-member-btn" data-view="member"><span class="zh">我的訂單</span><span class="en">My orders</span></button>
+          <button type="button" class="btn btn-outline" id="market-inventory-btn" data-view="inventory" hidden><span class="zh">庫存管理</span><span class="en">Inventory</span></button>
+          <button type="button" class="btn btn-outline" id="market-seller-btn" data-view="seller" hidden><span class="zh">賣家訂單</span><span class="en">Seller orders</span><span id="market-seller-count"></span></button>
+          <button type="button" class="btn btn-outline" id="market-admin-btn" data-view="admin" hidden><span class="zh">平台交易</span><span class="en">Platform transactions</span></button>
+          <a class="btn btn-outline" id="market-users-link" href="admin-users.html" hidden><span class="zh">管理員審核</span><span class="en">Admin approval</span></a>
+          <button type="button" class="btn btn-gold" id="market-add-btn" hidden><span class="zh">新增商品</span><span class="en">Add new item</span></button>
         </div>
-        <div class="prose">
-          <h2><span class="zh">刊登教材</span><span class="en">List an item</span></h2>
-          <p class="zh">請寄信至所辦信箱，主旨註明「教材市集」，並附書名、狀況、價格與聯絡方式。本頁為教學網展示，非正式交易平台。</p>
-          <p class="en">Email the program office with the subject “marketplace”, including title, condition, price, and how to reach you. This is a teaching-site board, not an official trading platform.</p>
-          <p><a class="btn btn-navy" href="mailto:imMBA@mail.fju.edu.tw?subject=Books%20%26%20Materials%20marketplace"><span class="zh">寄信刊登</span><span class="en">Email to list</span></a></p>
+        <div class="market-role" id="market-role" hidden>
+          <span><span class="zh">目前身分</span><span class="en">Current role</span></span>
+          <button type="button" class="btn btn-outline" data-mode="buyer"><span class="zh">買家模式</span><span class="en">Buyer mode</span></button>
+          <button type="button" class="btn btn-outline" data-mode="seller"><span class="zh">賣家模式</span><span class="en">Seller mode</span></button>
+        </div>
+        <p class="market-role-copy" id="market-role-copy"></p>
+        <p class="market-seller-notice" id="market-seller-notice" hidden></p>
+        <p class="market-stats" id="market-stats" hidden></p>
+
+        <form id="market-form" class="market-form" hidden>
+          <h2 id="market-form-title"><span class="zh">新增商品</span><span class="en">Add new item</span></h2>
+          <input type="hidden" id="market-product-id">
+          <label><span class="zh">中文商品名稱</span><span class="en">Chinese product name</span>
+            <input id="market-name-zh" required>
+          </label>
+          <label><span class="zh">英文商品名稱</span><span class="en">English product name</span>
+            <input id="market-name-en" required>
+          </label>
+          <label><span class="zh">分類</span><span class="en">Category</span>
+            <select id="market-category"></select>
+          </label>
+          <label><span class="zh">中文說明</span><span class="en">Chinese description</span>
+            <textarea id="market-description-zh" rows="3"></textarea>
+          </label>
+          <label><span class="zh">英文說明</span><span class="en">English description</span>
+            <textarea id="market-description-en" rows="3"></textarea>
+          </label>
+          <label><span class="zh">價格（元）</span><span class="en">Price (TWD)</span>
+            <input id="market-price" type="number" min="0" step="1" required>
+          </label>
+          <label><span class="zh">數量</span><span class="en">Quantity</span>
+            <input id="market-quantity" type="number" min="0" step="1" required>
+          </label>
+          <label><span class="zh">圖片網址（選填）</span><span class="en">Image URL (optional)</span>
+            <input id="market-image" type="text" placeholder="https://">
+          </label>
+          <label><span class="zh">產品影片網址（選填，MP4）</span><span class="en">Product video URL (optional, MP4)</span>
+            <input id="market-video" type="text" placeholder="https://">
+          </label>
+          <label><span class="zh">上架狀態</span><span class="en">Listing status</span>
+            <select id="market-listing-status"></select>
+          </label>
+          <div class="market-form-actions">
+            <button type="submit" class="btn btn-gold"><span class="zh">儲存商品</span><span class="en">Save item</span></button>
+            <button type="button" class="btn btn-outline" id="market-form-cancel"><span class="zh">取消</span><span class="en">Cancel</span></button>
+            <button type="button" class="btn btn-outline" id="market-seed"><span class="zh">載入簡報範例商品</span><span class="en">Load slide sample items</span></button>
+          </div>
+        </form>
+
+        <div id="market-view-listings">
+          <div class="admin-list-head">
+            <h2 id="market-list-title"><span class="zh">瀏覽商品</span><span class="en">Browse products</span></h2>
+            <label id="market-browse-filter"><span class="zh">分類</span><span class="en">Category</span>
+              <select id="market-category-filter"></select>
+            </label>
+          </div>
+          <div class="market-grid" id="market-grid"></div>
+        </div>
+
+        <div id="market-view-inventory" hidden>
+          <div class="admin-list-head">
+            <h2><span class="zh">庫存管理</span><span class="en">Inventory management</span></h2>
+            <p class="admin-count" id="market-stock-total"></p>
+          </div>
+          <div class="admin-news-table-wrap">
+            <table class="admin-news-table">
+              <thead>
+                <tr>
+                  <th><span class="zh">商品</span><span class="en">Product</span></th>
+                  <th><span class="zh">狀態</span><span class="en">Status</span></th>
+                  <th><span class="zh">提醒</span><span class="en">Alert</span></th>
+                  <th><span class="zh">庫存</span><span class="en">Stock</span></th>
+                </tr>
+              </thead>
+              <tbody id="market-inventory-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="market-view-cart" hidden>
+          <div class="admin-list-head">
+            <h2><span class="zh">購物車</span><span class="en">Shopping cart</span></h2>
+          </div>
+          <div id="market-cart"></div>
+        </div>
+
+        <div id="market-view-pay" hidden>
+          <div class="admin-list-head">
+            <h2><span class="zh">付款</span><span class="en">Payment</span></h2>
+          </div>
+          <div id="market-pay"></div>
+        </div>
+
+        <div id="market-view-member" hidden>
+          <div class="admin-list-head">
+            <h2><span class="zh">我的訂單</span><span class="en">My orders</span></h2>
+          </div>
+          <div id="market-member"></div>
+        </div>
+
+        <div id="market-view-seller" hidden>
+          <div class="admin-list-head">
+            <h2><span class="zh">賣家訂單管理</span><span class="en">Seller order management</span></h2>
+          </div>
+          <div id="market-seller"></div>
+          <div class="market-accounts">
+            <div class="admin-list-head">
+              <h2><span class="zh">帳務（月報）</span><span class="en">Financial management (monthly report)</span></h2>
+            </div>
+            <div class="market-account-tools">
+              <label><span class="zh">月份</span><span class="en">Month</span>
+                <select id="market-month"></select>
+              </label>
+              <button type="button" class="btn btn-outline" id="market-export"><span class="zh">匯出 CSV</span><span class="en">Export CSV</span></button>
+            </div>
+            <p id="market-month-summary"></p>
+          </div>
+        </div>
+
+        <div id="market-view-admin" hidden>
+          <div class="admin-list-head">
+            <h2><span class="zh">全平台交易</span><span class="en">All platform transactions</span></h2>
+          </div>
+          <form id="market-fee-form" class="market-fee" hidden>
+            <label><span class="zh">每筆平台手續費（元）</span><span class="en">Platform fee per transaction (TWD)</span>
+              <input id="market-fee" type="number" min="0" step="1">
+            </label>
+            <button type="submit" class="btn btn-gold"><span class="zh">儲存平台手續費</span><span class="en">Save platform fee</span></button>
+          </form>
+          <p class="market-stats" id="market-admin-stats"></p>
+          <div class="market-filters">
+            <label><span class="zh">訂單編號</span><span class="en">Order ID</span>
+              <input id="market-order-q" type="search">
+            </label>
+            <label><span class="zh">交易狀態</span><span class="en">Transaction status</span>
+              <select id="market-status-filter"></select>
+            </label>
+          </div>
+          <div id="market-admin-list"></div>
         </div>
       </div>
     </section>
   </main>
   <div id="site-footer"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/auth.js?v=market"></script>
   <script src="assets/js/site.js?v=site-downloads"></script>
+  <script src="assets/js/market-app.js?v=market-orders"></script>
 </body>
 </html>
