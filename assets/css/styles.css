@@ -404,6 +404,27 @@ body.menu-collapsed {
   color: var(--navy);
   background: transparent;
 }
+.btn-danger {
+  background: #9a3412;
+  color: #fff;
+}
+.btn-danger:hover { filter: brightness(.96); color: #fff; }
+.users-confirm {
+  position: fixed; inset: 0; z-index: 80;
+  display: grid; place-items: center;
+  padding: 20px; background: rgba(8, 22, 40, .45);
+}
+.users-confirm[hidden] { display: none !important; }
+.users-confirm-card {
+  width: min(440px, 100%);
+  padding: 22px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(8, 22, 40, .2);
+}
+.users-confirm-card h3 { margin: 0 0 8px; }
+.users-confirm-card p { margin: 0 0 16px; }
+.users-confirm-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
 
 .menu-toggle {
   display: none;

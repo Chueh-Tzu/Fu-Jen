@@ -106,6 +106,7 @@
     if (row.entity_type === "announcement") return t("公告：", "Announcement: ") + name;
     if (row.entity_type === "faculty") return t("師資：", "Faculty: ") + name;
     if (row.entity_type === "alumni") return t("校友：", "Alumni: ") + name;
+    if (row.entity_type === "profile") return t("帳號：", "Account: ") + name;
     if (row.entity_type === "market_product") return t("市集商品：", "Marketplace item: ") + name;
     if (row.entity_type === "market_order") return t("市集訂單：", "Marketplace order: ") + name;
     return name;

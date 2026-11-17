@@ -201,6 +201,43 @@ create policy "Public read faculty photos"
   to public
   using (bucket_id = 'faculty-photos');
 
+-- Super admin removes a login. Profiles and related rows follow the foreign keys.
+create or replace function public.remove_site_account(p_user uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  target_role text;
+begin
+  if uid is null then
+    raise exception 'Sign in required';
+  end if;
+  if not public.is_super_admin() then
+    raise exception 'Only a super admin can remove an account';
+  end if;
+  if p_user is null or p_user = uid then
+    raise exception 'You cannot remove the account you are using';
+  end if;
+  select role into target_role from public.profiles where id = p_user;
+  if target_role is null and not exists (select 1 from auth.users where id = p_user) then
+    raise exception 'Account not found';
+  end if;
+  if target_role = 'super_admin' then
+    raise exception 'A super admin account cannot be removed';
+  end if;
+  delete from auth.users where id = p_user;
+  if not found then
+    raise exception 'Account not found';
+  end if;
+end;
+$$;
+
+revoke all on function public.remove_site_account(uuid) from public;
+grant execute on function public.remove_site_account(uuid) to authenticated;
+
 -- ---------------------------------------------------------------
 -- AFTER you register your first account in the website login page,
 -- promote yourself to super_admin in SQL Editor (replace email):

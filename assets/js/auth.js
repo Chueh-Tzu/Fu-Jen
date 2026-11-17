@@ -359,6 +359,12 @@
     return (result.data || []).map(normalizeProfile);
   }
 
+  async function removeAccount(userId) {
+    var sb = getClient();
+    var result = await sb.rpc("remove_site_account", { p_user: userId });
+    if (result.error) throw result.error;
+  }
+
   async function setRole(userId, role) {
     if (!/^(visitor|pending|rejected|admin|super_admin)$/.test(role)) {
       throw new Error("Invalid role.");
@@ -485,6 +491,7 @@
     resetPassword: resetPassword,
     updatePassword: updatePassword,
     listProfiles: listProfiles,
+    removeAccount: removeAccount,
     listLoginLogs: listLoginLogs,
     listActivityLogs: listActivityLogs,
     writeActivity: writeActivity,

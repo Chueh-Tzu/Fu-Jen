@@ -5,7 +5,12 @@
   var listEl = document.getElementById("users-list");
   var countEl = document.getElementById("users-count");
   var statusEl = document.getElementById("users-status");
+  var dialog = document.getElementById("users-remove-dialog");
+  var dialogCopy = document.getElementById("users-remove-copy");
+  var confirmBtn = document.getElementById("users-remove-confirm");
+  var cancelBtn = document.getElementById("users-remove-cancel");
   var me = null;
+  var pending = null;
 
   function isEn() {
     return document.documentElement.getAttribute("data-locale") === "en";
@@ -81,7 +86,11 @@
         '<h3 class="admin-row-title">' + escapeHtml(row.display_name || row.email || row.id) + "</h3>" +
         '<p class="admin-row-sub">' + escapeHtml(row.email || "") + "</p>" +
         "</div>" +
-        '<div class="admin-row-actions">' + actions + "</div></article>"
+        '<div class="admin-row-actions">' + actions +
+        (row.role === "super_admin" ? "" :
+          '<button type="button" class="btn btn-outline" data-remove="' + escapeHtml(row.id) + '">' +
+          t("移除帳號", "Remove account") + "</button>") +
+        "</div></article>"
       );
     }).join("");
     listEl.querySelectorAll("[data-role]").forEach(function (btn) {
@@ -96,7 +105,43 @@
     render(rows);
   }
 
+  function accountName(row) {
+    return row.display_name || row.email || row.id;
+  }
+
+  function paintDialog() {
+    if (!pending) return;
+    dialogCopy.textContent = t(
+      "確定要移除「" + accountName(pending) + "」嗎？移除後這個帳號無法再登入。",
+      "Remove “" + accountName(pending) + "”? This account will no longer be able to sign in."
+    );
+  }
+
+  function openDialog(row) {
+    pending = row;
+    paintDialog();
+    dialog.hidden = false;
+    cancelBtn.focus();
+  }
+
+  function closeDialog() {
+    pending = null;
+    dialog.hidden = true;
+    confirmBtn.disabled = false;
+    cancelBtn.disabled = false;
+  }
+
   listEl.addEventListener("click", async function (event) {
+    var removeBtn = event.target.closest("[data-remove]");
+    if (removeBtn) {
+      var card = removeBtn.closest("[data-id]");
+      openDialog({
+        id: removeBtn.getAttribute("data-remove"),
+        display_name: card ? card.querySelector(".admin-row-title").textContent : "",
+        email: card ? card.querySelector(".admin-row-sub").textContent : ""
+      });
+      return;
+    }
     var btn = event.target.closest("[data-role]");
     if (!btn) return;
     var row = btn.closest("[data-id]");
@@ -112,10 +157,51 @@
     }
   });
 
+  cancelBtn.addEventListener("click", closeDialog);
+  dialog.addEventListener("click", function (event) {
+    if (event.target === dialog) closeDialog();
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && !dialog.hidden) closeDialog();
+  });
+  confirmBtn.addEventListener("click", async function () {
+    if (!pending) return;
+    if (me && me.profile && me.profile.id === pending.id) {
+      closeDialog();
+      showStatus(t("不能移除目前登入的帳號。", "You cannot remove the account you are using."), "err");
+      return;
+    }
+    var target = pending;
+    confirmBtn.disabled = true;
+    cancelBtn.disabled = true;
+    try {
+      await auth.removeAccount(target.id);
+      if (auth.writeActivity) {
+        try {
+          await auth.writeActivity({
+            action: "DELETE",
+            entity_type: "profile",
+            entity_id: target.id,
+            entity_label: accountName(target),
+            summary: "removed account"
+          });
+        } catch (logErr) {}
+      }
+      closeDialog();
+      showStatus(t("已移除帳號「" + accountName(target) + "」。", "Removed “" + accountName(target) + "”."), "ok");
+      await refresh();
+    } catch (err) {
+      confirmBtn.disabled = false;
+      cancelBtn.disabled = false;
+      showStatus(t("移除失敗：", "Could not remove the account: ") + (err.message || err), "err");
+    }
+  });
+
   var localeToggle = document.querySelector("[data-locale-toggle]");
   if (localeToggle) {
     localeToggle.addEventListener("click", function () {
       setTimeout(function () {
+        paintDialog();
         if (!listEl.querySelector("[data-id]")) return;
         refresh().then(function () {
           if (statusEl.classList.contains("is-ok")) {
