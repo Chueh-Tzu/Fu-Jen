@@ -3,38 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>C2C Marketplace | International Management (imMBA)</title>
+  <title>Books &amp; Marketplace | International Management (imMBA)</title>
   <meta name="description" content="Student C2C marketplace for browsing, selling, and tracking orders.">
   <link rel="icon" href="assets/img/immba-logo.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=market-orders2">
+  <link rel="stylesheet" href="assets/css/styles.css?v=swap-ui20">
 </head>
-<body>
+<body class="page-market">
   <a class="skip" href="#main"><span class="zh">跳至主要內容</span><span class="en">Skip to content</span></a>
   <div id="site-header"></div>
   <main id="main">
     <header class="page-hero">
       <div class="wrap">
-        <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">同學市集</span><span class="en">C2C marketplace</span></p>
-        <h1><span class="zh">同學市集</span><span class="en">C2C marketplace</span></h1>
+        <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">書籍&amp;市集</span><span class="en">Books &amp; Marketplace</span></p>
+        <h1><span class="zh">書籍&amp;市集</span><span class="en">Books &amp; Marketplace</span></h1>
         <p class="lead"><span class="zh">同一個帳號可以切換買家或賣家。訪客只能瀏覽上架商品。這是課程教學示範，不是正式交易平台。</span><span class="en">The same account can switch between buyer and seller. Visitors can only browse listings. This is a course demo, not an official store.</span></p>
       </div>
     </header>
     <section class="section">
       <div class="wrap market-wrap">
         <p class="admin-status" id="market-status" role="status" aria-live="polite" hidden></p>
-        <div class="market-toolbar">
-          <button type="button" class="btn btn-outline" id="market-listings-btn" data-view="listings"><span class="zh">瀏覽商品</span><span class="en">Browse products</span></button>
+        <div class="swap-top">
+          <div class="swap-brandline">
+            <p class="swap-brand"><span class="zh">書籍&amp;市集</span><span class="en">Books &amp; Marketplace</span></p>
+            <p class="swap-tag"><span class="zh">校園二手交易</span><span class="en">Campus second-hand trade</span></p>
+          </div>
+          <div class="swap-top-actions">
+            <span id="market-who"></span>
+            <a class="swap-text" href="index.html"><span class="zh">回到 imMBA</span><span class="en">Back to imMBA</span></a>
+            <button type="button" class="btn btn-outline" id="market-locale">EN</button>
+            <a class="btn btn-outline market-login" id="market-login" href="login.html?next=books.html"><span class="zh">登入</span><span class="en">Sign in</span></a>
+            <button type="button" class="btn btn-outline" id="market-signout" hidden><span class="zh">登出</span><span class="en">Sign out</span></button>
+          </div>
+        </div>
+        <div class="market-toolbar swap-nav">
+          <span class="swap-kicker"><span class="zh">市集</span><span class="en">Market</span></span>
+          <button type="button" class="btn btn-outline" id="market-listings-btn" data-view="listings"><span class="zh">瀏覽商品</span><span class="en">Browse</span></button>
           <button type="button" class="btn btn-outline" id="market-cart-btn" data-view="cart"><span class="zh">購物車</span><span class="en">Cart</span></button>
           <button type="button" class="btn btn-outline" id="market-member-btn" data-view="member"><span class="zh">我的訂單</span><span class="en">My orders</span></button>
-          <button type="button" class="btn btn-outline" id="market-inventory-btn" data-view="inventory" hidden><span class="zh">庫存管理</span><span class="en">Inventory</span></button>
-          <button type="button" class="btn btn-outline" id="market-seller-btn" data-view="seller" hidden><span class="zh">賣家訂單</span><span class="en">Seller orders</span><span id="market-seller-count"></span></button>
-          <button type="button" class="btn btn-outline" id="market-admin-btn" data-view="admin" hidden><span class="zh">平台交易</span><span class="en">Platform transactions</span></button>
-          <a class="btn btn-outline" id="market-users-link" href="admin-users.html" hidden><span class="zh">管理員審核</span><span class="en">Admin approval</span></a>
-          <button type="button" class="btn btn-gold" id="market-add-btn" hidden><span class="zh">新增商品</span><span class="en">Add new item</span></button>
+          <button type="button" class="btn btn-outline" id="market-admin-label" data-view="admin" hidden><span class="zh">管理</span><span class="en">Admin</span></button>
+          <button type="button" class="btn btn-outline" id="market-admin-btn" data-view="admin" hidden><span class="zh">交易查詢</span><span class="en">Transactions</span></button>
+          <button type="button" class="btn btn-outline" data-mode="seller" id="market-become-seller"><span class="zh">成為賣家</span><span class="en">Become a seller</span></button>
+          <a class="btn btn-outline" id="market-users-link" href="admin-users.html" hidden><span class="zh">帳號</span><span class="en">Account</span></a>
+          <span class="swap-kicker" id="market-seller-label" hidden><span class="zh">賣家</span><span class="en">Seller</span></span>
+          <button type="button" class="btn btn-outline" id="market-inventory-btn" data-view="inventory" hidden><span class="zh">我的商品</span><span class="en">My listings</span></button>
+          <button type="button" class="btn btn-outline" id="market-seller-btn" data-view="seller" hidden><span class="zh">待處理訂單</span><span class="en">Orders to process</span><span id="market-seller-count"></span></button>
+          <button type="button" class="btn btn-outline" id="market-add-btn" hidden><span class="zh">上架新商品</span><span class="en">List a new item</span></button>
+          <button type="button" class="btn btn-outline" data-mode="buyer" id="market-buyer-mode" hidden><span class="zh">回到買家</span><span class="en">Buyer mode</span></button>
         </div>
+        <p class="swap-fee-note" id="market-fee-note" hidden role="status">
+          <span class="zh">每筆平台手續費為 <span id="market-fee-amount">4</span>（元）</span>
+          <span class="en">The platform fee is <span id="market-fee-amount-en">4</span> TWD per order.</span>
+        </p>
         <div class="market-role" id="market-role" hidden>
           <span><span class="zh">目前身分</span><span class="en">Current role</span></span>
           <button type="button" class="btn btn-outline" data-mode="buyer"><span class="zh">買家模式</span><span class="en">Buyer mode</span></button>
@@ -84,14 +106,34 @@
           </div>
         </form>
 
-        <div id="market-view-listings">
-          <div class="admin-list-head">
-            <h2 id="market-list-title"><span class="zh">瀏覽商品</span><span class="en">Browse products</span></h2>
-            <label id="market-browse-filter"><span class="zh">分類</span><span class="en">Category</span>
+        <div id="market-view-listings" class="swap-browse">
+          <aside class="swap-filters" id="market-browse-filter">
+            <h2><span class="zh">篩選</span><span class="en">Filters</span></h2>
+            <label><span class="zh">搜尋商品名稱</span><span class="en">Search item name</span>
+              <input id="market-search" type="search">
+            </label>
+            <label><span class="zh">分類</span><span class="en">Category</span>
               <select id="market-category-filter"></select>
             </label>
+            <div class="swap-price">
+              <label><span class="zh">最低價</span><span class="en">Min price</span>
+                <input id="market-min" type="number" min="0" step="1">
+              </label>
+              <label><span class="zh">最高價</span><span class="en">Max price</span>
+                <input id="market-max" type="number" min="0" step="1">
+              </label>
+            </div>
+            <label class="swap-check"><input id="market-instock" type="checkbox"> <span class="zh">只看有庫存</span><span class="en">In stock only</span></label>
+            <button type="button" class="btn btn-outline" id="market-clear-filters"><span class="zh">清除篩選</span><span class="en">Clear filters</span></button>
+          </aside>
+          <div>
+            <div class="swap-head">
+              <h2 id="market-list-title"><span class="zh">瀏覽商品</span><span class="en">Browse items</span></h2>
+              <p id="market-list-count"></p>
+            </div>
+            <p class="swap-lead" id="market-list-lead"><span class="zh">二手書籍、課程教材和校園日常用品。</span><span class="en">Second-hand books, course materials and everyday items on campus.</span></p>
+            <div class="market-grid" id="market-grid"></div>
           </div>
-          <div class="market-grid" id="market-grid"></div>
         </div>
 
         <div id="market-view-inventory" hidden>
@@ -103,10 +145,13 @@
             <table class="admin-news-table">
               <thead>
                 <tr>
-                  <th><span class="zh">商品</span><span class="en">Product</span></th>
+                  <th><span class="zh">商品</span><span class="en">Item</span></th>
+                  <th><span class="zh">價格</span><span class="en">Price</span></th>
+                  <th><span class="zh">庫存</span><span class="en">Inventory</span></th>
+                  <th><span class="zh">已售</span><span class="en">Purchased</span></th>
+                  <th><span class="zh">可售</span><span class="en">Available</span></th>
                   <th><span class="zh">狀態</span><span class="en">Status</span></th>
-                  <th><span class="zh">提醒</span><span class="en">Alert</span></th>
-                  <th><span class="zh">庫存</span><span class="en">Stock</span></th>
+                  <th><span class="zh">操作</span><span class="en">Actions</span></th>
                 </tr>
               </thead>
               <tbody id="market-inventory-body"></tbody>
@@ -132,6 +177,18 @@
           <div class="admin-list-head">
             <h2><span class="zh">我的訂單</span><span class="en">My orders</span></h2>
           </div>
+          <div class="swap-query">
+            <label><span class="zh">搜尋訂單編號</span><span class="en">Search order number</span>
+              <input id="market-member-q" type="search" placeholder="MK">
+            </label>
+            <label><span class="zh">狀態</span><span class="en">Status</span>
+              <select id="market-member-status"></select>
+            </label>
+            <label class="swap-check"><input id="market-member-abnormal" type="checkbox"> <span class="zh">只看異常</span><span class="en">Only abnormal</span></label>
+            <button type="button" class="btn btn-outline" id="market-member-clear"><span class="zh">清除</span><span class="en">Clear</span></button>
+            <button type="button" class="btn btn-outline" id="market-member-export"><span class="zh">匯出目前結果（CSV）</span><span class="en">Export the current result (CSV)</span></button>
+          </div>
+          <p class="swap-note"><span class="zh">異常是指：待確認付款超過 3 天，或已出貨超過 7 天仍未完成。</span><span class="en">Looks abnormal: waiting for payment confirmation for more than 3 days, or shipped more than 7 days ago and not completed.</span></p>
           <div id="market-member"></div>
         </div>
 
@@ -158,21 +215,19 @@
           <div class="admin-list-head">
             <h2><span class="zh">全平台交易</span><span class="en">All platform transactions</span></h2>
           </div>
-          <form id="market-fee-form" class="market-fee" hidden>
-            <label><span class="zh">每筆平台手續費（元）</span><span class="en">Platform fee per transaction (TWD)</span>
-              <input id="market-fee" type="number" min="0" step="1">
-            </label>
-            <button type="submit" class="btn btn-gold"><span class="zh">儲存平台手續費</span><span class="en">Save platform fee</span></button>
-          </form>
           <p class="market-stats" id="market-admin-stats"></p>
-          <div class="market-filters">
-            <label><span class="zh">訂單編號</span><span class="en">Order ID</span>
-              <input id="market-order-q" type="search">
+          <div class="swap-query">
+            <label><span class="zh">搜尋訂單編號</span><span class="en">Search order number</span>
+              <input id="market-order-q" type="search" placeholder="MK">
             </label>
-            <label><span class="zh">交易狀態</span><span class="en">Transaction status</span>
+            <label><span class="zh">狀態</span><span class="en">Status</span>
               <select id="market-status-filter"></select>
             </label>
+            <label class="swap-check"><input id="market-abnormal" type="checkbox"> <span class="zh">只看異常</span><span class="en">Only abnormal</span></label>
+            <button type="button" class="btn btn-outline" id="market-admin-clear"><span class="zh">清除</span><span class="en">Clear</span></button>
+            <button type="button" class="btn btn-outline" id="market-admin-export"><span class="zh">匯出目前結果（CSV）</span><span class="en">Export the current result (CSV)</span></button>
           </div>
+          <p class="swap-note"><span class="zh">異常是指：待確認付款超過 3 天，或已出貨超過 7 天仍未完成。</span><span class="en">Looks abnormal: waiting for payment confirmation for more than 3 days, or shipped more than 7 days ago and not completed.</span></p>
           <div id="market-admin-list"></div>
         </div>
       </div>
@@ -183,6 +238,6 @@
   <script src="assets/js/supabase-config.js"></script>
   <script src="assets/js/auth.js?v=market"></script>
   <script src="assets/js/site.js?v=site-downloads"></script>
-  <script src="assets/js/market-app.js?v=market-orders"></script>
+  <script src="assets/js/market-app.js?v=swap-ui21"></script>
 </body>
 </html>

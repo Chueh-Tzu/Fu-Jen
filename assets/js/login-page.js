@@ -116,6 +116,11 @@
     return next;
   }
 
+  function marketHome(profile) {
+    if (nextPage() === "books.html" && profile && profile.role !== "rejected") return "books.html";
+    return "";
+  }
+
   function isRecoveryLanding() {
     var type = params.get("type") || hashParams.get("type") || "";
     return params.get("mode") === "reset" || type === "recovery";
@@ -185,6 +190,7 @@
       location.replace(nextPage());
       return;
     }
+    var market = marketHome(profile);
     if (profile && profile.role === "pending") {
       try { sessionStorage.setItem("immba-visitor-note", "pending"); } catch (err) {}
     } else if (profile && profile.role === "rejected") {
@@ -192,7 +198,7 @@
     } else if (params.get("denied") === "1") {
       try { sessionStorage.setItem("immba-visitor-note", "denied"); } catch (err) {}
     }
-    location.replace("index.html");
+    location.replace(market || "index.html");
   }
 
   function continueAfterAuth(profile) {
@@ -204,14 +210,19 @@
       location.href = nextPage();
       return;
     }
+    var market = marketHome(profile);
     if (profile && profile.role === "pending") {
       try { sessionStorage.setItem("immba-visitor-note", "pending"); } catch (err) {}
-      location.href = "index.html";
+      location.href = market || "index.html";
       return;
     }
     if (profile && profile.role === "rejected") {
       try { sessionStorage.setItem("immba-visitor-note", "rejected"); } catch (err) {}
       location.href = "index.html";
+      return;
+    }
+    if (market) {
+      location.href = market;
       return;
     }
     sendVisitorHome();

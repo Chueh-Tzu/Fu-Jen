@@ -18,9 +18,13 @@
   var view = "listings";
   var mode = "buyer";
   var cartEditId = "";
+  var cartPicked = {};
   var overviewOrderId = "";
+  var adminDetailId = "";
+  var memberDetailId = "";
   var ready = false;
   var statusNote = null;
+  var statusTimer = null;
 
   var statusEl = document.getElementById("market-status");
 
@@ -41,9 +45,20 @@
     var amount = Number(value || 0).toLocaleString("en-US");
     return t(amount + " 元", "NT$ " + amount);
   }
-  function showStatus(zh, en, kind) {
+  function showStatus(zh, en, kind, stayMs) {
     statusNote = { zh: zh, en: en || zh, kind: kind || "ok" };
     paintStatus();
+    if (statusTimer) {
+      clearTimeout(statusTimer);
+      statusTimer = null;
+    }
+    if (stayMs) {
+      statusTimer = setTimeout(function () {
+        statusTimer = null;
+        statusNote = null;
+        paintStatus();
+      }, stayMs);
+    }
   }
   function paintStatus() {
     if (!statusNote || !statusNote.zh) {
@@ -94,6 +109,7 @@
     if (status === "shipped") return t("已出貨", "Shipped");
     if (status === "arrived") return t("已到貨", "Arrived");
     if (status === "completed") return t("已完成", "Completed");
+    if (status === "cancelled") return t("已取消", "Cancelled");
     if (status === "listed") return t("上架中", "Listed");
     if (status === "hidden") return t("已隱藏", "Hidden");
     if (status === "sold") return t("已售出", "Sold");
@@ -159,12 +175,38 @@
     }).join(t("、", ", "));
   }
   function visibleProducts() {
-    if (mode === "seller" && canTrade()) {
-      return products.filter(function (item) { return item.seller_id === uid(); });
-    }
     return products.filter(function (item) {
       return item.status === "listed";
     });
+  }
+
+  function shortCode(id) {
+    return String(id || "").replace(/-/g, "").slice(0, 6).toUpperCase();
+  }
+
+  function orderCode(order) {
+    var date = new Date(order.created_at || order.updated_at);
+    if (isNaN(date.getTime())) return shortCode(order.id);
+    var parts = {};
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Taipei",
+      year: "2-digit",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(date).forEach(function (part) {
+      parts[part.type] = part.value;
+    });
+    return "MK " + parts.year + "-" + parts.month + parts.day + "." + shortCode(order.id).slice(0, 4);
+  }
+
+  function purchasedCount(productId) {
+    var count = 0;
+    orders.forEach(function (order) {
+      (order.market_order_items || []).forEach(function (item) {
+        if (item.product_id === productId) count += Number(item.quantity) || 0;
+      });
+    });
+    return count;
   }
 
   function setView(next) {
@@ -191,8 +233,17 @@
 
   function pendingSellerOrders() {
     return orders.filter(function (order) {
-      return order.seller_id === uid() && order.status === "awaiting_payment";
+      return order.seller_id === uid() && order.status !== "completed" && order.status !== "cancelled";
     }).length;
+  }
+
+  function cancelRequested(order) {
+    return !!(order && order.cancel_reason && order.status !== "cancelled");
+  }
+
+  function orderBadge(order) {
+    if (cancelRequested(order)) return t("待確認取消", "Cancellation requested");
+    return statusLabel(order.status);
   }
 
   function renderChrome() {
@@ -207,9 +258,22 @@
     document.getElementById("market-seller-btn").hidden = !sellerView;
     document.getElementById("market-admin-btn").hidden = !isAdmin();
     document.getElementById("market-users-link").hidden = !isSuper();
-    document.getElementById("market-listings-btn").innerHTML = sellerView
-      ? '<span class="zh">我的商品</span><span class="en">My listings</span>'
-      : '<span class="zh">瀏覽商品</span><span class="en">Browse products</span>';
+    document.getElementById("market-login").hidden = signedIn;
+    document.getElementById("market-signout").hidden = !signedIn;
+    document.getElementById("market-role").hidden = true;
+    document.getElementById("market-become-seller").hidden = sellerView;
+    document.getElementById("market-buyer-mode").hidden = !sellerView;
+    document.getElementById("market-seller-label").hidden = !sellerView;
+    document.getElementById("market-admin-label").hidden = !isAdmin();
+    document.getElementById("market-who").textContent = signedIn
+      ? (me.profile.display_name || me.profile.email || "")
+      : "";
+    document.getElementById("market-fee-note").hidden = sellerView;
+    document.getElementById("market-fee-amount").textContent = String(fee);
+    document.getElementById("market-fee-amount-en").textContent = String(fee);
+    document.getElementById("market-locale").textContent = isEn() ? "中文" : "EN";
+    document.getElementById("market-listings-btn").innerHTML =
+      '<span class="zh">瀏覽商品</span><span class="en">Browse</span>';
     var pending = signedIn ? pendingSellerOrders() : 0;
     document.getElementById("market-seller-count").textContent = pending
       ? t("（" + pending + "）", "(" + pending + ")")
@@ -252,12 +316,26 @@
       });
     });
     var notice = document.getElementById("market-seller-notice");
-    var openOrders = signedIn ? orders.filter(function (order) {
-      return order.seller_id === uid() && order.status !== "completed";
+    var cancelAsks = signedIn ? orders.filter(function (order) {
+      return order.seller_id === uid() && cancelRequested(order);
     }).length : 0;
-    if (!signedIn || sellerView || !openOrders) {
+    var openOrders = signedIn ? orders.filter(function (order) {
+      return order.seller_id === uid() && order.status !== "completed" && order.status !== "cancelled" && !cancelRequested(order);
+    }).length : 0;
+    if (!signedIn || (!cancelAsks && (sellerView || !openOrders))) {
       notice.hidden = true;
       notice.innerHTML = "";
+    } else if (cancelAsks) {
+      notice.hidden = false;
+      notice.innerHTML =
+        escapeHtml(t(
+          "賣家通知：買家申請取消 " + cancelAsks + " 筆訂單，請按「確認取消」。",
+          "Seller notice: a buyer asked to cancel " + cancelAsks + " order(s). Press Confirm cancellation."
+        )) +
+        (sellerView
+          ? ""
+          : ' <button type="button" class="btn btn-gold" id="market-open-seller">' +
+            t("前往賣家訂單", "Open seller orders") + "</button>");
     } else {
       notice.hidden = false;
       notice.innerHTML =
@@ -299,54 +377,53 @@
   function renderListings() {
     var grid = document.getElementById("market-grid");
     var title = document.getElementById("market-list-title");
-    var sellerView = selling();
-    grid.classList.toggle("is-browse", !sellerView);
     var filter = document.getElementById("market-category-filter");
-    document.getElementById("market-browse-filter").hidden = sellerView;
-    title.innerHTML = sellerView
-      ? '<span class="zh">我的商品</span><span class="en">My listings</span>'
-      : '<span class="zh">瀏覽商品</span><span class="en">Browse products</span>';
+    var search = (document.getElementById("market-search").value || "").trim().toLowerCase();
+    var min = Number(document.getElementById("market-min").value);
+    var max = Number(document.getElementById("market-max").value);
+    var inStock = document.getElementById("market-instock").checked;
+    title.innerHTML = '<span class="zh">瀏覽商品</span><span class="en">Browse items</span>';
     var rows = visibleProducts().filter(function (item) {
-      return sellerView || !filter.value || filter.value === "all" || item.category === filter.value;
+      var name = (productTitle(item) + " " + (item.name_zh || "") + " " + (item.name_en || "")).toLowerCase();
+      var price = Number(item.price) || 0;
+      var stock = Number(item.quantity) || 0;
+      if (filter.value && filter.value !== "all" && item.category !== filter.value) return false;
+      if (search && name.indexOf(search) === -1 && shortCode(item.id).toLowerCase().indexOf(search) === -1) return false;
+      if (document.getElementById("market-min").value !== "" && price < min) return false;
+      if (document.getElementById("market-max").value !== "" && price > max) return false;
+      if (inStock && stock <= 0) return false;
+      return true;
     });
+    document.getElementById("market-list-count").textContent = t(rows.length + " 件商品", rows.length + " items");
     if (!rows.length) {
-      grid.innerHTML = '<p class="market-empty">' + escapeHtml(t("目前沒有可顯示的商品。", "No products to show.")) + "</p>";
+      grid.innerHTML = '<p class="market-empty">' + escapeHtml(t("目前沒有符合的商品。", "No items match these filters.")) + "</p>";
       return;
     }
     var cart = readCart();
     grid.innerHTML = rows.map(function (item) {
       var stock = Number(item.quantity) || 0;
-      var low = item.status === "listed" && stock === 1;
       var qty = Math.max(1, Math.min(Number(cart[item.id] || 1), Math.max(stock, 1)));
       var actions = "";
-      if (sellerView && item.seller_id === uid()) {
-        actions =
-          '<button type="button" class="btn btn-outline" data-edit="' + item.id + '">' + t("編輯商品", "Edit item") + "</button>" +
-          '<button type="button" class="btn btn-outline" data-sold="' + item.id + '">' + t("標記售出", "Mark as sold") + "</button>" +
-          '<button type="button" class="btn btn-outline" data-hide="' + item.id + '">' + t("隱藏", "Hide") + "</button>" +
-          '<button type="button" class="btn btn-outline" data-delete-product="' + item.id + '">' + t("刪除", "Delete") + "</button>";
-      } else if (!sellerView && stock <= 0) {
+      if (stock <= 0) {
         actions = '<p class="market-note">' + escapeHtml(t("已售完", "Sold out")) + "</p>";
-      } else if (!sellerView && canTrade()) {
+      } else if (canTrade()) {
         actions =
           '<label class="market-qty">' + t("數量", "Qty") +
           ' <input data-qty="' + item.id + '" type="number" min="1" max="' + stock + '" value="' + qty + '"></label>' +
           '<button type="button" class="btn btn-gold" data-cart="' + item.id + '">' + t("加入購物車", "Add to cart") + "</button>";
-      } else if (!sellerView) {
-        actions = '<p class="market-note">' + escapeHtml(t("登入後才能加入購物車。", "Sign in to add this item to the cart.")) + "</p>";
+      } else {
+        actions = '<a class="btn btn-gold" href="login.html?next=books.html">' + t("登入後下單", "Sign in to order") + "</a>";
       }
       return (
-        '<article class="market-card">' +
+        '<article class="swap-card">' +
         cardMedia(item) +
-        '<p class="kicker">' + escapeHtml(categoryLabel(item.category)) + "</p>" +
+        '<div class="swap-card-body">' +
+        '<p class="swap-code"><span>' + escapeHtml(shortCode(item.id)) + "</span> " + escapeHtml(categoryLabel(item.category)) + "</p>" +
         "<h3>" + escapeHtml(productTitle(item)) + "</h3>" +
-        (low ? '<p class="market-low">' + escapeHtml(t("庫存不足，剩下 " + item.quantity + " 件", "Low stock (" + item.quantity + " left)")) + "</p>" : "") +
-        "<p>" + escapeHtml(productBlurb(item)) + "</p>" +
         '<p class="market-price">' + escapeHtml(money(item.price)) + "</p>" +
-        "<p>" + escapeHtml(t("可售數量：", "Available quantity: ") + item.quantity) + " · " + escapeHtml(statusLabel(item.status)) + "</p>" +
-        "<p>" + escapeHtml(t("賣家：", "Seller: ") + (item.seller_name || t("已註冊會員", "Registered member"))) + "</p>" +
-        '<p class="market-note">' + escapeHtml(t("請透過平台或雙方約定的方式聯絡賣家。", "Please contact the seller through the platform or via an agreed communication channel.")) + "</p>" +
-        '<div class="market-card-actions">' + actions + "</div></article>"
+        "<p>" + escapeHtml(t("剩下 " + stock + " 件", stock + " left")) + " · " +
+        escapeHtml(t("賣家：", "Seller: ") + (item.seller_name || t("已註冊會員", "Registered member"))) + "</p>" +
+        '<div class="market-card-actions">' + actions + "</div></div></article>"
       );
     }).join("");
   }
@@ -358,23 +435,29 @@
       return sum + (item.status === "listed" ? Number(item.quantity) || 0 : 0);
     }, 0);
     document.getElementById("market-stock-total").textContent = t(
-      "可售庫存共 " + total + " 件",
-      "Total available stock: " + total
+      "可售數量 = 目前庫存 − 已購買數量。可售共 " + total + " 件",
+      "Available stock = current inventory − purchased quantity. Available: " + total
     );
     if (!mine.length) {
-      body.innerHTML = '<tr><td colspan="4">' + escapeHtml(t("尚未上架商品。", "No listings yet.")) + "</td></tr>";
+      body.innerHTML = '<tr><td colspan="7">' + escapeHtml(t("尚未上架商品。", "No listings yet.")) + "</td></tr>";
       return;
     }
     body.innerHTML = mine.map(function (item) {
-      var alert = item.status === "listed" && Number(item.quantity) <= 1
-        ? t("庫存不足，剩下 " + item.quantity + " 件", "Low stock alert: only " + item.quantity + " left")
-        : "—";
+      var available = Number(item.quantity) || 0;
+      var purchased = purchasedCount(item.id);
+      var inventory = available + purchased;
+      var stockNote = item.status === "listed" && available <= 1
+        ? '<span class="swap-pill is-low">' + escapeHtml(t("不足", "Low")) + "</span>"
+        : '<span class="swap-pill is-ok">' + escapeHtml(t("有庫存", "In stock")) + "</span>";
       return (
-        "<tr><td>" + escapeHtml(productTitle(item)) + "</td><td>" + escapeHtml(statusLabel(item.status)) + "</td><td>" +
-        escapeHtml(alert) + '</td><td><input data-stock="' + item.id + '" type="number" min="0" step="1" value="' +
-        Number(item.quantity) + '"> <button type="button" class="btn btn-outline" data-stock-save="' + item.id + '">' +
-        t("更新庫存", "Update stock") + "</button> <button type=\"button\" class=\"btn btn-outline\" data-delete-product=\"" +
-        item.id + '">' + t("刪除", "Delete") + "</button></td></tr>"
+        "<tr><td><strong>" + escapeHtml(shortCode(item.id)) + "</strong><br>" + escapeHtml(productTitle(item)) +
+        "<br><span class=\"swap-muted\">" + escapeHtml(categoryLabel(item.category)) + "</span></td>" +
+        "<td>" + escapeHtml(money(item.price)) + "</td>" +
+        "<td>" + inventory + "</td><td>" + purchased + "</td><td>" + available + " " + stockNote + "</td>" +
+        "<td><span class=\"swap-pill\">" + escapeHtml(statusLabel(item.status)) + "</span></td>" +
+        '<td class="swap-actions"><button type="button" class="btn btn-outline" data-edit="' + item.id + '">' + t("編輯", "Edit") + "</button> " +
+        '<button type="button" class="btn btn-outline" data-hide="' + item.id + '">' + t("隱藏", "Hide") + "</button> " +
+        '<button type="button" class="btn btn-outline" data-delete-product="' + item.id + '">' + t("刪除", "Delete") + "</button></td></tr>"
       );
     }).join("");
   }
@@ -395,18 +478,62 @@
     return '<span class="market-thumb">' + escapeHtml(t("無圖片", "No image")) + "</span>";
   }
 
+  function cartCharge(lines) {
+    var subtotal = lines.reduce(function (sum, line) {
+      return sum + line.product.price * line.quantity;
+    }, 0);
+    var sellers = {};
+    lines.forEach(function (line) {
+      sellers[line.product.seller_id || ""] = true;
+    });
+    var sellerCount = Object.keys(sellers).length;
+    return { subtotal: subtotal, platformFee: sellerCount ? fee * sellerCount : 0 };
+  }
+
+  function rememberCartPicks(lines) {
+    var alive = {};
+    lines.forEach(function (line) {
+      var id = line.product.id;
+      alive[id] = true;
+      if (!Object.prototype.hasOwnProperty.call(cartPicked, id)) cartPicked[id] = true;
+    });
+    Object.keys(cartPicked).forEach(function (id) {
+      if (!alive[id]) delete cartPicked[id];
+    });
+  }
+
+  function selectedLines() {
+    var lines = cartLines();
+    rememberCartPicks(lines);
+    return lines.filter(function (line) { return cartPicked[line.product.id]; });
+  }
+
+  function chargeSummary(charge, shipping) {
+    return '<div class="swap-fee-lines">' +
+      '<p class="swap-fee-line">' + escapeHtml(t("商品金額 ", "Items ") + money(charge.subtotal)) + "</p>" +
+      '<p class="swap-fee-line">' + escapeHtml(t("平台手續費 ", "Platform fee ") + money(charge.platformFee)) + "</p>" +
+      (shipping
+        ? '<p class="swap-fee-line">' + escapeHtml(t("運費 ", "Shipping ") + money(shipping)) + "</p>"
+        : "") +
+      "</div>";
+  }
+
   function renderCart() {
     var host = document.getElementById("market-cart");
     var lines = cartLines();
+    rememberCartPicks(lines);
     if (!lines.length) {
       host.innerHTML = '<p class="market-empty">' + escapeHtml(t("購物車是空的。", "Your cart is empty.")) + "</p>";
       return;
     }
-    var subtotal = lines.reduce(function (sum, line) {
-      return sum + line.product.price * line.quantity;
-    }, 0);
+    var chosen = selectedLines();
+    var charge = cartCharge(chosen);
     host.innerHTML =
+      '<div class="market-cart-tools">' +
+      '<button type="button" class="btn btn-outline" data-cart-select-all>' + t("全選", "Select all") + "</button>" +
+      "</div>" +
       '<div class="admin-news-table-wrap"><table class="admin-news-table market-cart-table"><thead><tr>' +
+      "<th>" + t("選取", "Select") + "</th>" +
       "<th>" + t("商品圖片", "Image") + "</th>" +
       "<th>" + t("商品名稱", "Product name") + "</th>" +
       "<th>" + t("數量", "Quantity") + "</th>" +
@@ -424,49 +551,80 @@
         var editCell = editing
           ? '<button type="button" class="btn btn-outline" data-cart-save="' + line.product.id + '">' + t("儲存", "Save") + "</button>"
           : '<button type="button" class="btn btn-outline" data-cart-edit="' + line.product.id + '">' + t("修改", "Edit") + "</button>";
-        return "<tr><td>" + cartThumb(line.product) + "</td><td>" + escapeHtml(productTitle(line.product)) +
-          "</td><td>" + quantityCell + "</td><td>" + escapeHtml(money(line.product.price * line.quantity)) +
-          "</td><td>" + editCell + "</td><td>" +
+        var pick = '<input type="checkbox" data-cart-pick="' + line.product.id + '" aria-label="' +
+          escapeHtml(t("選取 ", "Select ") + productTitle(line.product)) + '"' +
+          (cartPicked[line.product.id] ? " checked" : "") + ">";
+        return '<tr><td class="market-pick">' + pick + "</td><td>" + cartThumb(line.product) + "</td><td>" +
+          escapeHtml(productTitle(line.product)) + "</td><td>" + quantityCell + "</td><td>" +
+          escapeHtml(money(line.product.price * line.quantity)) + "</td><td>" + editCell + "</td><td>" +
           '<button type="button" class="btn btn-outline" data-remove="' + line.product.id + '">' +
           t("刪除", "Delete") + "</button></td></tr>";
       }).join("") +
       "</tbody></table></div>" +
-      '<p class="market-cart-total">' + escapeHtml(t("總金額 ", "Total ") + money(subtotal)) + "</p>" +
+      (chosen.length
+        ? ""
+        : '<p class="swap-note">' + escapeHtml(t("請勾選要下單的商品。", "Select the items you want to order.")) + "</p>") +
+      chargeSummary(charge, 0) +
+      '<p class="market-cart-total">' + escapeHtml(t("總金額 ", "Total ") + money(charge.subtotal + charge.platformFee)) + "</p>" +
       '<button type="button" class="btn btn-gold" id="market-to-pay">' + t("確認下單", "Confirm order") + "</button>";
+  }
+
+  function paySummary(charge, shipping) {
+    return '<div class="swap-fee-lines">' +
+      '<p class="swap-fee-line">' + escapeHtml(t("商品金額 ", "Items ") + money(charge.subtotal)) + "</p>" +
+      '<p class="swap-fee-line">' + escapeHtml(t("平台費用 ", "Platform fee ") + money(charge.platformFee)) + "</p>" +
+      '<p class="swap-fee-line">' + escapeHtml(t("運費 ", "Shipping ") + money(shipping)) + "</p>" +
+      "</div>";
   }
 
   function renderPay() {
     var host = document.getElementById("market-pay");
-    var lines = cartLines();
+    var lines = selectedLines();
     if (!lines.length) {
-      host.innerHTML = '<p class="market-empty">' + escapeHtml(t("購物車是空的，請先選商品。", "Your cart is empty. Choose a product first.")) + "</p>";
+      host.innerHTML = '<p class="market-empty">' + escapeHtml(t("請先勾選要下單的商品。", "Select the items you want to order.")) + "</p>";
       return;
     }
-    var subtotal = lines.reduce(function (sum, line) {
-      return sum + line.product.price * line.quantity;
-    }, 0);
+    var charge = cartCharge(lines);
     host.innerHTML =
       '<p class="market-note">' + escapeHtml(t(
         "這是課程示範的付款畫面，不會真的扣款。送出後，賣家會在賣家模式確認收款。",
         "This is a course-demo payment screen. No real charge is made. After you submit, the seller confirms the payment in seller mode."
       )) + "</p>" +
-      "<ul class=\"market-pay-lines\">" +
+      '<div class="admin-news-table-wrap"><table class="admin-news-table market-cart-table market-pay-table"><thead><tr>' +
+      "<th>" + t("商品圖片", "Image") + "</th>" +
+      "<th>" + t("商品名稱", "Product name") + "</th>" +
+      "<th>" + t("數量", "Quantity") + "</th>" +
+      "<th>" + t("商品金額", "Item amount") + "</th>" +
+      "</tr></thead><tbody>" +
       lines.map(function (line) {
-        return "<li>" + escapeHtml(productTitle(line.product) + " × " + line.quantity + " · " + money(line.product.price * line.quantity)) + "</li>";
+        return "<tr><td>" + cartThumb(line.product) + "</td><td>" + escapeHtml(productTitle(line.product)) +
+          "</td><td>" + line.quantity + "</td><td>" +
+          escapeHtml(money(line.product.price * line.quantity)) + "</td></tr>";
       }).join("") +
-      "</ul>" +
+      "</tbody></table></div>" +
       '<fieldset class="market-ship"><legend>' + t("運送方式", "Shipping method") + "</legend>" +
       '<label><input type="radio" name="market-ship" value="pickup" checked> ' + escapeHtml(shippingLabel("pickup")) + "</label>" +
-      '<label><input type="radio" name="market-ship" value="delivery"> ' + escapeHtml(shippingLabel("delivery")) + "</label></fieldset>" +
-      '<p id="market-pay-total" class="market-cart-total">' + escapeHtml(t("應付金額 ", "Amount due ") + money(subtotal)) + "</p>" +
+      '<label><input type="radio" name="market-ship" value="delivery"> ' + escapeHtml(shippingLabel("delivery")) + "</label>" +
+      '<div id="market-delivery" class="market-delivery" hidden>' +
+      '<label><span>' + t("收件人", "Recipient") + '</span><input id="market-recipient" type="text" maxlength="80" autocomplete="name"></label>' +
+      '<label><span>' + t("連絡電話", "Phone") + '</span><input id="market-phone" type="tel" maxlength="30" autocomplete="tel"></label>' +
+      '<label><span>' + t("收件地址", "Address") + '</span><textarea id="market-address" rows="3" maxlength="300" autocomplete="street-address"></textarea></label>' +
+      "</div></fieldset>" +
+      paySummary(charge, 0) +
+      '<p id="market-pay-total" class="market-cart-total">' + escapeHtml(t("應付金額 ", "Total ") + money(charge.subtotal + charge.platformFee)) + "</p>" +
       '<div class="market-form-actions">' +
       '<button type="button" class="btn btn-outline" id="market-pay-back">' + t("返回購物車", "Back to cart") + "</button>" +
       '<button type="button" class="btn btn-gold" id="market-checkout">' + t("確認付款", "Confirm payment") + "</button></div>";
     host.querySelectorAll('input[name="market-ship"]').forEach(function (input) {
       input.addEventListener("change", function () {
-        var ship = input.value === "delivery" ? 80 : 0;
+        var delivery = input.value === "delivery";
+        var ship = delivery ? 80 : 0;
+        var box = document.getElementById("market-delivery");
+        if (box) box.hidden = !delivery;
+        var summary = host.querySelector(".swap-fee-lines");
+        if (summary) summary.outerHTML = paySummary(charge, ship);
         document.getElementById("market-pay-total").textContent =
-          t("應付金額 ", "Amount due ") + money(subtotal + ship);
+          t("應付金額 ", "Total ") + money(charge.subtotal + charge.platformFee + ship);
       });
     });
   }
@@ -482,7 +640,7 @@
       ? t("小計 ", "Subtotal ") + money(order.subtotal) +
         t("，運費 ", ", Shipping ") + money(order.shipping_fee) +
         t("，平台手續費 ", ", Platform fee ") + money(order.platform_fee) +
-        t("（不計入買家應付金額），應付 ", " (not added to the amount the buyer pays), amount due ") + money(order.total)
+        t("，應付 ", ", amount due ") + money(order.total)
       : shippingLabel(order.shipping_method) + " · " + t("訂單總額 ", "Order total ") + money(order.total);
     return (
       '<article class="market-order">' +
@@ -545,52 +703,242 @@
       (rows || "<tr><td colspan=\"4\">—</td></tr>") +
       "</tbody></table></div></section>";
   }
+
+  function orderDetail(order, closeAttr) {
+    var lines = orderItems(order).map(function (item) {
+      var qty = Number(item.quantity) || 0;
+      var amount = (Number(item.unit_price) || 0) * qty;
+      return '<article class="order-detail-item">' +
+        itemImage(item) +
+        "<div><strong>" + escapeHtml(itemTitle(item)) + "</strong></div>" +
+        '<span class="order-detail-qty">× ' + qty + "</span>" +
+        '<strong class="order-detail-price">' + escapeHtml(money(amount)) + "</strong></article>";
+    }).join("");
+    return '<section class="order-detail">' +
+      "<header><button type=\"button\" class=\"order-detail-back\" " + (closeAttr || "data-admin-detail-close") + ">" +
+      escapeHtml(t("← 返回", "← Back")) + "</button><h3>" +
+      escapeHtml(t("訂單詳情", "Order details")) + "</h3></header>" +
+      '<p class="order-detail-code">' + escapeHtml(orderCode(order) + " · " + orderBadge(order)) + "</p>" +
+      (order.cancel_reason
+        ? '<p class="order-detail-reason"><span>' + escapeHtml(t("取消原因", "Cancellation reason")) + "</span><strong>" +
+          escapeHtml(cancelReasonLabel(order.cancel_reason) || "—") + "</strong></p>"
+        : "") +
+      (lines || '<p class="market-empty">—</p>') +
+      '<dl class="order-detail-sums">' +
+      "<div><dt>" + escapeHtml(t("商品總金額", "Items")) + "</dt><dd>" + escapeHtml(money(order.subtotal)) + "</dd></div>" +
+      "<div><dt>" + escapeHtml(t("運費", "Shipping")) + "</dt><dd>" + escapeHtml(money(order.shipping_fee)) + "</dd></div>" +
+      "<div><dt>" + escapeHtml(t("平台手續費", "Platform fee")) + "</dt><dd>" + escapeHtml(money(order.platform_fee)) + "</dd></div>" +
+      "</dl>" +
+      '<p class="order-detail-total"><span>' + escapeHtml(t("訂單金額", "Order total")) + "</span><strong>" +
+      escapeHtml(money(order.total)) + "</strong></p></section>";
+  }
+  function stepIndex(status) {
+    if (status === "awaiting_payment") return 1;
+    if (status === "payment_confirmed") return 2;
+    if (status === "ready_to_ship") return 3;
+    if (status === "shipped" || status === "arrived") return 4;
+    if (status === "completed") return 5;
+    return 0;
+  }
+
+  function cancelReasonLabel(reason) {
+    if (reason === "not_wanted") return t("不想購買", "I no longer want this");
+    if (reason === "too_expensive") return t("價格太貴", "The price is too high");
+    if (reason === "wrong_address") return t("地址錯誤(需修改訂單)", "Wrong address (the order needs a change)");
+    return "";
+  }
+
+  function canBuyerCancel(order) {
+    return !order.cancel_reason && (
+      order.status === "awaiting_payment" || order.status === "payment_confirmed" || order.status === "ready_to_ship"
+    );
+  }
+
+  function buyerCancel(order) {
+    if (!canBuyerCancel(order)) return "";
+    return '<div class="swap-cancel">' +
+      '<button type="button" class="btn btn-outline" data-cancel-open="' + order.id + '">' +
+      t("取消下單", "Cancel order") + "</button>" +
+      '<select class="swap-cancel-reason" hidden data-cancel-reason="' + order.id + '" aria-label="' +
+      escapeHtml(t("取消原因", "Cancellation reason")) + '">' +
+      '<option value="">' + escapeHtml(t("請選擇原因", "Choose a reason")) + "</option>" +
+      '<option value="not_wanted">' + escapeHtml(t("不想購買", "I no longer want this")) + "</option>" +
+      '<option value="too_expensive">' + escapeHtml(t("價格太貴", "The price is too high")) + "</option>" +
+      '<option value="wrong_address">' + escapeHtml(t("地址錯誤(需修改訂單)", "Wrong address (the order needs a change)")) + "</option>" +
+      "</select></div>";
+  }
+
+  function statusSteps(status) {
+    if (status === "cancelled") return "";
+    var steps = [
+      ["已下單", "Order placed"],
+      ["待確認付款", "Waiting for payment confirmation"],
+      ["已確認付款", "Payment confirmed"],
+      ["待出貨", "Ready to ship"],
+      ["已出貨", "Shipped"],
+      ["已完成", "Completed"]
+    ];
+    var current = stepIndex(status);
+    return '<ol class="swap-steps">' + steps.map(function (step, index) {
+      var state = index < current ? "is-done" : index === current ? "is-now" : "";
+      return '<li class="' + state + '">' + escapeHtml(t(step[0], step[1])) + "</li>";
+    }).join("") + "</ol>";
+  }
+
+  function orderLines(order) {
+    return orderItems(order).map(function (item) {
+      return "<p>" + escapeHtml(itemTitle(item) + " × " + (Number(item.quantity) || 0)) +
+        "<strong>" + escapeHtml(money((Number(item.unit_price) || 0) * (Number(item.quantity) || 0))) + "</strong></p>";
+    }).join("");
+  }
+
+  function swapOrder(order, actions, audience) {
+    var who = audience === "buyer"
+      ? t("賣家：", "Seller: ") + (order.seller_name || "—")
+      : t("買家：", "Buyer: ") + (order.buyer_name || "—");
+    if (audience === "admin") {
+      who = t("買家：", "Buyer: ") + (order.buyer_name || "—") + " · " + t("賣家：", "Seller: ") + (order.seller_name || "—");
+    }
+    return (
+      '<article class="swap-order">' +
+      '<header><strong title="' + escapeHtml(order.id) + '">' + escapeHtml(orderCode(order)) + "</strong>" +
+      "<span>" + escapeHtml(orderBadge(order)) + "</span></header>" +
+      "<p>" + escapeHtml(who + " · " + t("下單 ", "Placed ") + formatTime(order.created_at)) + "</p>" +
+      (cancelRequested(order) ? "" : statusSteps(order.status)) +
+      (order.cancel_reason
+        ? '<p class="swap-note">' + escapeHtml(t("取消原因：", "Cancellation reason: ") + (cancelReasonLabel(order.cancel_reason) || "—")) +
+          (cancelRequested(order) ? "<br>" + escapeHtml(t("等待賣家確認取消。", "Waiting for the seller to confirm.")) : "") + "</p>"
+        : "") +
+      '<div class="swap-lines">' + orderLines(order) + "</div>" +
+      (order.shipping_method === "delivery"
+        ? '<p class="swap-note">' + escapeHtml(t("收件人 ", "Recipient ") + (order.recipient_name || "—")) + "<br>" +
+          escapeHtml(t("連絡電話 ", "Phone ") + (order.recipient_phone || "—")) + "<br>" +
+          escapeHtml(t("收件地址 ", "Address ") + (order.recipient_address || "—")) + "</p>"
+        : "") +
+      '<p class="swap-total">' + escapeHtml(money(order.total)) + "</p>" +
+      (actions ? '<div class="swap-actions">' + actions + "</div>" : "") +
+      "</article>"
+    );
+  }
+  function trackIndex(order) {
+    if (!order || order.status === "cancelled" || cancelRequested(order)) return -1;
+    if (order.status === "payment_confirmed" || order.status === "ready_to_ship") return 1;
+    if (order.status === "shipped") return 2;
+    if (order.status === "arrived" || order.status === "completed") return 3;
+    return 0;
+  }
+
+  function trackTime(iso) {
+    var text = formatTime(iso);
+    if (!text) return "<time></time>";
+    var parts = text.split(" ");
+    return "<time>" + escapeHtml(parts[0] || "") + "<br>" + escapeHtml(parts[1] || "") + "</time>";
+  }
+
+  function trackEvents(order) {
+    var step = trackIndex(order);
+    var events = [];
+    if (order.status === "cancelled") {
+      events.push({ zh: "訂單已取消", en: "Order cancelled", time: order.updated_at, now: true });
+    } else if (cancelRequested(order)) {
+      events.push({ zh: "已申請取消，等待賣家確認", en: "Cancellation requested, waiting for the seller", time: order.updated_at, now: true });
+    } else if (step >= 3) {
+      events.push({ zh: "配送完成", en: "Delivered", time: order.updated_at, now: true });
+    } else if (step === 2) {
+      events.push({ zh: "已出貨", en: "Shipped", time: order.updated_at, now: true });
+    } else if (step === 1) {
+      events.push({ zh: "賣家已確認訂單", en: "Seller confirmed the order", time: order.updated_at, now: true });
+    } else {
+      events.push({ zh: "已下單，等待賣家確認", en: "Order placed, waiting for the seller", time: order.created_at, now: true });
+    }
+    if (step >= 3) events.push({ zh: "已出貨", en: "Shipped", time: "" });
+    if (step >= 2) events.push({ zh: "賣家已確認訂單", en: "Seller confirmed the order", time: "" });
+    if (step !== 0) events.push({ zh: "已下單", en: "Order placed", time: order.created_at });
+    return events;
+  }
+
+  function trackFlow(order) {
+    var current = trackIndex(order);
+    var steps = [
+      ["賣家已確認訂單", "Seller confirmed"],
+      ["已出貨", "Shipped"],
+      ["配送完成", "Delivered"]
+    ];
+    return '<ol class="track-steps">' + steps.map(function (step, index) {
+      var n = index + 1;
+      var state = current < 0 ? "" : current > n ? "is-done" : current === n ? "is-now" : "";
+      return '<li class="' + state + '"><span>' + (current >= n ? "✓" : "") + "</span><strong>" +
+        escapeHtml(t(step[0], step[1])) + "</strong></li>";
+    }).join("") + "</ol>";
+  }
+
+  function trackLog(order) {
+    return '<ol class="track-log">' + trackEvents(order).map(function (event) {
+      return '<li class="' + (event.now ? "is-now" : "") + '">' +
+        (event.time ? trackTime(event.time) : "<time></time>") +
+        '<span class="track-rail"></span><strong>' + escapeHtml(t(event.zh, event.en)) + "</strong></li>";
+    }).join("") + "</ol>";
+  }
+
+  function orderTrackCard(order) {
+    var items = orderItems(order);
+    var first = items[0];
+    return '<article class="track-card">' +
+      trackFlow(order) +
+      '<div class="track-summary">' +
+      (first ? itemImage(first) : '<span class="market-thumb">—</span>') +
+      "<div><strong>" + escapeHtml(orderHeadline(order)) + "</strong><p>" + escapeHtml(orderCode(order)) + "</p>" +
+      (order.cancel_reason
+        ? "<p>" + escapeHtml(t("取消原因：", "Cancellation reason: ") + (cancelReasonLabel(order.cancel_reason) || "—")) + "</p>"
+        : "") +
+      "</div>" +
+      '<button type="button" class="btn btn-outline" data-member-detail="' + order.id + '">' +
+      t("訂單詳情", "Order details") + "</button></div>" +
+      trackLog(order) +
+      "</article>";
+  }
+
   function renderMember() {
     var host = document.getElementById("market-member");
     if (!canTrade()) {
       host.innerHTML = '<p class="market-empty">' + escapeHtml(t("請先登入才能查看訂單。", "Sign in to view your orders.")) + "</p>";
       return;
     }
-    var mine = orders.filter(function (order) { return order.buyer_id === uid(); });
-    if (!mine.length) {
+    var owned = orders.filter(function (order) { return order.buyer_id === uid(); });
+    if (!owned.length) {
       host.innerHTML = '<p class="market-empty">' + escapeHtml(t("還沒有訂單。", "No orders yet.")) + "</p>";
       return;
     }
-    if (!mine.some(function (order) { return order.id === overviewOrderId; })) overviewOrderId = "";
-    var open = mine.filter(function (order) { return order.id === overviewOrderId; })[0];
-    host.innerHTML =
-      '<div class="admin-news-table-wrap"><table class="admin-news-table market-orders-table"><thead><tr>' +
-      "<th>" + t("訂單編號", "Order no.") + "</th>" +
-      "<th>" + t("商品圖片", "Image") + "</th>" +
-      "<th>" + t("商品名稱", "Product") + "</th>" +
-      "<th>" + t("數量", "Qty") + "</th>" +
-      "<th>" + t("金額", "Amount") + "</th>" +
-      "<th>" + t("狀態", "Status") + "</th>" +
-      "<th>" + t("商品總覽", "Items") + "</th>" +
-      "</tr></thead><tbody>" +
-      mine.map(function (order) {
-        var items = orderItems(order);
-        var status = buyerStatus(order.status);
-        var image = items.length ? itemImage(items[0]) : '<span class="market-thumb">' + escapeHtml(t("無圖片", "No image")) + "</span>";
-        return "<tr><td class=\"market-order-no\" title=\"" + escapeHtml(order.id) + "\">" + escapeHtml(String(order.id || "").slice(0, 8)) +
-          "</td><td>" + image + "</td><td>" + escapeHtml(orderHeadline(order)) +
-          "</td><td>" + orderQty(order) + "</td><td>" + escapeHtml(money(order.total)) +
-          "</td><td><span class=\"market-status-pill is-" + status.key + "\">" + escapeHtml(t(status.zh, status.en)) + "</span></td><td>" +
-          '<button type="button" class="btn btn-outline" data-order-overview="' + order.id + '">' +
-          t("商品總覽", "View items") + "</button></td></tr>";
-      }).join("") +
-      "</tbody></table></div>" +
-      (open ? orderOverview(open) : "");
+    var mine = filteredOrders(owned, "market-member-q", "market-member-status", "market-member-abnormal");
+    var detail = null;
+    if (memberDetailId) {
+      orders.some(function (order) {
+        if (order.id === memberDetailId && order.buyer_id === uid()) detail = order;
+        return !!detail;
+      });
+    }
+    if (detail) {
+      host.innerHTML = '<section class="track-card">' + trackFlow(detail) + trackLog(detail) + "</section>" +
+        orderDetail(detail, "data-member-detail-close") + buyerCancel(detail);
+      return;
+    }
+    host.innerHTML = mine.length
+      ? mine.map(orderTrackCard).join("")
+      : '<p class="market-empty">' + escapeHtml(t("沒有符合的訂單。", "No matching orders.")) + "</p>";
   }
 
   function sellerAction(order) {
+    if (cancelRequested(order)) {
+      return '<button type="button" class="btn btn-gold" data-confirm-cancel="' + order.id + '">' +
+        t("確認取消", "Confirm cancellation") + "</button>";
+    }
     if (order.status === "awaiting_payment") {
       return '<button type="button" class="btn btn-gold" data-advance="' + order.id + '" data-next="payment_confirmed">' +
         t("確認付款", "Confirm payment") + "</button>";
     }
     if (order.status === "payment_confirmed") {
       return '<button type="button" class="btn btn-gold" data-advance="' + order.id + '" data-next="ready_to_ship">' +
-        t("移到待出貨", "Move to ready to ship") + "</button>";
+        t("標記可出貨", "Mark ready") + "</button>";
     }
     if (order.status === "ready_to_ship") {
       return '<button type="button" class="btn btn-gold" data-advance="' + order.id + '" data-next="shipped">' +
@@ -610,18 +958,14 @@
   function renderSeller() {
     var host = document.getElementById("market-seller");
     var mine = orders.filter(function (order) { return order.seller_id === uid(); });
-    function bucket(titleZh, titleEn, list) {
-      return '<section class="market-bucket"><h3>' + t(titleZh, titleEn) + " · " + list.length + "</h3>" +
-        (list.length ? list.map(function (order) { return orderCard(order, sellerAction(order), "seller"); }).join("") :
-          '<p class="market-empty">' + escapeHtml(t("目前沒有訂單。", "There are no orders at the moment.")) + "</p>") +
-        "</section>";
-    }
+    var open = mine.filter(function (order) {
+      return order.status !== "completed" && order.status !== "cancelled";
+    });
     host.innerHTML =
-      bucket("待確認付款", "Pending payments", mine.filter(function (order) { return order.status === "awaiting_payment"; })) +
-      bucket("已確認付款", "Payment confirmed", mine.filter(function (order) { return order.status === "payment_confirmed"; })) +
-      bucket("待出貨", "Pending shipments", mine.filter(function (order) { return order.status === "ready_to_ship" || order.status === "shipped"; })) +
-      bucket("已到貨", "Arrived", mine.filter(function (order) { return order.status === "arrived"; })) +
-      bucket("已完成", "Completed orders", mine.filter(function (order) { return order.status === "completed"; }));
+      '<p class="swap-count">' + escapeHtml(t(open.length + " 筆待處理", open.length + " orders to process")) + "</p>" +
+      (mine.length
+        ? mine.map(function (order) { return swapOrder(order, sellerAction(order), "seller"); }).join("")
+        : '<p class="market-empty">' + escapeHtml(t("目前沒有訂單。", "There are no orders at the moment.")) + "</p>");
     renderAccounting();
   }
 
@@ -659,15 +1003,76 @@
     );
   }
 
-  function filteredAdminOrders() {
-    var query = (document.getElementById("market-order-q").value || "").trim().toLowerCase();
-    var status = document.getElementById("market-status-filter").value;
-    return orders.filter(function (order) {
-      if (query && String(order.id).toLowerCase().indexOf(query) === -1) return false;
+  function isAbnormal(order) {
+    var stamp = new Date(order.updated_at || order.created_at).getTime();
+    if (!stamp) return false;
+    var days = (Date.now() - stamp) / 86400000;
+    if (order.status === "awaiting_payment" && days > 3) return true;
+    if ((order.status === "shipped" || order.status === "arrived") && days > 7) return true;
+    return false;
+  }
+
+  function filteredOrders(list, queryId, statusId, abnormalId) {
+    var queryEl = document.getElementById(queryId);
+    var statusEl = document.getElementById(statusId);
+    var abnormalEl = document.getElementById(abnormalId);
+    var query = ((queryEl && queryEl.value) || "").trim().toLowerCase();
+    var status = statusEl ? statusEl.value : "all";
+    var abnormalOnly = !!(abnormalEl && abnormalEl.checked);
+    return list.filter(function (order) {
+      var code = (orderCode(order) + " " + order.id).toLowerCase();
+      if (query && code.indexOf(query) === -1) return false;
+      if (abnormalOnly && !isAbnormal(order)) return false;
       if (status === "all") return true;
-      if (status === "incomplete") return order.status !== "completed";
+      if (status === "incomplete") return order.status !== "completed" && order.status !== "cancelled";
       return order.status === status;
     });
+  }
+
+  function orderQueryTable(list, detailAttr) {
+    if (!list.length) {
+      return '<p class="market-empty">' + escapeHtml(t("沒有符合的交易。", "No matching transactions.")) + "</p>";
+    }
+    var rows = list.map(function (order) {
+      return "<tr><td><strong>" + escapeHtml(orderCode(order)) + "</strong></td><td>" +
+        escapeHtml(order.buyer_name || "—") + "</td><td>" + escapeHtml(order.seller_name || "—") + "</td><td>" +
+        escapeHtml(orderBadge(order)) + "</td><td>" + escapeHtml(money(order.total)) + "</td><td>" +
+        escapeHtml(formatTime(order.created_at)) + "</td><td>" + escapeHtml(itemNames(order) || "—") + "</td><td>" +
+        '<button type="button" class="btn btn-outline" ' + detailAttr + '="' + order.id + '">' +
+        t("訂單詳情", "Order details") + "</button></td></tr>";
+    }).join("");
+    return '<div class="admin-news-table-wrap"><table class="admin-news-table swap-table"><thead><tr>' +
+      "<th>" + t("訂單編號", "Order no.") + "</th><th>" + t("買家", "Buyer") + "</th><th>" + t("賣家", "Seller") + "</th><th>" +
+      t("狀態", "Status") + "</th><th>" + t("金額", "Amount") + "</th><th>" + t("下單時間", "Placed") + "</th><th>" +
+      t("明細", "Details") + "</th><th>" + t("訂單詳情", "Order details") + "</th></tr></thead><tbody>" +
+      rows + "</tbody></table></div>";
+  }
+
+  function exportOrderCsv(rows, filename) {
+    var header = isEn()
+      ? ["order_no", "buyer", "seller", "status", "total", "placed", "items"]
+      : ["訂單編號", "買家", "賣家", "狀態", "金額", "下單時間", "明細"];
+    var lines = [header.join(",")].concat(rows.map(function (order) {
+      return [
+        '"' + orderCode(order) + '"',
+        '"' + (order.buyer_name || "") + '"',
+        '"' + (order.seller_name || "") + '"',
+        '"' + orderBadge(order) + '"',
+        order.total,
+        '"' + formatTime(order.created_at) + '"',
+        '"' + itemNames(order).replace(/"/g, '""') + '"'
+      ].join(",");
+    }));
+    var blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    var link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  function filteredAdminOrders() {
+    return filteredOrders(orders, "market-order-q", "market-status-filter", "market-abnormal");
   }
 
   function renderAdmin() {
@@ -675,16 +1080,21 @@
     var amount = list.reduce(function (sum, order) { return sum + Number(order.total || 0); }, 0);
     var fees = list.reduce(function (sum, order) { return sum + Number(order.platform_fee || 0); }, 0);
     document.getElementById("market-admin-stats").textContent = t(
-      "交易筆數 " + list.length + " / 交易金額 " + money(amount) + " / 平台手續費 " + money(fees),
-      "Transactions: " + list.length + " / Total amount: " + money(amount) + " / Platform fees: " + money(fees)
+      list.length + " 筆交易 / 金額 " + money(amount) + " / 手續費 " + money(fees),
+      list.length + " orders / Amount " + money(amount) + " / Fees " + money(fees)
     );
-    document.getElementById("market-fee").value = fee;
-    document.getElementById("market-fee-form").hidden = !isSuper();
-    document.getElementById("market-admin-list").innerHTML = list.length
-      ? list.map(function (order) {
-          return orderCard(order, "", "admin");
-        }).join("")
-      : '<p class="market-empty">' + escapeHtml(t("沒有符合的交易。", "No matching transactions.")) + "</p>";
+    var detail = null;
+    if (adminDetailId) {
+      orders.some(function (order) {
+        if (order.id === adminDetailId) detail = order;
+        return order.id === adminDetailId;
+      });
+    }
+    if (detail) {
+      document.getElementById("market-admin-list").innerHTML = orderDetail(detail);
+      return;
+    }
+    document.getElementById("market-admin-list").innerHTML = orderQueryTable(list, "data-admin-detail");
   }
 
   function fillSelect(select, options) {
@@ -716,7 +1126,7 @@
       { value: "hidden", zh: "已隱藏", en: "Hidden" },
       { value: "sold", zh: "已售出", en: "Sold" }
     ]);
-    fillSelect(document.getElementById("market-status-filter"), [
+    var orderStatuses = [
       { value: "all", zh: "全部", en: "All" },
       { value: "incomplete", zh: "未完成", en: "Incomplete" },
       { value: "awaiting_payment", zh: "待確認付款", en: "Waiting for payment" },
@@ -724,11 +1134,14 @@
       { value: "ready_to_ship", zh: "待出貨", en: "Ready to ship" },
       { value: "shipped", zh: "已出貨", en: "Shipped" },
       { value: "arrived", zh: "已到貨", en: "Arrived" },
-      { value: "completed", zh: "已完成", en: "Completed" }
-    ]);
+      { value: "completed", zh: "已完成", en: "Completed" },
+      { value: "cancelled", zh: "已取消", en: "Cancelled" }
+    ];
+    fillSelect(document.getElementById("market-status-filter"), orderStatuses);
+    fillSelect(document.getElementById("market-member-status"), orderStatuses);
     document.title = t(
-      "同學市集 | 國際經營管理碩士班（imMBA）",
-      "C2C Marketplace | International Management (imMBA)"
+      "書籍&市集 | 國際經營管理碩士班（imMBA）",
+      "Books & Marketplace | International Management (imMBA)"
     );
   }
 
@@ -872,27 +1285,61 @@
   document.getElementById("market-add-btn").addEventListener("click", function () {
     mode = "seller";
     localStorage.setItem(MODE_KEY, mode);
-    setView("listings");
+    setView("inventory");
     openForm(null);
     renderChrome();
+  });
+  ["market-search", "market-min", "market-max"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", renderListings);
+  });
+  document.getElementById("market-instock").addEventListener("change", renderListings);
+  document.getElementById("market-clear-filters").addEventListener("click", function () {
+    document.getElementById("market-search").value = "";
+    document.getElementById("market-min").value = "";
+    document.getElementById("market-max").value = "";
+    document.getElementById("market-instock").checked = false;
+    document.getElementById("market-category-filter").value = "all";
+    renderListings();
+  });
+  document.getElementById("market-locale").addEventListener("click", function () {
+    var next = document.documentElement.getAttribute("data-locale") === "en" ? "zh" : "en";
+    localStorage.setItem("immba-locale", next);
+    location.href = "books.html";
+  });
+  document.getElementById("market-signout").addEventListener("click", async function () {
+    await auth.signOut();
+    location.href = "books.html";
+  });
+  document.getElementById("market-abnormal").addEventListener("change", renderAdmin);
+  document.getElementById("market-member-q").addEventListener("input", renderMember);
+  document.getElementById("market-member-status").addEventListener("change", renderMember);
+  document.getElementById("market-member-abnormal").addEventListener("change", renderMember);
+  document.getElementById("market-member-clear").addEventListener("click", function () {
+    document.getElementById("market-member-q").value = "";
+    document.getElementById("market-member-status").value = "all";
+    document.getElementById("market-member-abnormal").checked = false;
+    memberDetailId = "";
+    renderMember();
+  });
+  document.getElementById("market-member-export").addEventListener("click", function () {
+    var rows = filteredOrders(orders.filter(function (order) {
+      return order.buyer_id === uid();
+    }), "market-member-q", "market-member-status", "market-member-abnormal");
+    exportOrderCsv(rows, "my-orders.csv");
+  });
+  document.getElementById("market-admin-clear").addEventListener("click", function () {
+    document.getElementById("market-order-q").value = "";
+    document.getElementById("market-status-filter").value = "all";
+    document.getElementById("market-abnormal").checked = false;
+    renderAdmin();
+  });
+  document.getElementById("market-admin-export").addEventListener("click", function () {
+    exportOrderCsv(filteredAdminOrders(), "market-query.csv");
   });
   document.getElementById("market-category-filter").addEventListener("change", renderListings);
   document.getElementById("market-month").addEventListener("change", renderAccounting);
   document.getElementById("market-order-q").addEventListener("input", renderAdmin);
   document.getElementById("market-status-filter").addEventListener("change", renderAdmin);
-  document.getElementById("market-fee-form").addEventListener("submit", async function (event) {
-    event.preventDefault();
-    var next = Number(document.getElementById("market-fee").value);
-    if (next < 0) return;
-    var result = await auth.getClient().from("market_settings").update({ platform_fee: next }).eq("id", 1);
-    if (result.error) {
-      showStatus("手續費儲存失敗：" + result.error.message, "Could not save the fee: " + result.error.message, "err");
-      return;
-    }
-    fee = next;
-    showStatus("平台手續費已更新。新的訂單會使用這個金額。", "Platform fee saved. New orders use this amount.", "ok");
-    renderAdmin();
-  });
   document.getElementById("market-export").addEventListener("click", function () {
     var select = document.getElementById("market-month");
     var rows = orders.filter(function (order) {
@@ -939,6 +1386,32 @@
       renderChrome();
       return;
     }
+    var detailButton = event.target.closest("[data-admin-detail]");
+    if (detailButton) {
+      adminDetailId = detailButton.getAttribute("data-admin-detail");
+      renderAdmin();
+      var detailPanel = document.querySelector(".order-detail");
+      if (detailPanel) detailPanel.scrollIntoView({ block: "start" });
+      return;
+    }
+    if (event.target.closest("[data-admin-detail-close]")) {
+      adminDetailId = "";
+      renderAdmin();
+      return;
+    }
+    var memberDetail = event.target.closest("[data-member-detail]");
+    if (memberDetail) {
+      memberDetailId = memberDetail.getAttribute("data-member-detail");
+      renderMember();
+      var memberPanel = document.querySelector("#market-member .order-detail");
+      if (memberPanel) memberPanel.scrollIntoView({ block: "start" });
+      return;
+    }
+    if (event.target.closest("[data-member-detail-close]")) {
+      memberDetailId = "";
+      renderMember();
+      return;
+    }
     var overviewButton = event.target.closest("[data-order-overview]");
     if (overviewButton) {
       var nextOverview = overviewButton.getAttribute("data-order-overview");
@@ -955,10 +1428,14 @@
     }
     var modeButton = event.target.closest("[data-mode]");
     if (modeButton) {
+      if (!canTrade()) {
+        location.href = "login.html?next=books.html";
+        return;
+      }
       mode = modeButton.getAttribute("data-mode") === "seller" ? "seller" : "buyer";
       localStorage.setItem(MODE_KEY, mode);
+      if (mode === "seller") setView("inventory");
       if (mode === "buyer") setView("listings");
-      if (mode === "seller" && (view === "cart" || view === "member" || view === "pay")) setView("listings");
       renderChrome();
       renderListings();
       return;
@@ -980,8 +1457,8 @@
       var cart = readCart();
       cart[productId] = quantity;
       writeCart(cart);
-      showStatus("已加入購物車。", "Added to cart.", "ok");
-      setView("cart");
+      cartPicked[productId] = true;
+      showStatus("已加入購物車。", "Added to cart.", "ok", 10000);
       return;
     }
     var cartEdit = event.target.closest("[data-cart-edit]");
@@ -1007,9 +1484,24 @@
       renderCart();
       return;
     }
+    var pickBox = event.target.closest("[data-cart-pick]");
+    if (pickBox) {
+      cartPicked[pickBox.getAttribute("data-cart-pick")] = !!pickBox.checked;
+      renderCart();
+      return;
+    }
+    if (event.target.closest("[data-cart-select-all]")) {
+      cartLines().forEach(function (line) { cartPicked[line.product.id] = true; });
+      renderCart();
+      return;
+    }
     if (event.target.id === "market-to-pay" || event.target.closest("#market-to-pay")) {
       if (!cartLines().length) {
         showStatus("購物車是空的。", "Your cart is empty.", "err");
+        return;
+      }
+      if (!selectedLines().length) {
+        showStatus("請先勾選要下單的商品。", "Select the items you want to order.", "err");
         return;
       }
       setView("pay");
@@ -1030,7 +1522,9 @@
     var removeButton = event.target.closest("[data-remove]");
     if (removeButton) {
       var cartNow = readCart();
-      delete cartNow[removeButton.getAttribute("data-remove")];
+      var removedId = removeButton.getAttribute("data-remove");
+      delete cartNow[removedId];
+      delete cartPicked[removedId];
       writeCart(cartNow);
       renderCart();
       return;
@@ -1114,6 +1608,38 @@
       await refresh();
       return;
     }
+    var cancelOpen = event.target.closest("[data-cancel-open]");
+    if (cancelOpen) {
+      var cancelSelect = document.querySelector('[data-cancel-reason="' + cancelOpen.getAttribute("data-cancel-open") + '"]');
+      if (cancelSelect) {
+        cancelSelect.hidden = false;
+        cancelSelect.focus();
+        if (typeof cancelSelect.showPicker === "function") {
+          try { cancelSelect.showPicker(); } catch (err) { return; }
+        }
+      }
+      return;
+    }
+    var confirmCancel = event.target.closest("[data-confirm-cancel]");
+    if (confirmCancel) {
+      var confirmId = confirmCancel.getAttribute("data-confirm-cancel");
+      var confirmed = await auth.getClient().rpc("confirm_market_cancel", { p_order: confirmId });
+      if (confirmed.error) {
+        showStatus("確認取消失敗：" + confirmed.error.message, "Could not confirm the cancellation: " + confirmed.error.message, "err");
+        return;
+      }
+      showStatus("已確認取消，訂單已取消。", "Cancellation confirmed. The order is cancelled.", "ok");
+      await logMarket({
+        action: "UPDATE",
+        entity_type: "market_order",
+        entity_id: confirmId,
+        entity_label: confirmId,
+        summary: "cancellation confirmed"
+      });
+      await refresh();
+      setView("seller");
+      return;
+    }
     var advance = event.target.closest("[data-advance]");
     if (advance) {
       var advanced = await auth.getClient().rpc("advance_market_order", {
@@ -1137,42 +1663,92 @@
     }
   });
 
+  document.addEventListener("change", async function (event) {
+    var reasonSelect = event.target.closest("[data-cancel-reason]");
+    if (!reasonSelect) return;
+    var reason = reasonSelect.value;
+    if (!reason) return;
+    var orderId = reasonSelect.getAttribute("data-cancel-reason");
+    reasonSelect.disabled = true;
+    var cancelled = await auth.getClient().rpc("cancel_market_order", {
+      p_order: orderId,
+      p_reason: reason
+    });
+    if (cancelled.error) {
+      reasonSelect.disabled = false;
+      reasonSelect.value = "";
+      showStatus("取消失敗：" + cancelled.error.message, "Could not cancel the order: " + cancelled.error.message, "err");
+      return;
+    }
+    await logMarket({
+      action: "UPDATE",
+      entity_type: "market_order",
+      entity_id: orderId,
+      entity_label: orderId,
+      summary: "cancel requested: " + reason
+    });
+    if (reason === "wrong_address") {
+      showStatus("已送出取消申請，等待賣家確認。確認後請重新下單並填寫正確地址。", "Cancellation requested. After the seller confirms, place the order again with the correct address.", "ok");
+    } else {
+      showStatus("已送出取消申請，等待賣家確認。", "Cancellation requested. Waiting for the seller to confirm.", "ok");
+    }
+    await refresh();
+    setView("member");
+  });
+
   async function checkout() {
     if (!canTrade()) {
       location.href = "login.html?next=books.html";
       return;
     }
-    var cart = readCart();
+    var chosen = selectedLines();
     var groups = {};
-    Object.keys(cart).forEach(function (id) {
-      var product = productById(id);
-      var quantity = Number(cart[id]) || 0;
-      if (!product || quantity < 1) return;
-      var seller = product.seller_id;
+    chosen.forEach(function (line) {
+      var seller = line.product.seller_id;
       if (!groups[seller]) groups[seller] = [];
-      groups[seller].push({ product_id: id, quantity: quantity });
+      groups[seller].push({ product_id: line.product.id, quantity: line.quantity });
     });
     var sellers = Object.keys(groups);
     if (!sellers.length) {
-      showStatus("購物車是空的。", "Your cart is empty.", "err");
+      showStatus("請先勾選要下單的商品。", "Select the items you want to order.", "err");
       return;
     }
     var shipping = "pickup";
     document.querySelectorAll('input[name="market-ship"]').forEach(function (input) {
       if (input.checked) shipping = input.value;
     });
+    var recipient = "";
+    var phone = "";
+    var address = "";
+    if (shipping === "delivery") {
+      recipient = ((document.getElementById("market-recipient") || {}).value || "").trim();
+      phone = ((document.getElementById("market-phone") || {}).value || "").trim();
+      address = ((document.getElementById("market-address") || {}).value || "").trim();
+      if (!recipient || !phone || !address) {
+        showStatus("請填寫收件人、連絡電話和收件地址。", "Enter the recipient, phone number, and address.", "err");
+        return;
+      }
+    }
     var sb = auth.getClient();
     for (var i = 0; i < sellers.length; i += 1) {
       var placed = await sb.rpc("place_market_order", {
         p_items: groups[sellers[i]],
-        p_shipping: shipping
+        p_shipping: shipping,
+        p_recipient: recipient,
+        p_phone: phone,
+        p_address: address
       });
       if (placed.error) {
         showStatus("下單失敗：" + placed.error.message, "Checkout failed: " + placed.error.message, "err");
         return;
       }
     }
-    writeCart({});
+    var cart = readCart();
+    chosen.forEach(function (line) {
+      delete cart[line.product.id];
+      delete cartPicked[line.product.id];
+    });
+    writeCart(cart);
     showStatus("付款已送出，等待賣家確認收款。", "Payment submitted. Waiting for the seller to confirm it.", "ok");
     await refresh();
     setView("member");
@@ -1201,6 +1777,7 @@
       }
       await refresh();
       if (location.hash === "#cart") setView("cart");
+      else setView(view);
     } catch (err) {
       var message = String((err && err.message) || err || "");
       showStatus(

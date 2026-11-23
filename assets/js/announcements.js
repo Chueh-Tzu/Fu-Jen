@@ -572,7 +572,7 @@
     { href: "dual-degree.html", zh: "跨國雙碩士", en: "Dual Master’s" },
     { href: "exchange.html", zh: "海外交換", en: "Exchange" },
     { href: "news.html", zh: "公告", en: "News" },
-    { href: "books.html", zh: "同學市集", en: "C2C marketplace" },
+    { href: "books.html", zh: "書籍&市集", en: "Books & Marketplace" },
     { href: "gallery.html", zh: "相片集錦", en: "Photo Gallery" },
     { href: "contact.html", zh: "聯絡我們", en: "Contact" }
   ];
