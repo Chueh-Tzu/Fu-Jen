@@ -186,6 +186,10 @@
       location.replace("profile-setup.html?next=" + encodeURIComponent(nextPage()));
       return;
     }
+    if (profile && profile.role === "market") {
+      location.replace("books.html");
+      return;
+    }
     if (profile && auth.isAdminRole(profile.role)) {
       location.replace(nextPage());
       return;
@@ -193,8 +197,12 @@
     var market = marketHome(profile);
     if (profile && profile.role === "pending") {
       try { sessionStorage.setItem("immba-visitor-note", "pending"); } catch (err) {}
+      location.replace(profile.signup_channel === "market" || market ? "books.html" : "index.html");
+      return;
     } else if (profile && profile.role === "rejected") {
       try { sessionStorage.setItem("immba-visitor-note", "rejected"); } catch (err) {}
+      location.replace(profile.signup_channel === "market" ? "books.html" : "index.html");
+      return;
     } else if (params.get("denied") === "1") {
       try { sessionStorage.setItem("immba-visitor-note", "denied"); } catch (err) {}
     }
@@ -202,6 +210,10 @@
   }
 
   function continueAfterAuth(profile) {
+    if (profile && profile.role === "market") {
+      location.href = "books.html";
+      return;
+    }
     if (profile && auth.isAdminRole(profile.role)) {
       if (profile.profile_completed === false) {
         location.href = "profile-setup.html?next=" + encodeURIComponent(nextPage());
@@ -213,12 +225,12 @@
     var market = marketHome(profile);
     if (profile && profile.role === "pending") {
       try { sessionStorage.setItem("immba-visitor-note", "pending"); } catch (err) {}
-      location.href = market || "index.html";
+      location.href = profile.signup_channel === "market" || market ? "books.html" : "index.html";
       return;
     }
     if (profile && profile.role === "rejected") {
       try { sessionStorage.setItem("immba-visitor-note", "rejected"); } catch (err) {}
-      location.href = "index.html";
+      location.href = profile.signup_channel === "market" ? "books.html" : "index.html";
       return;
     }
     if (market) {
@@ -298,7 +310,9 @@
         if (loginEmail) loginEmail.value = String(email || "").trim();
         showStatus(
           t(
-            "註冊成功！確認信已寄出，請到信箱點擊連結完成驗證。驗證後身分是待審核（pending），需等超級管理員核准後才能進入後台。",
+            (nextPage() === "books.html"
+              ? "註冊成功！確認信已寄出，請到信箱點擊連結完成驗證。驗證後需等超級管理員核准，才能進入書籍&市集下單、上架和切換買賣家。此帳號不能進入公告後台。"
+              : "註冊成功！確認信已寄出，請到信箱點擊連結完成驗證。驗證後身分是待審核（pending），需等超級管理員核准後才能進入後台。"),
             "Registered! Check your inbox and click the confirmation link. Your role will be pending until a super admin approves it."
           ),
           "ok"

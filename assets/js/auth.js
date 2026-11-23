@@ -35,9 +35,10 @@
       id: row.id,
       email: String(row.email || "").trim(),
       display_name: String(row.display_name || "").trim(),
-      role: row.role === "admin" || row.role === "super_admin" || row.role === "pending" || row.role === "rejected" || row.role === "visitor"
+      role: row.role === "admin" || row.role === "super_admin" || row.role === "market" || row.role === "pending" || row.role === "rejected" || row.role === "visitor"
         ? row.role
         : "visitor",
+      signup_channel: row.signup_channel === "market" ? "market" : "site",
       profile_completed: row.profile_completed === false ? false : true,
       student_id: row.student_id || "",
       department: row.department || "",
@@ -54,6 +55,10 @@
 
   function isAdminRole(role) {
     return role === "admin" || role === "super_admin";
+  }
+
+  function isMarketMember(role) {
+    return role === "market" || role === "admin" || role === "super_admin";
   }
 
   /** Absolute URL for login.html on this site (used for email redirects). */
@@ -172,7 +177,7 @@
     try {
       var session = cached.session || (await getSession());
       if (!session || !session.user) return;
-      var allowed = { visitor: 1, pending: 1, rejected: 1, admin: 1, super_admin: 1 };
+      var allowed = { visitor: 1, pending: 1, rejected: 1, market: 1, admin: 1, super_admin: 1 };
       var role = profile && allowed[profile.role] ? profile.role : "visitor";
       var name =
         (profile && profile.display_name) ||
@@ -272,15 +277,18 @@
     });
   }
 
-  async function signUp(email, password, displayName) {
+  async function signUp(email, password, displayName, channel) {
     var sb = getClient();
-    // Confirm-email link returns users to the login page (role stays visitor until approval).
-    var emailRedirectTo = loginPageUrl("email_confirmed=1");
+    var marketSignup = channel === "market";
+    var emailRedirectTo = loginPageUrl(marketSignup ? "email_confirmed=1&next=books.html" : "email_confirmed=1");
     var result = await sb.auth.signUp({
       email: String(email || "").trim(),
       password: String(password || ""),
       options: {
-        data: { display_name: String(displayName || "").trim() || null },
+        data: {
+          display_name: String(displayName || "").trim() || null,
+          signup_channel: marketSignup ? "market" : "site"
+        },
         emailRedirectTo: emailRedirectTo
       }
     });
@@ -366,7 +374,7 @@
   }
 
   async function setRole(userId, role) {
-    if (!/^(visitor|pending|rejected|admin|super_admin)$/.test(role)) {
+    if (!/^(visitor|pending|rejected|market|admin|super_admin)$/.test(role)) {
       throw new Error("Invalid role.");
     }
     var sb = getClient();
@@ -452,9 +460,13 @@
     }
     var profile = await getProfile(true);
     if (!profile || !isAdminRole(profile.role)) {
+      if (profile && profile.role === "market") {
+        location.replace("books.html");
+        return null;
+      }
       if (profile && (profile.role === "pending" || profile.role === "rejected")) {
         try { sessionStorage.setItem("immba-visitor-note", profile.role); } catch (err) {}
-        location.replace("index.html");
+        location.replace(profile.signup_channel === "market" ? "books.html" : "index.html");
         return null;
       }
       location.replace("login.html?denied=1");
@@ -502,6 +514,7 @@
     requireSuperAdmin: requireSuperAdmin,
     saveOwnProfile: saveOwnProfile,
     isAdminRole: isAdminRole,
+    isMarketMember: isMarketMember,
     mapAuthError: mapAuthError,
     loginPageUrl: loginPageUrl,
     setAdminNavAccess: setAdminNavAccess,

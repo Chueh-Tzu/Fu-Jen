@@ -31,6 +31,7 @@
   function roleLabel(role) {
     if (role === "super_admin") return t("超級管理員", "Super admin");
     if (role === "admin") return t("管理員", "Admin");
+    if (role === "market") return t("市集成員", "Marketplace member");
     if (role === "pending") return t("待審核", "Pending");
     if (role === "rejected") return t("已拒絕", "Rejected");
     return t("一般訪客", "Visitor");
@@ -50,7 +51,7 @@
   }
 
   function render(rows) {
-    var order = { pending: 0, rejected: 1, visitor: 2, admin: 3, super_admin: 4 };
+    var order = { pending: 0, rejected: 1, visitor: 2, market: 3, admin: 4, super_admin: 5 };
     rows = rows.slice().sort(function (a, b) {
       return (order[a.role] == null ? 9 : order[a.role]) - (order[b.role] == null ? 9 : order[b.role]);
     });
@@ -67,9 +68,18 @@
       var isSelf = me && me.profile && me.profile.id === row.id;
       var actions = "";
       if (row.role === "pending" || row.role === "rejected") {
+        if (row.signup_channel === "market") {
+          actions =
+            roleButton("market", t("核准進入市集", "Approve for marketplace"), "btn-gold") +
+            (row.role === "pending" ? roleButton("rejected", t("拒絕", "Reject"), "btn-outline") : "");
+        } else {
+          actions =
+            roleButton("admin", t("核准為管理員", "Approve as admin"), "btn-gold") +
+            (row.role === "pending" ? roleButton("rejected", t("拒絕", "Reject"), "btn-outline") : "");
+        }
+      } else if (row.role === "market") {
         actions =
-          roleButton("admin", t("核准為管理員", "Approve as admin"), "btn-gold") +
-          (row.role === "pending" ? roleButton("rejected", t("拒絕", "Reject"), "btn-outline") : "");
+          roleButton("visitor", t("設為一般訪客", "Set as visitor"), "btn-outline");
       } else {
         actions =
           roleButton("admin", t("核准為管理員", "Approve as admin"), "btn-gold") +

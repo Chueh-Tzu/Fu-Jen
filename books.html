@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=swap-ui20">
+  <link rel="stylesheet" href="assets/css/styles.css?v=swap-ui34">
 </head>
 <body class="page-market">
   <a class="skip" href="#main"><span class="zh">跳至主要內容</span><span class="en">Skip to content</span></a>
@@ -34,7 +34,7 @@
             <span id="market-who"></span>
             <a class="swap-text" href="index.html"><span class="zh">回到 imMBA</span><span class="en">Back to imMBA</span></a>
             <button type="button" class="btn btn-outline" id="market-locale">EN</button>
-            <a class="btn btn-outline market-login" id="market-login" href="login.html?next=books.html"><span class="zh">登入</span><span class="en">Sign in</span></a>
+            <button type="button" class="btn btn-outline market-login" id="market-login"><span class="zh">登入</span><span class="en">Sign in</span></button>
             <button type="button" class="btn btn-outline" id="market-signout" hidden><span class="zh">登出</span><span class="en">Sign out</span></button>
           </div>
         </div>
@@ -45,13 +45,16 @@
           <button type="button" class="btn btn-outline" id="market-member-btn" data-view="member"><span class="zh">我的訂單</span><span class="en">My orders</span></button>
           <button type="button" class="btn btn-outline" id="market-admin-label" data-view="admin" hidden><span class="zh">管理</span><span class="en">Admin</span></button>
           <button type="button" class="btn btn-outline" id="market-admin-btn" data-view="admin" hidden><span class="zh">交易查詢</span><span class="en">Transactions</span></button>
-          <button type="button" class="btn btn-outline" data-mode="seller" id="market-become-seller"><span class="zh">成為賣家</span><span class="en">Become a seller</span></button>
-          <a class="btn btn-outline" id="market-users-link" href="admin-users.html" hidden><span class="zh">帳號</span><span class="en">Account</span></a>
-          <span class="swap-kicker" id="market-seller-label" hidden><span class="zh">賣家</span><span class="en">Seller</span></span>
+          <button type="button" class="btn btn-outline" data-mode="seller" id="market-become-seller" hidden><span class="zh">成為賣家</span><span class="en">Become a seller</span></button>
+          <button type="button" class="btn btn-outline" id="market-users-link" data-view="account" hidden><span class="zh">帳號</span><span class="en">Account</span></button>
+          <span class="swap-divider" id="market-seller-divider" hidden aria-hidden="true">I</span>
           <button type="button" class="btn btn-outline" id="market-inventory-btn" data-view="inventory" hidden><span class="zh">我的商品</span><span class="en">My listings</span></button>
           <button type="button" class="btn btn-outline" id="market-seller-btn" data-view="seller" hidden><span class="zh">待處理訂單</span><span class="en">Orders to process</span><span id="market-seller-count"></span></button>
-          <button type="button" class="btn btn-outline" id="market-add-btn" hidden><span class="zh">上架新商品</span><span class="en">List a new item</span></button>
+          <button type="button" class="btn btn-outline" id="market-add-btn" data-view="compose" hidden><span class="zh">上架新商品</span><span class="en">List a new item</span></button>
+          <button type="button" class="btn btn-outline" id="market-changes-btn" data-view="changes" hidden><span class="zh">後台變更</span><span class="en">Change log</span></button>
           <button type="button" class="btn btn-outline" data-mode="buyer" id="market-buyer-mode" hidden><span class="zh">回到買家</span><span class="en">Buyer mode</span></button>
+          <span class="swap-kicker swap-seller-mark" id="market-buyer-label"><span class="zh">買家</span><span class="en">Buyer</span></span>
+          <span class="swap-kicker swap-seller-mark" id="market-seller-label" hidden><span class="zh">賣家</span><span class="en">Seller</span></span>
         </div>
         <p class="swap-fee-note" id="market-fee-note" hidden role="status">
           <span class="zh">每筆平台手續費為 <span id="market-fee-amount">4</span>（元）</span>
@@ -66,45 +69,59 @@
         <p class="market-seller-notice" id="market-seller-notice" hidden></p>
         <p class="market-stats" id="market-stats" hidden></p>
 
-        <form id="market-form" class="market-form" hidden>
+        <div id="market-view-compose" hidden>
+        <form id="market-form" class="market-form">
           <h2 id="market-form-title"><span class="zh">新增商品</span><span class="en">Add new item</span></h2>
+          <p class="swap-muted" id="market-identity-note" hidden><span class="zh">名稱與價格已固定，不能修改。</span><span class="en">Name and price are fixed.</span></p>
           <input type="hidden" id="market-product-id">
-          <label><span class="zh">中文商品名稱</span><span class="en">Chinese product name</span>
-            <input id="market-name-zh" required>
-          </label>
-          <label><span class="zh">英文商品名稱</span><span class="en">English product name</span>
-            <input id="market-name-en" required>
-          </label>
-          <label><span class="zh">分類</span><span class="en">Category</span>
-            <select id="market-category"></select>
-          </label>
-          <label><span class="zh">中文說明</span><span class="en">Chinese description</span>
-            <textarea id="market-description-zh" rows="3"></textarea>
-          </label>
-          <label><span class="zh">英文說明</span><span class="en">English description</span>
-            <textarea id="market-description-en" rows="3"></textarea>
-          </label>
-          <label><span class="zh">價格（元）</span><span class="en">Price (TWD)</span>
-            <input id="market-price" type="number" min="0" step="1" required>
-          </label>
-          <label><span class="zh">數量</span><span class="en">Quantity</span>
-            <input id="market-quantity" type="number" min="0" step="1" required>
-          </label>
-          <label><span class="zh">圖片網址（選填）</span><span class="en">Image URL (optional)</span>
-            <input id="market-image" type="text" placeholder="https://">
-          </label>
-          <label><span class="zh">產品影片網址（選填，MP4）</span><span class="en">Product video URL (optional, MP4)</span>
-            <input id="market-video" type="text" placeholder="https://">
-          </label>
-          <label><span class="zh">上架狀態</span><span class="en">Listing status</span>
-            <select id="market-listing-status"></select>
-          </label>
+          <div class="market-lang-pair">
+            <label class="field-zh"><span class="zh">中文商品名稱</span><span class="en">Chinese product name</span>
+              <input id="market-name-zh" required>
+            </label>
+            <label class="field-en"><span class="zh">英文商品名稱（自動翻譯）</span><span class="en">English name (translated)</span>
+              <input id="market-name-en" class="is-synced" readonly>
+            </label>
+          </div>
+          <div class="market-form-row is-3">
+            <label><span class="zh">分類</span><span class="en">Category</span>
+              <select id="market-category"></select>
+            </label>
+            <label><span class="zh">價格（元）</span><span class="en">Price (TWD)</span>
+              <input id="market-price" type="number" min="0" step="1" required>
+            </label>
+            <label><span class="zh">數量</span><span class="en">Quantity</span>
+              <input id="market-quantity" type="number" min="0" step="1" required>
+            </label>
+          </div>
+          <div class="market-lang-pair">
+            <label class="field-zh"><span class="zh">中文說明</span><span class="en">Chinese description</span>
+              <textarea id="market-description-zh" rows="2"></textarea>
+            </label>
+            <label class="field-en"><span class="zh">英文說明（自動翻譯）</span><span class="en">English description (translated)</span>
+              <textarea id="market-description-en" class="is-synced" rows="2" readonly></textarea>
+            </label>
+          </div>
+          <div class="market-form-row is-3">
+            <label class="market-photo"><span class="zh">商品照片（選填，最多 10 張）</span><span class="en">Photos (optional, up to 10)</span>
+              <input id="market-photo" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+              <span class="swap-muted" id="market-photo-count"></span>
+              <div id="market-photo-list" class="market-photo-list"></div>
+            </label>
+            <label><span class="zh">產品影片網址（選填，MP4）</span><span class="en">Product video URL (optional, MP4)</span>
+              <input id="market-video" type="text" placeholder="https://">
+            </label>
+            <label><span class="zh">上架狀態</span><span class="en">Listing status</span>
+              <select id="market-listing-status"></select>
+            </label>
+          </div>
+          <input type="hidden" id="market-image">
           <div class="market-form-actions">
             <button type="submit" class="btn btn-gold"><span class="zh">儲存商品</span><span class="en">Save item</span></button>
             <button type="button" class="btn btn-outline" id="market-form-cancel"><span class="zh">取消</span><span class="en">Cancel</span></button>
             <button type="button" class="btn btn-outline" id="market-seed"><span class="zh">載入簡報範例商品</span><span class="en">Load slide sample items</span></button>
           </div>
         </form>
+        </div>
 
         <div id="market-view-listings" class="swap-browse">
           <aside class="swap-filters" id="market-browse-filter">
@@ -136,13 +153,29 @@
           </div>
         </div>
 
+        <div id="market-view-account" hidden>
+          <div class="admin-list-head">
+            <h2><span class="zh">帳號</span><span class="en">Account</span></h2>
+          </div>
+          <div id="market-account"></div>
+        </div>
+
         <div id="market-view-inventory" hidden>
           <div class="admin-list-head">
             <h2><span class="zh">庫存管理</span><span class="en">Inventory management</span></h2>
             <p class="admin-count" id="market-stock-total"></p>
           </div>
-          <div class="admin-news-table-wrap">
-            <table class="admin-news-table">
+          <div class="inventory-sheet">
+            <table class="inventory-table">
+              <colgroup>
+                <col class="inv-item">
+                <col class="inv-price">
+                <col class="inv-count">
+                <col class="inv-count">
+                <col class="inv-stock">
+                <col class="inv-status">
+                <col class="inv-actions">
+              </colgroup>
               <thead>
                 <tr>
                   <th><span class="zh">商品</span><span class="en">Item</span></th>
@@ -155,6 +188,27 @@
                 </tr>
               </thead>
               <tbody id="market-inventory-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="market-view-changes" hidden>
+          <div class="admin-list-head">
+            <h2><span class="zh">後台變更</span><span class="en">Change log</span></h2>
+            <p class="admin-count" id="market-changes-note"></p>
+          </div>
+          <div class="inventory-sheet">
+            <table class="inventory-table change-table">
+              <thead>
+                <tr>
+                  <th><span class="zh">時間</span><span class="en">Time</span></th>
+                  <th><span class="zh">賣家</span><span class="en">Seller</span></th>
+                  <th><span class="zh">商品</span><span class="en">Item</span></th>
+                  <th><span class="zh">動作</span><span class="en">Action</span></th>
+                  <th><span class="zh">變更內容</span><span class="en">What changed</span></th>
+                </tr>
+              </thead>
+              <tbody id="market-changes-body"></tbody>
             </table>
           </div>
         </div>
@@ -234,10 +288,107 @@
     </section>
   </main>
   <div id="site-footer"></div>
+  <dialog id="market-auth" class="market-auth">
+    <div class="market-auth-card">
+      <p class="admin-status" id="market-auth-status" role="status" hidden></p>
+      <div id="market-auth-login">
+        <h2><span class="zh">登入</span><span class="en">Sign in</span></h2>
+        <form id="market-auth-login-form">
+          <label><span class="zh">電子郵件</span><span class="en">Email</span>
+            <input type="email" id="market-login-email" required autocomplete="username">
+          </label>
+          <label><span class="zh">密碼</span><span class="en">Password</span>
+            <span class="password-field">
+              <input type="password" id="market-login-password" required minlength="6" autocomplete="current-password">
+              <button type="button" class="password-toggle" data-market-password="market-login-password" aria-label="顯示密碼"><span class="password-toggle-icon" aria-hidden="true"></span></button>
+            </span>
+          </label>
+        </form>
+      </div>
+      <div id="market-auth-register" hidden>
+        <h2><span class="zh">註冊</span><span class="en">Register</span></h2>
+        <form id="market-auth-register-form">
+          <label><span class="zh">顯示名稱</span><span class="en">Display name</span>
+            <input type="text" id="market-reg-name" maxlength="80" autocomplete="nickname">
+          </label>
+          <label><span class="zh">電子郵件</span><span class="en">Email</span>
+            <input type="email" id="market-reg-email" required autocomplete="username">
+          </label>
+          <label><span class="zh">密碼（至少 6 碼）</span><span class="en">Password (min 6)</span>
+            <span class="password-field">
+              <input type="password" id="market-reg-password" required minlength="6" autocomplete="new-password">
+              <button type="button" class="password-toggle" data-market-password="market-reg-password" aria-label="顯示密碼"><span class="password-toggle-icon" aria-hidden="true"></span></button>
+            </span>
+          </label>
+          <label><span class="zh">確認密碼</span><span class="en">Confirm password</span>
+            <span class="password-field">
+              <input type="password" id="market-reg-password2" required minlength="6" autocomplete="new-password">
+              <button type="button" class="password-toggle" data-market-password="market-reg-password2" aria-label="顯示密碼"><span class="password-toggle-icon" aria-hidden="true"></span></button>
+            </span>
+          </label>
+          <button type="submit" class="btn btn-gold auth-submit" id="market-reg-submit" hidden><span class="zh">送出</span><span class="en">Submit</span></button>
+        </form>
+      </div>
+      <div id="market-auth-forgot" hidden>
+        <h2><span class="zh">忘記密碼</span><span class="en">Forgot password</span></h2>
+        <p><span class="zh">輸入註冊信箱，我們會寄送重設密碼連結。</span><span class="en">Enter your registered email and we will send a reset link.</span></p>
+        <form id="market-auth-forgot-form">
+          <label><span class="zh">電子郵件</span><span class="en">Email</span>
+            <input type="email" id="market-forgot-email" required autocomplete="username">
+          </label>
+          <button type="submit" class="btn btn-gold auth-submit" id="market-forgot-submit" hidden><span class="zh">送出</span><span class="en">Submit</span></button>
+        </form>
+      </div>
+      <div class="auth-mode-switch" role="group">
+        <button type="button" class="btn btn-gold" id="market-auth-tab-login"><span class="zh">登入</span><span class="en">Sign in</span></button>
+        <button type="button" class="btn btn-outline" id="market-auth-tab-register"><span class="zh">註冊</span><span class="en">Register</span></button>
+        <button type="button" class="btn btn-outline" id="market-auth-tab-forgot"><span class="zh">忘記密碼</span><span class="en">Forgot password</span></button>
+        <a class="btn btn-outline" href="index.html"><span class="zh">回首頁</span><span class="en">Home</span></a>
+      </div>
+    </div>
+  </dialog>
+  <dialog id="market-ship-dialog" class="market-auth">
+    <div class="market-auth-card">
+      <h2><span class="zh">標記可出貨</span><span class="en">Mark ready to ship</span></h2>
+      <p id="market-ship-order"></p>
+      <p class="swap-note" id="market-ship-pickup" hidden><span class="zh">於 LM208 中午 12:00 面交</span><span class="en">In-person pickup at LM208, 12:00 noon</span></p>
+      <p class="swap-note"><span class="zh">出貨日最早可選下單當天。抵達日最早為下單隔天，更早的日期會反灰且不能選。</span><span class="en">The earliest ship date is the day the order was placed. Arrival starts the next day. Earlier dates are grayed out and cannot be selected.</span></p>
+      <form id="market-ship-form">
+        <label><span class="zh">出貨日期</span><span class="en">Ship date</span>
+          <input id="market-ship-date" type="date" required>
+        </label>
+        <label><span class="zh">抵達日期</span><span class="en">Arrival date</span>
+          <input id="market-arrive-date" type="date" required>
+        </label>
+        <div class="market-form-actions">
+          <button type="submit" class="btn btn-gold"><span class="zh">確認日期</span><span class="en">Save dates</span></button>
+          <button type="button" class="btn btn-outline" id="market-ship-cancel"><span class="zh">取消</span><span class="en">Cancel</span></button>
+        </div>
+      </form>
+      <p class="admin-status" id="market-ship-status" role="status" hidden></p>
+    </div>
+  </dialog>
+  <dialog id="market-stock-dialog" class="market-auth">
+    <div class="market-auth-card">
+      <h2><span class="zh">編輯上架</span><span class="en">Edit listing</span></h2>
+      <p id="market-stock-name"></p>
+      <form id="market-stock-form">
+        <label><span class="zh">上架數量</span><span class="en">Quantity to list</span>
+          <input id="market-stock-qty" type="number" min="0" step="1" required>
+        </label>
+        <div class="market-form-actions">
+          <button type="submit" class="btn btn-gold"><span class="zh">確認上架</span><span class="en">List this quantity</span></button>
+          <button type="button" class="btn btn-outline" id="market-stock-hide"><span class="zh">下架商品</span><span class="en">Unlist item</span></button>
+          <button type="button" class="btn btn-outline" id="market-stock-cancel"><span class="zh">取消</span><span class="en">Cancel</span></button>
+        </div>
+      </form>
+      <p class="admin-status" id="market-stock-status" role="status" hidden></p>
+    </div>
+  </dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase-config.js"></script>
-  <script src="assets/js/auth.js?v=market"></script>
+  <script src="assets/js/auth.js?v=market-member"></script>
   <script src="assets/js/site.js?v=site-downloads"></script>
-  <script src="assets/js/market-app.js?v=swap-ui21"></script>
+  <script src="assets/js/market-app.js?v=swap-ui46"></script>
 </body>
 </html>
