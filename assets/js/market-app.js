@@ -531,14 +531,16 @@
     var stock = Number(item.quantity) || 0;
     dialog.setAttribute("data-open-product", item.id);
     body.innerHTML =
-      cardMedia(item) +
+      '<div class="market-detail">' +
+      '<div class="market-detail-media">' + cardMedia(item) + "</div>" +
+      '<div class="market-detail-copy">' +
       '<p class="swap-code"><span>' + escapeHtml(shortCode(item.id)) + "</span> " + escapeHtml(categoryLabel(item.category)) + "</p>" +
       "<h2>" + escapeHtml(productTitle(item)) + "</h2>" +
       '<p class="market-price">' + escapeHtml(money(item.price)) + "</p>" +
-      "<p>" + escapeHtml(t("剩下 " + stock + " 件", stock + " left")) + " · " +
+      '<p class="market-detail-meta">' + escapeHtml(t("剩下 " + stock + " 件", stock + " left")) + " · " +
       escapeHtml(t("賣家：", "Seller: ") + (item.seller_name || t("已註冊會員", "Registered member"))) + "</p>" +
-      "<h3>" + escapeHtml(t("介紹說明", "Description")) + "</h3>" +
-      '<p class="market-product-copy">' + escapeHtml(productBlurb(item)) + "</p>";
+      '<p class="market-product-copy">' + escapeHtml(productBlurb(item)) + "</p>" +
+      "</div></div>";
     var close = document.getElementById("market-product-close");
     if (close) close.setAttribute("aria-label", t("關閉", "Close"));
     if (!dialog.open) dialog.showModal();
