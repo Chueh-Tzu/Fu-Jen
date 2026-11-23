@@ -68,21 +68,24 @@
     statusEl.className = "admin-status is-" + statusNote.kind;
     statusEl.textContent = t(statusNote.zh, statusNote.en);
   }
+  function textOf(value) {
+    return String(value || "").trim();
+  }
   function productTitle(item) {
-    var zh = item.name_zh || "";
-    var en = item.name_en || item.name || "";
-    return isEn() ? (en || zh) : (zh || en);
+    if (isEn()) return textOf(item.name_en || item.name) || t("未提供英文名稱", "No English name");
+    return textOf(item.name_zh) || t("未提供中文名稱", "No Chinese name");
   }
   function productBlurb(item) {
-    var zh = item.description_zh || "";
-    var en = item.description_en || item.description || "";
-    return (isEn() ? (en || zh) : (zh || en)) || t("未提供說明", "No description provided");
+    if (isEn()) return textOf(item.description_en || item.description) || t("未提供英文說明", "No English description");
+    return textOf(item.description_zh) || t("未提供中文說明", "No Chinese description");
   }
   function lineTitle(item) {
     var product = item.product_id ? productById(item.product_id) : null;
-    var zh = item.product_name_zh || (product && product.name_zh) || "";
-    var en = item.product_name_en || item.product_name || (product && (product.name_en || product.name)) || "";
-    return (isEn() ? (en || zh) : (zh || en)) + " x" + item.quantity;
+    var zh = textOf(item.product_name_zh) || (product ? textOf(product.name_zh) : "");
+    var en = textOf(item.product_name_en) || textOf(item.product_name) || (product ? textOf(product.name_en || product.name) : "");
+    var title = isEn() ? en : zh;
+    if (!title) title = isEn() ? t("未提供英文名稱", "No English name") : t("未提供中文名稱", "No Chinese name");
+    return title + " x" + item.quantity;
   }
   function formatTime(iso) {
     var date = new Date(iso);
@@ -525,33 +528,17 @@
     var dialog = document.getElementById("market-product-dialog");
     var body = document.getElementById("market-product-detail");
     if (!dialog || !body || !item) return;
-    var nameZh = String(item.name_zh || "").trim();
-    var nameEn = String(item.name_en || item.name || "").trim();
-    var descZh = String(item.description_zh || "").trim();
-    var descEn = String(item.description_en || item.description || "").trim();
-    var otherName = isEn() ? nameZh : nameEn;
-    var title = productTitle(item);
-    if (otherName && otherName === title) otherName = "";
     var stock = Number(item.quantity) || 0;
-    var copy = "";
-    if (descZh) {
-      copy += "<h3>" + escapeHtml(t("介紹說明", "Chinese description")) + "</h3><p class=\"market-product-copy\">" + escapeHtml(descZh) + "</p>";
-    }
-    if (descEn && descEn !== descZh) {
-      copy += "<h3>" + escapeHtml(t("英文說明", "Description")) + "</h3><p class=\"market-product-copy\">" + escapeHtml(descEn) + "</p>";
-    }
-    if (!copy) {
-      copy = "<h3>" + escapeHtml(t("介紹說明", "Description")) + "</h3><p class=\"market-product-copy\">" + escapeHtml(t("未提供說明", "No description provided")) + "</p>";
-    }
+    dialog.setAttribute("data-open-product", item.id);
     body.innerHTML =
       cardMedia(item) +
       '<p class="swap-code"><span>' + escapeHtml(shortCode(item.id)) + "</span> " + escapeHtml(categoryLabel(item.category)) + "</p>" +
-      "<h2>" + escapeHtml(title) + "</h2>" +
-      (otherName ? '<p class="market-product-alt">' + escapeHtml(otherName) + "</p>" : "") +
+      "<h2>" + escapeHtml(productTitle(item)) + "</h2>" +
       '<p class="market-price">' + escapeHtml(money(item.price)) + "</p>" +
       "<p>" + escapeHtml(t("剩下 " + stock + " 件", stock + " left")) + " · " +
       escapeHtml(t("賣家：", "Seller: ") + (item.seller_name || t("已註冊會員", "Registered member"))) + "</p>" +
-      copy;
+      "<h3>" + escapeHtml(t("介紹說明", "Description")) + "</h3>" +
+      '<p class="market-product-copy">' + escapeHtml(productBlurb(item)) + "</p>";
     var close = document.getElementById("market-product-close");
     if (close) close.setAttribute("aria-label", t("關閉", "Close"));
     if (!dialog.open) dialog.showModal();
@@ -642,8 +629,18 @@
   }
 
   function changeDetail(entry) {
-    var rows = (entry.changes || []).filter(function (row) {
-      return row.field !== "image_url" || !(entry.changes || []).some(function (other) { return other.field === "image_urls"; });
+    var changes = entry.changes || [];
+    var hasEnglishName = changes.some(function (row) { return row.field === "name_en"; });
+    var hasEnglishDescription = changes.some(function (row) { return row.field === "description_en"; });
+    var rows = changes.filter(function (row) {
+      if (row.field === "image_url" && changes.some(function (other) { return other.field === "image_urls"; })) return false;
+      if (isEn()) {
+        if (row.field === "name_zh" || row.field === "description_zh") return false;
+        if (row.field === "name" && hasEnglishName) return false;
+        if (row.field === "description" && hasEnglishDescription) return false;
+        return true;
+      }
+      return row.field !== "name" && row.field !== "name_en" && row.field !== "description" && row.field !== "description_en";
     });
     if (!rows.length) return escapeHtml(changeAction(entry));
     return rows.map(function (row) {
@@ -880,9 +877,10 @@
     return order.market_order_items || [];
   }
   function itemTitle(item) {
-    var zh = item.product_name_zh || "";
-    var en = item.product_name_en || item.product_name || "";
-    return (isEn() ? (en || zh) : (zh || en)) || "—";
+    var product = item.product_id ? productById(item.product_id) : null;
+    var zh = textOf(item.product_name_zh) || (product ? textOf(product.name_zh) : "");
+    var en = textOf(item.product_name_en) || textOf(item.product_name) || (product ? textOf(product.name_en || product.name) : "");
+    return (isEn() ? en : zh) || (isEn() ? t("未提供英文名稱", "No English name") : t("未提供中文名稱", "No Chinese name"));
   }
   function itemImage(item) {
     var product = item.product_id ? productById(item.product_id) : null;
@@ -2526,6 +2524,12 @@
       setTimeout(function () {
         paintStatus();
         if (ready) renderAll();
+        var productDialog = document.getElementById("market-product-dialog");
+        if (productDialog && productDialog.open) {
+          var openProduct = productById(productDialog.getAttribute("data-open-product"));
+          if (openProduct) openProductDetail(openProduct);
+        }
+        applyTranslateDirection();
       }, 0);
     });
   }

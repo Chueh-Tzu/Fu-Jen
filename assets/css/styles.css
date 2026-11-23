@@ -2970,8 +2970,10 @@ body.has-admin-side .page-hero .wrap {
 .market-form h2 { margin: 0; font-size: 24px; }
 .market-form-pair, .market-form-row.is-2, .market-lang-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .market-form-row.is-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-html[data-locale="en"] .market-lang-pair .field-en { order: 1; }
-html[data-locale="en"] .market-lang-pair .field-zh { order: 2; }
+html[data-locale="zh"] .market-lang-pair .field-en,
+html[data-locale="en"] .market-lang-pair .field-zh { display: none !important; }
+html[data-locale="zh"] .market-lang-pair,
+html[data-locale="en"] .market-lang-pair { grid-template-columns: 1fr; }
 .market-form .is-synced { background: #f7f4ee; color: var(--navy); }
 .market-photo-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .market-photo-list:empty { display: none; }
