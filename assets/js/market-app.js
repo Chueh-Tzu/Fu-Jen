@@ -161,8 +161,25 @@
   function isSuper() {
     return !!(me && me.profile && me.profile.role === "super_admin");
   }
-  function canTrade() {
+  function canSell() {
     return !!(me && me.profile && auth.isMarketMember && auth.isMarketMember(me.profile.role));
+  }
+  function canBuy() {
+    return !!(me && me.profile && auth.isMarketBuyer && auth.isMarketBuyer(me.profile.role));
+  }
+  function registeredSide() {
+    var apply = me && me.profile && me.profile.apply_as;
+    return apply === "seller" || apply === "buyer" ? apply : "";
+  }
+  function applySideMode() {
+    var side = registeredSide();
+    if (side === "seller") mode = "seller";
+    else if (side === "buyer") mode = "buyer";
+    else if (entryChoice === "seller" && canSell()) mode = "seller";
+    else if (entryChoice !== "seller" && canBuy()) mode = "buyer";
+    else if (canSell() && !canBuy()) mode = "seller";
+    else mode = "buyer";
+    localStorage.setItem(MODE_KEY, mode);
   }
   function cartKey() {
     return CART_KEY + ":" + (uid() || "guest");
@@ -227,6 +244,12 @@
   }
 
   function setView(next) {
+    var side = registeredSide();
+    if ((next === "seller" || next === "inventory" || next === "compose" || next === "changes") && (side === "buyer" || !canSell())) next = "listings";
+    if (next === "admin" && !isAdmin()) next = "listings";
+    if ((next === "cart" || next === "pay" || next === "member" || next === "account") && (side === "seller" || !canBuy())) {
+      next = side === "seller" && canSell() ? "inventory" : "listings";
+    }
     view = next;
     ["listings", "inventory", "compose", "changes", "cart", "pay", "member", "seller", "admin", "account"].forEach(function (name) {
       var panel = document.getElementById("market-view-" + name);
@@ -248,7 +271,9 @@
   }
 
   function selling() {
-    return canTrade() && mode === "seller";
+    if (registeredSide() === "buyer") return false;
+    if (registeredSide() === "seller") return canSell();
+    return canSell() && mode === "seller";
   }
 
   function pendingSellerOrders() {
@@ -268,9 +293,9 @@
 
   function renderChrome() {
     var signedIn = !!(me && me.profile);
-    var approved = canTrade();
+    var approved = canBuy();
     var sellerView = selling();
-    document.getElementById("market-role").hidden = !signedIn;
+    document.getElementById("market-role").hidden = !!registeredSide() || !(canSell() && canBuy());
     document.getElementById("market-listings-btn").hidden = false;
     document.getElementById("market-cart-btn").hidden = !approved || sellerView;
     document.getElementById("market-member-btn").hidden = !approved || sellerView;
@@ -279,10 +304,10 @@
     document.getElementById("market-inventory-btn").hidden = !sellerView;
     document.getElementById("market-seller-btn").hidden = !sellerView;
     document.getElementById("market-admin-btn").hidden = !isAdmin();
-    document.getElementById("market-users-link").hidden = !approved;
+    document.getElementById("market-users-link").hidden = !(canBuy() || canSell());
     document.getElementById("market-login").hidden = signedIn;
     document.getElementById("market-signout").hidden = !signedIn;
-    document.getElementById("market-become-seller").hidden = !approved || sellerView;
+    document.getElementById("market-become-seller").hidden = registeredSide() === "buyer" || !canSell() || sellerView;
     document.getElementById("market-buyer-mode").hidden = !sellerView;
     document.getElementById("market-buyer-label").hidden = sellerView;
     document.getElementById("market-seller-label").hidden = !sellerView;
@@ -297,7 +322,7 @@
     document.getElementById("market-locale").textContent = isEn() ? "中文" : "EN";
     document.getElementById("market-listings-btn").innerHTML =
       '<span class="zh">瀏覽商品</span><span class="en">Browse</span>';
-    var pending = approved ? pendingSellerOrders() : 0;
+    var pending = canSell() ? pendingSellerOrders() : 0;
     document.getElementById("market-seller-count").textContent = pending
       ? t("（" + pending + "）", "(" + pending + ")")
       : "";
@@ -310,6 +335,16 @@
       copy.textContent = t(
         "訪客可以瀏覽市集中所有已上架商品。登入後才能加入購物車。",
         "Visitors can browse every listed product. Sign in to add items to the cart."
+      );
+    } else if (registeredSide() === "seller" || (canSell() && !canBuy())) {
+      copy.textContent = t(
+        "賣家：可以管理自己的商品，以及處理自己的訂單。不能下單。",
+        "Seller: you can manage your own products and process your own orders. You cannot place orders."
+      );
+    } else if (registeredSide() === "buyer" || !canSell()) {
+      copy.textContent = t(
+        "買家：可以瀏覽商品、下單，以及查看自己的訂單。不能修改庫存、管理商品，也不能進入管理頁。",
+        "Buyer: you can browse, buy, and view your own orders. You cannot edit inventory, manage products, or open admin pages."
       );
     } else if (sellerView) {
       copy.textContent = t(
@@ -457,7 +492,7 @@
       var actions = "";
       if (stock <= 0) {
         actions = '<p class="market-note">' + escapeHtml(t("已售完", "Sold out")) + "</p>";
-      } else if (canTrade()) {
+      } else if (canBuy()) {
         actions =
           '<label class="market-qty">' + t("數量", "Qty") +
           ' <input data-qty="' + item.id + '" type="number" min="1" max="' + stock + '" value="' + qty + '"></label>' +
@@ -466,7 +501,7 @@
         actions = '<button type="button" class="btn btn-gold" data-open-auth>' + t("登入後下單", "Sign in to order") + "</button>";
       }
       return (
-        '<article class="swap-card">' +
+        '<article class="swap-card" data-product="' + item.id + '">' +
         cardMedia(item) +
         '<div class="swap-card-body">' +
         '<p class="swap-code"><span>' + escapeHtml(shortCode(item.id)) + "</span> " + escapeHtml(categoryLabel(item.category)) + "</p>" +
@@ -477,6 +512,49 @@
         '<div class="market-card-actions">' + actions + "</div></div></article>"
       );
     }).join("");
+  }
+
+  function closeProductDetail() {
+    var dialog = document.getElementById("market-product-dialog");
+    if (!dialog) return;
+    dialog.querySelectorAll("video").forEach(function (video) { video.pause(); });
+    if (dialog.open) dialog.close();
+  }
+
+  function openProductDetail(item) {
+    var dialog = document.getElementById("market-product-dialog");
+    var body = document.getElementById("market-product-detail");
+    if (!dialog || !body || !item) return;
+    var nameZh = String(item.name_zh || "").trim();
+    var nameEn = String(item.name_en || item.name || "").trim();
+    var descZh = String(item.description_zh || "").trim();
+    var descEn = String(item.description_en || item.description || "").trim();
+    var otherName = isEn() ? nameZh : nameEn;
+    var title = productTitle(item);
+    if (otherName && otherName === title) otherName = "";
+    var stock = Number(item.quantity) || 0;
+    var copy = "";
+    if (descZh) {
+      copy += "<h3>" + escapeHtml(t("介紹說明", "Chinese description")) + "</h3><p class=\"market-product-copy\">" + escapeHtml(descZh) + "</p>";
+    }
+    if (descEn && descEn !== descZh) {
+      copy += "<h3>" + escapeHtml(t("英文說明", "Description")) + "</h3><p class=\"market-product-copy\">" + escapeHtml(descEn) + "</p>";
+    }
+    if (!copy) {
+      copy = "<h3>" + escapeHtml(t("介紹說明", "Description")) + "</h3><p class=\"market-product-copy\">" + escapeHtml(t("未提供說明", "No description provided")) + "</p>";
+    }
+    body.innerHTML =
+      cardMedia(item) +
+      '<p class="swap-code"><span>' + escapeHtml(shortCode(item.id)) + "</span> " + escapeHtml(categoryLabel(item.category)) + "</p>" +
+      "<h2>" + escapeHtml(title) + "</h2>" +
+      (otherName ? '<p class="market-product-alt">' + escapeHtml(otherName) + "</p>" : "") +
+      '<p class="market-price">' + escapeHtml(money(item.price)) + "</p>" +
+      "<p>" + escapeHtml(t("剩下 " + stock + " 件", stock + " left")) + " · " +
+      escapeHtml(t("賣家：", "Seller: ") + (item.seller_name || t("已註冊會員", "Registered member"))) + "</p>" +
+      copy;
+    var close = document.getElementById("market-product-close");
+    if (close) close.setAttribute("aria-label", t("關閉", "Close"));
+    if (!dialog.open) dialog.showModal();
   }
 
   function inventoryActions(item) {
@@ -1065,7 +1143,7 @@
 
   function renderMember() {
     var host = document.getElementById("market-member");
-    if (!canTrade()) {
+    if (!canBuy()) {
       host.innerHTML = '<p class="market-empty">' + escapeHtml(t("請先登入才能查看訂單。", "Sign in to view your orders.")) + "</p>";
       return;
     }
@@ -1144,6 +1222,10 @@
 
   function renderSeller() {
     var host = document.getElementById("market-seller");
+    if (!canSell()) {
+      host.innerHTML = '<p class="market-empty">' + escapeHtml(t("買家不能處理賣家訂單。", "Buyers cannot process seller orders.")) + "</p>";
+      return;
+    }
     var mine = orders.filter(function (order) { return order.seller_id === uid(); });
     host.innerHTML = sellerOrderTable(mine);
     renderAccounting();
@@ -1256,6 +1338,10 @@
   }
 
   function renderAdmin() {
+    if (!isAdmin()) {
+      document.getElementById("market-admin-list").innerHTML = '<p class="market-empty">' + escapeHtml(t("只有管理員可以查看全平台交易。", "Only an admin can monitor platform transactions.")) + "</p>";
+      return;
+    }
     var list = filteredAdminOrders();
     var amount = list.reduce(function (sum, order) { return sum + Number(order.total || 0); }, 0);
     var fees = list.reduce(function (sum, order) { return sum + Number(order.platform_fee || 0); }, 0);
@@ -1466,7 +1552,7 @@
   }
 
   function marketMember() {
-    return !!(me && me.profile && me.profile.role === "market");
+    return !!(me && me.profile && (me.profile.role === "market" || me.profile.role === "both"));
   }
 
   function listedIdentityLocked() {
@@ -1563,8 +1649,8 @@
 
   async function saveProduct(event) {
     event.preventDefault();
-    if (!canTrade()) {
-      openMarketAuth();
+    if (!canSell()) {
+      showStatus("買家不能上架或修改商品。", "Buyers cannot list or edit products.", "err");
       return;
     }
     var id = document.getElementById("market-product-id").value;
@@ -1641,7 +1727,7 @@
   }
 
   async function addSamples() {
-    if (!canTrade()) return;
+    if (!canSell()) return;
     var sb = auth.getClient();
     var existing = {};
     products.forEach(function (item) {
@@ -1728,7 +1814,7 @@
   async function applyStockChoice(unlist) {
     var item = productById(stockEditId);
     var note = document.getElementById("market-stock-status");
-    if (!item || item.seller_id !== uid()) return;
+    if (!canSell() || !item || item.seller_id !== uid()) return;
     var qtyField = document.getElementById("market-stock-qty");
     var qty = Number(qtyField.value);
     if (!unlist && (qtyField.value === "" || qty < 0)) return;
@@ -1953,6 +2039,13 @@
     URL.revokeObjectURL(link.href);
   });
 
+  var productDialog = document.getElementById("market-product-dialog");
+  if (productDialog) {
+    productDialog.addEventListener("click", function (event) {
+      if (event.target === productDialog) closeProductDetail();
+    });
+  }
+
   document.body.addEventListener("click", async function (event) {
     var removePhoto = event.target.closest("[data-remove-photo]");
     if (removePhoto && removePhoto.closest("#market-photo-list")) {
@@ -1979,6 +2072,16 @@
       }
       return;
     }
+    if (event.target.closest("#market-product-close")) {
+      closeProductDetail();
+      return;
+    }
+    var productCard = event.target.closest("[data-product]");
+    if (productCard && !event.target.closest("button, input, textarea, select, label, video, a")) {
+      var product = productById(productCard.getAttribute("data-product"));
+      if (product) openProductDetail(product);
+      return;
+    }
     if (event.target.closest("#market-login") || event.target.closest("[data-open-auth]")) {
       openMarketAuth("login");
       return;
@@ -1986,7 +2089,19 @@
     var viewButton = event.target.closest("[data-view]");
     if (viewButton) {
       var next = viewButton.getAttribute("data-view");
-      if ((next === "member" || next === "seller" || next === "inventory" || next === "account" || next === "compose" || next === "changes") && !canTrade()) {
+      if (next === "admin" && !isAdmin()) {
+        showStatus("只有管理員可以查看全平台交易。", "Only an admin can monitor platform transactions.", "err");
+        return;
+      }
+      if ((next === "seller" || next === "inventory" || next === "compose" || next === "changes") && (registeredSide() === "buyer" || !canSell())) {
+        showStatus("買家不能管理商品、庫存或賣家訂單。", "Buyers cannot manage products, inventory, or seller orders.", "err");
+        return;
+      }
+      if ((next === "member" || next === "cart" || next === "pay" || next === "account") && registeredSide() === "seller") {
+        showStatus("這個帳號是賣家，不能下單。", "This account is a seller and cannot place orders.", "err");
+        return;
+      }
+      if ((next === "member" || next === "cart" || next === "pay" || next === "account") && !canBuy()) {
         openMarketAuth();
         return;
       }
@@ -2041,11 +2156,16 @@
     }
     var modeButton = event.target.closest("[data-mode]");
     if (modeButton) {
-      if (!canTrade()) {
-        openMarketAuth();
+      var nextMode = modeButton.getAttribute("data-mode") === "seller" ? "seller" : "buyer";
+      if (nextMode === "seller" && (registeredSide() === "buyer" || !canSell())) {
+        showStatus("這個帳號是買家，不能切換到賣家。", "This account is a buyer and cannot switch to seller.", "err");
         return;
       }
-      mode = modeButton.getAttribute("data-mode") === "seller" ? "seller" : "buyer";
+      if (nextMode === "buyer" && (registeredSide() === "seller" || !canBuy())) {
+        showStatus("這個帳號是賣家，不能切換到買家。", "This account is a seller and cannot switch to buyer.", "err");
+        return;
+      }
+      mode = nextMode;
       localStorage.setItem(MODE_KEY, mode);
       if (mode === "seller") setView("inventory");
       if (mode === "buyer") setView("listings");
@@ -2055,7 +2175,11 @@
     }
     var cartButton = event.target.closest("[data-cart]");
     if (cartButton) {
-      if (!canTrade()) {
+      if (registeredSide() === "seller") {
+        showStatus("這個帳號是賣家，不能下單。", "This account is a seller and cannot place orders.", "err");
+        return;
+      }
+      if (!canBuy()) {
         openMarketAuth();
         return;
       }
@@ -2125,6 +2249,10 @@
       return;
     }
     if (event.target.id === "market-open-seller" || event.target.closest("#market-open-seller")) {
+      if (registeredSide() === "buyer" || !canSell()) {
+        showStatus("這個帳號是買家，不能切換到賣家。", "This account is a buyer and cannot switch to seller.", "err");
+        return;
+      }
       mode = "seller";
       localStorage.setItem(MODE_KEY, mode);
       setView("seller");
@@ -2148,6 +2276,7 @@
     }
     var editButton = event.target.closest("[data-edit]");
     if (editButton) {
+      if (!canSell()) return;
       var editItem = productById(editButton.getAttribute("data-edit"));
       if (!editItem || editItem.seller_id !== uid()) return;
       openStockDialog(editItem);
@@ -2157,10 +2286,10 @@
     if (deleteButton) {
       var deleteId = deleteButton.getAttribute("data-delete-product");
       var deleteProduct = productById(deleteId);
-      if (!deleteProduct || deleteProduct.seller_id !== uid()) return;
+      if (!canSell() || !deleteProduct || deleteProduct.seller_id !== uid()) return;
       var deleteName = deleteProduct ? productTitle(deleteProduct) : "";
       if (!window.confirm(t("要刪除「" + deleteName + "」嗎？已完成的訂單仍會保留。", "Delete “" + deleteName + "”? Completed orders stay on record."))) return;
-      var removed = await auth.getClient().from("market_products").delete().eq("id", deleteId);
+      var removed = await auth.getClient().from("market_products").delete().eq("id", deleteId).eq("seller_id", uid());
       if (removed.error) {
         showStatus("刪除失敗：" + removed.error.message, "Could not delete the item: " + removed.error.message, "err");
         return;
@@ -2183,7 +2312,8 @@
     if (soldButton) {
       var soldId = soldButton.getAttribute("data-sold");
       var soldItem = productById(soldId);
-      await auth.getClient().from("market_products").update({ status: "sold" }).eq("id", soldId);
+      if (!canSell() || !soldItem || soldItem.seller_id !== uid()) return;
+      await auth.getClient().from("market_products").update({ status: "sold" }).eq("id", soldId).eq("seller_id", uid());
       await logMarket({
         action: "UPDATE",
         entity_type: "market_product",
@@ -2198,7 +2328,8 @@
     if (hideButton) {
       var hideId = hideButton.getAttribute("data-hide");
       var hideItem = productById(hideId);
-      await auth.getClient().from("market_products").update({ status: "hidden" }).eq("id", hideId);
+      if (!canSell() || !hideItem || hideItem.seller_id !== uid()) return;
+      await auth.getClient().from("market_products").update({ status: "hidden" }).eq("id", hideId).eq("seller_id", uid());
       await logMarket({
         action: "UPDATE",
         entity_type: "market_product",
@@ -2241,6 +2372,10 @@
     var confirmCancel = event.target.closest("[data-confirm-cancel]");
     if (confirmCancel) {
       var confirmId = confirmCancel.getAttribute("data-confirm-cancel");
+      if (!canSell() || !orders.some(function (order) { return order.id === confirmId && order.seller_id === uid(); })) {
+        showStatus("只能處理自己的賣家訂單。", "You can only process your own seller orders.", "err");
+        return;
+      }
       var confirmed = await auth.getClient().rpc("confirm_market_cancel", { p_order: confirmId });
       if (confirmed.error) {
         showStatus("確認取消失敗：" + confirmed.error.message, "Could not confirm the cancellation: " + confirmed.error.message, "err");
@@ -2260,6 +2395,11 @@
     }
     var advance = event.target.closest("[data-advance]");
     if (advance) {
+      var advanceId = advance.getAttribute("data-advance");
+      if (!canSell() || !orders.some(function (order) { return order.id === advanceId && order.seller_id === uid(); })) {
+        showStatus("只能處理自己的賣家訂單。", "You can only process your own seller orders.", "err");
+        return;
+      }
       if (advance.getAttribute("data-next") === "ready_to_ship") {
         openShipDialog(advance.getAttribute("data-advance"));
         return;
@@ -2319,8 +2459,12 @@
   });
 
   async function checkout() {
-    if (!canTrade()) {
-      openMarketAuth();
+    if (registeredSide() === "seller" || !canBuy()) {
+      if (registeredSide() === "seller") {
+        showStatus("這個帳號是賣家，不能下單。", "This account is a seller and cannot place orders.", "err");
+      } else {
+        openMarketAuth();
+      }
       return;
     }
     var chosen = selectedLines();
@@ -2387,6 +2531,26 @@
   }
 
   var marketAuthMode = "login";
+  var entryChoice = "buyer";
+  var applyChoice = "buyer";
+
+  function setEntryChoice(next) {
+    entryChoice = next === "seller" ? "seller" : "buyer";
+    document.querySelectorAll("[data-entry]").forEach(function (button) {
+      var selected = button.getAttribute("data-entry") === entryChoice;
+      button.classList.toggle("is-current", selected);
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+    });
+  }
+
+  function setApplyChoice(next) {
+    applyChoice = next === "seller" ? "seller" : "buyer";
+    document.querySelectorAll("[data-apply]").forEach(function (button) {
+      var selected = button.getAttribute("data-apply") === applyChoice;
+      button.classList.toggle("is-current", selected);
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+    });
+  }
 
   function marketAuthStatus(message, kind) {
     var statusEl = document.getElementById("market-auth-status");
@@ -2420,17 +2584,40 @@
   function finishMarketAuth(profile) {
     var dialog = document.getElementById("market-auth");
     if (dialog && dialog.open) dialog.close();
-    if (profile && auth.isMarketMember(profile.role)) {
-      showStatus("已進入書籍&市集。", "You can use Books & Marketplace.", "ok");
+    var side = profile && (profile.apply_as === "seller" || profile.apply_as === "buyer") ? profile.apply_as : "";
+    var wantSeller = side ? side === "seller" : entryChoice === "seller";
+    if (wantSeller && canSell()) {
+      setView("inventory");
+      renderChrome();
+      showStatus("已以賣家身分進入。", "Signed in as a seller.", "ok");
       return;
     }
+    if (!wantSeller && canBuy()) {
+      setView("listings");
+      renderChrome();
+      showStatus("已以買家身分進入。", "Signed in as a buyer.", "ok");
+      return;
+    }
+    if (!side && canSell()) {
+      setView("inventory");
+      renderChrome();
+      showStatus("這個帳號是賣家，已改以賣家身分進入。", "This account is a seller, so you are signed in as a seller.", "ok");
+      return;
+    }
+    if (!side && canBuy()) {
+      setView("listings");
+      renderChrome();
+      showStatus("這個帳號是買家，已改以買家身分進入。", "This account is a buyer, so you are signed in as a buyer.", "ok");
+      return;
+    }
+    var waiting = side === "seller"
+      ? ["帳號正在等待超級管理員審核。通過後才能管理自己的商品和處理自己的訂單。", "This account is waiting for a super admin. After approval you can manage your own products and orders."]
+      : side === "buyer"
+        ? ["帳號正在等待超級管理員審核。通過後才能下單和查看自己的訂單。", "This account is waiting for a super admin. After approval you can place orders and view your own orders."]
+        : ["帳號正在等待超級管理員審核，通過後才能下單、上架和切換買賣家。", "This account is waiting for a super admin. After approval you can order, list items, and switch buyer or seller."];
     showStatus(
-      profile && profile.role === "rejected"
-        ? "此帳號無法進入書籍&市集。"
-        : "帳號正在等待超級管理員審核，通過後才能下單、上架和切換買賣家。",
-      profile && profile.role === "rejected"
-        ? "This account cannot enter Books & Marketplace."
-        : "This account is waiting for a super admin. After approval you can order, list items, and switch buyer or seller.",
+      profile && profile.role === "rejected" ? "此帳號無法進入書籍&市集。" : waiting[0],
+      profile && profile.role === "rejected" ? "This account cannot enter Books & Marketplace." : waiting[1],
       "err"
     );
   }
@@ -2439,9 +2626,22 @@
     var session = await auth.getSession();
     var profile = session ? await auth.getProfile(true) : null;
     me = session ? { session: session, profile: profile } : null;
+    applySideMode();
     await refresh();
     return profile;
   }
+
+  document.querySelectorAll("[data-entry]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      setEntryChoice(button.getAttribute("data-entry"));
+    });
+  });
+
+  document.querySelectorAll("[data-apply]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      setApplyChoice(button.getAttribute("data-apply"));
+    });
+  });
 
   document.querySelectorAll("[data-market-password]").forEach(function (button) {
     button.addEventListener("click", function () {
@@ -2464,6 +2664,14 @@
         document.getElementById("market-login-email").value,
         document.getElementById("market-login-password").value
       );
+      var signedIn = await auth.getProfile(true);
+      var picked = entryChoice === "seller" ? "seller" : "buyer";
+      if (signedIn && (signedIn.apply_as === "buyer" || signedIn.apply_as === "seller") && signedIn.apply_as !== picked) {
+        try { await auth.signOut(); } catch (ignore) {}
+        me = null;
+        marketAuthStatus(t("無此帳號存在", "This account does not exist."), "err");
+        return;
+      }
       finishMarketAuth(await reloadMarketSession());
     } catch (err) {
       var mapped = auth.mapAuthError ? auth.mapAuthError(err) : null;
@@ -2505,7 +2713,8 @@
         document.getElementById("market-reg-email").value,
         pw,
         document.getElementById("market-reg-name").value,
-        "market"
+        "market",
+        applyChoice
       );
       var identities = (data.user && data.user.identities) || [];
       if (data.user && identities.length === 0) {
@@ -2519,9 +2728,14 @@
       }
       setMarketAuthMode("login");
       document.getElementById("market-login-email").value = document.getElementById("market-reg-email").value;
+      var appliedSeller = applyChoice === "seller";
       marketAuthStatus(t(
-        "註冊成功！請到信箱點擊確認連結。超級管理員核准後，才能進入書籍&市集下單、上架和切換買賣家。",
-        "Registered. Open the confirmation link in your email. A super admin must approve the account before you can order, list items, or switch buyer and seller."
+        appliedSeller
+          ? "註冊成功！已送出賣家申請。請到信箱點擊確認連結，並等超級管理員核准。"
+          : "註冊成功！已送出買家申請。請到信箱點擊確認連結，並等超級管理員核准。",
+        appliedSeller
+          ? "Registered as a seller application. Open the confirmation link in your email, then wait for a super admin."
+          : "Registered as a buyer application. Open the confirmation link in your email, then wait for a super admin."
       ), "ok");
     } catch (err) {
       var mappedReg = auth.mapAuthError ? auth.mapAuthError(err) : null;
@@ -2555,6 +2769,13 @@
     document.getElementById("market-auth-tab-login").click();
   });
 
+  document.getElementById("market-auth-back").addEventListener("click", function () {
+    var dialog = document.getElementById("market-auth");
+    if (dialog && dialog.open) dialog.close();
+    marketAuthStatus("");
+    setView("listings");
+  });
+
   (async function init() {
     mode = "buyer";
     localStorage.setItem(MODE_KEY, mode);
@@ -2566,15 +2787,18 @@
         var profile = await auth.getProfile(true);
         me = { session: session, profile: profile };
       }
+      applySideMode();
       await refresh();
-      if (me && me.profile && !canTrade()) {
+      if (me && me.profile && !canBuy() && !canSell()) {
+        var side = registeredSide();
+        var waiting = side === "seller"
+          ? ["帳號正在等待超級管理員審核。通過後才能管理自己的商品和處理自己的訂單。", "This account is waiting for a super admin. After approval you can manage your own products and orders."]
+          : side === "buyer"
+            ? ["帳號正在等待超級管理員審核。通過後才能下單和查看自己的訂單。", "This account is waiting for a super admin. After approval you can place orders and view your own orders."]
+            : ["帳號正在等待超級管理員審核，通過後才能下單、上架和切換買賣家。", "This account is waiting for a super admin. After approval you can order, list items, and switch buyer or seller."];
         showStatus(
-          me.profile.role === "rejected"
-            ? "此帳號無法進入書籍&市集。"
-            : "帳號正在等待超級管理員審核，通過後才能下單、上架和切換買賣家。",
-          me.profile.role === "rejected"
-            ? "This account cannot enter Books & Marketplace."
-            : "This account is waiting for a super admin. After approval you can order, list items, and switch buyer or seller.",
+          me.profile.role === "rejected" ? "此帳號無法進入書籍&市集。" : waiting[0],
+          me.profile.role === "rejected" ? "This account cannot enter Books & Marketplace." : waiting[1],
           "err"
         );
       }

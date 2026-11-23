@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=users-remove">
+  <link rel="stylesheet" href="assets/css/styles.css?v=swap-ui37">
 </head>
 <body class="page-admin-faculty">
   <a class="skip" href="#main">Skip to content</a>
@@ -20,8 +20,8 @@
         <p class="crumbs"><a href="index.html">imMBA</a> / <span class="zh">管理員審核</span><span class="en">Admin approval</span></p>
         <h1><span class="zh">管理員角色與存取控制</span><span class="en">Admin roles &amp; access control</span></h1>
         <p class="lead">
-          <span class="zh">新註冊的帳號是待審核（pending）。從書籍&amp;市集註冊的帳號，請核准進入市集；核准後只能下單、上架和切換買賣家，不能進入公告後台。其他帳號可核准為管理員。</span>
-          <span class="en">New accounts are pending. Approve marketplace signups for the marketplace only: they can order, list items, and switch buyer or seller, and they cannot open the announcement back office. Other accounts can be approved as admins.</span>
+          <span class="zh">新註冊的帳號是待審核（pending）。從書籍&amp;市集註冊的帳號會註明申請買家或賣家，可核准為買家、賣家，或同時為買賣家。買家只能下單。賣家只能管理自己的商品和訂單。買賣家兩者都可以。這些帳號都不能進入公告後台。</span>
+          <span class="en">New accounts are pending. Approve a marketplace signup as a buyer, a seller, or both. Buyers can place orders. Sellers manage only their own products and orders. Buyer-and-seller accounts can do both. None of these accounts can open the announcement back office.</span>
         </p>
       </div>
     </header>
@@ -55,8 +55,8 @@
   <div id="site-footer"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase-config.js"></script>
-  <script src="assets/js/auth.js?v=market-member"></script>
+  <script src="assets/js/auth.js?v=access-roles3"></script>
   <script src="assets/js/site.js?v=pending-role"></script>
-  <script src="assets/js/admin-users.js?v=market-member"></script>
+  <script src="assets/js/admin-users.js?v=access-roles3"></script>
 </body>
 </html>

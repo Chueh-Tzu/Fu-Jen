@@ -5,7 +5,7 @@
 alter table public.profiles drop constraint if exists profiles_role_check;
 alter table public.profiles
   add constraint profiles_role_check
-  check (role in ('visitor', 'pending', 'rejected', 'market', 'admin', 'super_admin'));
+  check (role in ('visitor', 'pending', 'rejected', 'buyer', 'market', 'both', 'admin', 'super_admin'));
 
 alter table public.profiles alter column role set default 'pending';
 
@@ -42,4 +42,4 @@ create policy "Users can insert own profile"
 alter table public.login_logs drop constraint if exists login_logs_role_check;
 alter table public.login_logs
   add constraint login_logs_role_check
-  check (role in ('visitor', 'pending', 'rejected', 'market', 'admin', 'super_admin'));
+  check (role in ('visitor', 'pending', 'rejected', 'buyer', 'market', 'both', 'admin', 'super_admin'));

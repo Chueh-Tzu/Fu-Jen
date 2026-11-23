@@ -8,9 +8,11 @@ create table if not exists public.profiles (
   email text,
   display_name text,
   role text not null default 'pending'
-    check (role in ('visitor', 'pending', 'rejected', 'market', 'admin', 'super_admin')),
+    check (role in ('visitor', 'pending', 'rejected', 'buyer', 'market', 'both', 'admin', 'super_admin')),
   signup_channel text not null default 'site'
     check (signup_channel in ('site', 'market')),
+  apply_as text
+    check (apply_as is null or apply_as in ('buyer', 'seller')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -45,13 +47,19 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, display_name, role, signup_channel)
+  insert into public.profiles (id, email, display_name, role, signup_channel, apply_as)
   values (
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)),
     'pending',
-    case when new.raw_user_meta_data->>'signup_channel' = 'market' then 'market' else 'site' end
+    case when new.raw_user_meta_data->>'signup_channel' = 'market' then 'market' else 'site' end,
+    case
+      when new.raw_user_meta_data->>'signup_channel' = 'market'
+        and new.raw_user_meta_data->>'apply_as' = 'seller' then 'seller'
+      when new.raw_user_meta_data->>'signup_channel' = 'market' then 'buyer'
+      else null
+    end
   )
   on conflict (id) do nothing;
   return new;
@@ -106,7 +114,22 @@ as $$
     select 1
     from public.profiles p
     where p.id = auth.uid()
-      and p.role in ('market', 'admin', 'super_admin')
+      and p.role in ('market', 'both', 'admin', 'super_admin')
+  );
+$$;
+
+create or replace function public.is_market_buyer()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.profiles p
+    where p.id = auth.uid()
+      and p.role in ('buyer', 'both', 'admin', 'super_admin')
   );
 $$;
 

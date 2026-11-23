@@ -186,7 +186,7 @@
       location.replace("profile-setup.html?next=" + encodeURIComponent(nextPage()));
       return;
     }
-    if (profile && profile.role === "market") {
+    if (profile && (profile.role === "market" || profile.role === "buyer" || profile.role === "both")) {
       location.replace("books.html");
       return;
     }
@@ -210,7 +210,7 @@
   }
 
   function continueAfterAuth(profile) {
-    if (profile && profile.role === "market") {
+    if (profile && (profile.role === "market" || profile.role === "buyer" || profile.role === "both")) {
       location.href = "books.html";
       return;
     }

@@ -35,10 +35,11 @@
       id: row.id,
       email: String(row.email || "").trim(),
       display_name: String(row.display_name || "").trim(),
-      role: row.role === "admin" || row.role === "super_admin" || row.role === "market" || row.role === "pending" || row.role === "rejected" || row.role === "visitor"
+      role: row.role === "admin" || row.role === "super_admin" || row.role === "market" || row.role === "both" || row.role === "buyer" || row.role === "pending" || row.role === "rejected" || row.role === "visitor"
         ? row.role
         : "visitor",
       signup_channel: row.signup_channel === "market" ? "market" : "site",
+      apply_as: row.apply_as === "seller" ? "seller" : row.apply_as === "buyer" ? "buyer" : null,
       profile_completed: row.profile_completed === false ? false : true,
       student_id: row.student_id || "",
       department: row.department || "",
@@ -58,7 +59,11 @@
   }
 
   function isMarketMember(role) {
-    return role === "market" || role === "admin" || role === "super_admin";
+    return role === "market" || role === "both" || role === "admin" || role === "super_admin";
+  }
+
+  function isMarketBuyer(role) {
+    return role === "buyer" || role === "both" || role === "admin" || role === "super_admin";
   }
 
   /** Absolute URL for login.html on this site (used for email redirects). */
@@ -159,12 +164,16 @@
   }
 
   async function insertOwnProfile(sb, session) {
+    var meta = (session.user && session.user.user_metadata) || {};
     var row = {
       id: session.user.id,
       email: session.user.email,
-      display_name: (session.user.user_metadata && session.user.user_metadata.display_name) ||
-        String(session.user.email || "").split("@")[0]
+      display_name: meta.display_name || String(session.user.email || "").split("@")[0]
     };
+    if (meta.signup_channel === "market") {
+      row.signup_channel = "market";
+      row.apply_as = meta.apply_as === "seller" ? "seller" : "buyer";
+    }
     var created = await sb.from("profiles").insert(Object.assign({ role: "pending", profile_completed: false }, row)).select().maybeSingle();
     if (created.error && String(created.error.message || "").indexOf("profile_completed") !== -1) {
       created = await sb.from("profiles").insert(Object.assign({ role: "pending" }, row)).select().maybeSingle();
@@ -177,7 +186,7 @@
     try {
       var session = cached.session || (await getSession());
       if (!session || !session.user) return;
-      var allowed = { visitor: 1, pending: 1, rejected: 1, market: 1, admin: 1, super_admin: 1 };
+      var allowed = { visitor: 1, pending: 1, rejected: 1, buyer: 1, market: 1, both: 1, admin: 1, super_admin: 1 };
       var role = profile && allowed[profile.role] ? profile.role : "visitor";
       var name =
         (profile && profile.display_name) ||
@@ -277,18 +286,20 @@
     });
   }
 
-  async function signUp(email, password, displayName, channel) {
+  async function signUp(email, password, displayName, channel, applyAs) {
     var sb = getClient();
     var marketSignup = channel === "market";
     var emailRedirectTo = loginPageUrl(marketSignup ? "email_confirmed=1&next=books.html" : "email_confirmed=1");
+    var data = {
+      display_name: String(displayName || "").trim() || null,
+      signup_channel: marketSignup ? "market" : "site"
+    };
+    if (marketSignup) data.apply_as = applyAs === "seller" ? "seller" : "buyer";
     var result = await sb.auth.signUp({
       email: String(email || "").trim(),
       password: String(password || ""),
       options: {
-        data: {
-          display_name: String(displayName || "").trim() || null,
-          signup_channel: marketSignup ? "market" : "site"
-        },
+        data: data,
         emailRedirectTo: emailRedirectTo
       }
     });
@@ -374,7 +385,7 @@
   }
 
   async function setRole(userId, role) {
-    if (!/^(visitor|pending|rejected|market|admin|super_admin)$/.test(role)) {
+    if (!/^(visitor|pending|rejected|buyer|market|both|admin|super_admin)$/.test(role)) {
       throw new Error("Invalid role.");
     }
     var sb = getClient();
@@ -460,7 +471,7 @@
     }
     var profile = await getProfile(true);
     if (!profile || !isAdminRole(profile.role)) {
-      if (profile && profile.role === "market") {
+      if (profile && (profile.role === "market" || profile.role === "buyer" || profile.role === "both")) {
         location.replace("books.html");
         return null;
       }
@@ -515,6 +526,7 @@
     saveOwnProfile: saveOwnProfile,
     isAdminRole: isAdminRole,
     isMarketMember: isMarketMember,
+    isMarketBuyer: isMarketBuyer,
     mapAuthError: mapAuthError,
     loginPageUrl: loginPageUrl,
     setAdminNavAccess: setAdminNavAccess,

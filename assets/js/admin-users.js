@@ -31,7 +31,9 @@
   function roleLabel(role) {
     if (role === "super_admin") return t("超級管理員", "Super admin");
     if (role === "admin") return t("管理員", "Admin");
-    if (role === "market") return t("市集成員", "Marketplace member");
+    if (role === "buyer") return t("買家", "Buyer");
+    if (role === "market") return t("賣家", "Seller");
+    if (role === "both") return t("買賣家", "Buyer and seller");
     if (role === "pending") return t("待審核", "Pending");
     if (role === "rejected") return t("已拒絕", "Rejected");
     return t("一般訪客", "Visitor");
@@ -43,6 +45,18 @@
     statusEl.textContent = message;
   }
 
+  function applyNote(row) {
+    if (row.signup_channel !== "market") return "";
+    if (row.role !== "pending" && row.role !== "rejected") return "";
+    if (row.apply_as === "seller") {
+      return '<p class="admin-row-note">' + escapeHtml(t("備註：賣家申請", "Note: seller application")) + "</p>";
+    }
+    if (row.apply_as === "buyer") {
+      return '<p class="admin-row-note">' + escapeHtml(t("備註：買家申請", "Note: buyer application")) + "</p>";
+    }
+    return "";
+  }
+
   function roleButton(role, label, extraClass) {
     return (
       '<button type="button" class="btn ' + (extraClass || "btn-outline") + '" data-role="' + role + '">' +
@@ -51,7 +65,7 @@
   }
 
   function render(rows) {
-    var order = { pending: 0, rejected: 1, visitor: 2, market: 3, admin: 4, super_admin: 5 };
+    var order = { pending: 0, rejected: 1, visitor: 2, buyer: 3, market: 4, both: 5, admin: 6, super_admin: 7 };
     rows = rows.slice().sort(function (a, b) {
       return (order[a.role] == null ? 9 : order[a.role]) - (order[b.role] == null ? 9 : order[b.role]);
     });
@@ -70,15 +84,29 @@
       if (row.role === "pending" || row.role === "rejected") {
         if (row.signup_channel === "market") {
           actions =
-            roleButton("market", t("核准進入市集", "Approve for marketplace"), "btn-gold") +
+            roleButton("buyer", t("核准為買家", "Approve as buyer"), "btn-gold") +
+            roleButton("market", t("核准為賣家", "Approve as seller"), "btn-outline") +
+            roleButton("both", t("核准為買賣家", "Approve as buyer and seller"), "btn-outline") +
             (row.role === "pending" ? roleButton("rejected", t("拒絕", "Reject"), "btn-outline") : "");
         } else {
           actions =
             roleButton("admin", t("核准為管理員", "Approve as admin"), "btn-gold") +
             (row.role === "pending" ? roleButton("rejected", t("拒絕", "Reject"), "btn-outline") : "");
         }
+      } else if (row.role === "buyer") {
+        actions =
+          roleButton("market", t("改為賣家", "Change to seller"), "btn-outline") +
+          roleButton("both", t("改為買賣家", "Change to buyer and seller"), "btn-outline") +
+          roleButton("visitor", t("設為一般訪客", "Set as visitor"), "btn-outline");
       } else if (row.role === "market") {
         actions =
+          roleButton("buyer", t("改為買家", "Change to buyer"), "btn-outline") +
+          roleButton("both", t("改為買賣家", "Change to buyer and seller"), "btn-outline") +
+          roleButton("visitor", t("設為一般訪客", "Set as visitor"), "btn-outline");
+      } else if (row.role === "both") {
+        actions =
+          roleButton("buyer", t("改為買家", "Change to buyer"), "btn-outline") +
+          roleButton("market", t("改為賣家", "Change to seller"), "btn-outline") +
           roleButton("visitor", t("設為一般訪客", "Set as visitor"), "btn-outline");
       } else {
         actions =
@@ -95,6 +123,7 @@
         "</div>" +
         '<h3 class="admin-row-title">' + escapeHtml(row.display_name || row.email || row.id) + "</h3>" +
         '<p class="admin-row-sub">' + escapeHtml(row.email || "") + "</p>" +
+        applyNote(row) +
         "</div>" +
         '<div class="admin-row-actions">' + actions +
         (row.role === "super_admin" ? "" :

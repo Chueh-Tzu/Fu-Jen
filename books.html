@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=swap-ui34">
+  <link rel="stylesheet" href="assets/css/styles.css?v=swap-ui37">
 </head>
 <body class="page-market">
   <a class="skip" href="#main"><span class="zh">跳至主要內容</span><span class="en">Skip to content</span></a>
@@ -292,6 +292,10 @@
     <div class="market-auth-card">
       <p class="admin-status" id="market-auth-status" role="status" hidden></p>
       <div id="market-auth-login">
+        <div class="market-entry-switch" role="group" aria-label="登入身分">
+          <button type="button" class="is-current" data-entry="buyer" id="market-entry-buyer" aria-pressed="true"><span class="zh">買家</span><span class="en">Buyer</span></button>
+          <button type="button" data-entry="seller" id="market-entry-seller" aria-pressed="false"><span class="zh">賣家</span><span class="en">Seller</span></button>
+        </div>
         <h2><span class="zh">登入</span><span class="en">Sign in</span></h2>
         <form id="market-auth-login-form">
           <label><span class="zh">電子郵件</span><span class="en">Email</span>
@@ -326,6 +330,13 @@
               <button type="button" class="password-toggle" data-market-password="market-reg-password2" aria-label="顯示密碼"><span class="password-toggle-icon" aria-hidden="true"></span></button>
             </span>
           </label>
+          <div class="market-apply-field">
+            <span class="zh">申請身分</span><span class="en">Apply as</span>
+            <div class="market-entry-switch" role="group" aria-label="申請身分">
+              <button type="button" class="is-current" data-apply="buyer" id="market-apply-buyer" aria-pressed="true"><span class="zh">買家</span><span class="en">Buyer</span></button>
+              <button type="button" data-apply="seller" id="market-apply-seller" aria-pressed="false"><span class="zh">賣家</span><span class="en">Seller</span></button>
+            </div>
+          </div>
           <button type="submit" class="btn btn-gold auth-submit" id="market-reg-submit" hidden><span class="zh">送出</span><span class="en">Submit</span></button>
         </form>
       </div>
@@ -343,7 +354,7 @@
         <button type="button" class="btn btn-gold" id="market-auth-tab-login"><span class="zh">登入</span><span class="en">Sign in</span></button>
         <button type="button" class="btn btn-outline" id="market-auth-tab-register"><span class="zh">註冊</span><span class="en">Register</span></button>
         <button type="button" class="btn btn-outline" id="market-auth-tab-forgot"><span class="zh">忘記密碼</span><span class="en">Forgot password</span></button>
-        <a class="btn btn-outline" href="index.html"><span class="zh">回首頁</span><span class="en">Home</span></a>
+        <button type="button" class="btn btn-outline" id="market-auth-back"><span class="zh">回上一頁</span><span class="en">Back</span></button>
       </div>
     </div>
   </dialog>
@@ -368,6 +379,12 @@
       <p class="admin-status" id="market-ship-status" role="status" hidden></p>
     </div>
   </dialog>
+  <dialog id="market-product-dialog" class="market-auth">
+    <div class="market-auth-card market-product-card">
+      <button type="button" class="market-dialog-close" id="market-product-close" aria-label="關閉"><span class="zh">×</span><span class="en">×</span></button>
+      <div id="market-product-detail"></div>
+    </div>
+  </dialog>
   <dialog id="market-stock-dialog" class="market-auth">
     <div class="market-auth-card">
       <h2><span class="zh">編輯上架</span><span class="en">Edit listing</span></h2>
@@ -387,8 +404,8 @@
   </dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase-config.js"></script>
-  <script src="assets/js/auth.js?v=market-member"></script>
+  <script src="assets/js/auth.js?v=access-roles3"></script>
   <script src="assets/js/site.js?v=site-downloads"></script>
-  <script src="assets/js/market-app.js?v=swap-ui46"></script>
+  <script src="assets/js/market-app.js?v=swap-ui53"></script>
 </body>
 </html>

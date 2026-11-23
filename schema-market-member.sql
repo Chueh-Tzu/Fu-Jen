@@ -4,16 +4,22 @@
 
 alter table public.profiles drop constraint if exists profiles_role_check;
 alter table public.profiles add constraint profiles_role_check
-  check (role in ('visitor', 'pending', 'rejected', 'market', 'admin', 'super_admin'));
+  check (role in ('visitor', 'pending', 'rejected', 'buyer', 'market', 'both', 'admin', 'super_admin'));
 
 alter table public.profiles add column if not exists signup_channel text not null default 'site';
 alter table public.profiles drop constraint if exists profiles_signup_channel_check;
 alter table public.profiles add constraint profiles_signup_channel_check
   check (signup_channel in ('site', 'market'));
 
+alter table public.profiles add column if not exists apply_as text;
+alter table public.profiles drop constraint if exists profiles_apply_as_check;
+alter table public.profiles add constraint profiles_apply_as_check
+  check (apply_as is null or apply_as in ('buyer', 'seller'));
+comment on column public.profiles.apply_as is 'Marketplace signup request: buyer or seller. Null for site signups.';
+
 alter table public.login_logs drop constraint if exists login_logs_role_check;
 alter table public.login_logs add constraint login_logs_role_check
-  check (role in ('visitor', 'pending', 'rejected', 'market', 'admin', 'super_admin'));
+  check (role in ('visitor', 'pending', 'rejected', 'buyer', 'market', 'both', 'admin', 'super_admin'));
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -22,13 +28,19 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, display_name, role, signup_channel)
+  insert into public.profiles (id, email, display_name, role, signup_channel, apply_as)
   values (
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)),
     'pending',
-    case when new.raw_user_meta_data->>'signup_channel' = 'market' then 'market' else 'site' end
+    case when new.raw_user_meta_data->>'signup_channel' = 'market' then 'market' else 'site' end,
+    case
+      when new.raw_user_meta_data->>'signup_channel' = 'market'
+        and new.raw_user_meta_data->>'apply_as' = 'seller' then 'seller'
+      when new.raw_user_meta_data->>'signup_channel' = 'market' then 'buyer'
+      else null
+    end
   )
   on conflict (id) do nothing;
   return new;
@@ -46,7 +58,7 @@ as $$
     select 1
     from public.profiles p
     where p.id = auth.uid()
-      and p.role in ('market', 'admin', 'super_admin')
+      and p.role in ('market', 'both', 'admin', 'super_admin')
   );
 $$;
 
@@ -58,6 +70,7 @@ as $$
 begin
   if auth.uid() = old.id and not public.is_super_admin() then
     new.signup_channel := old.signup_channel;
+    new.apply_as := old.apply_as;
   end if;
   return new;
 end;
@@ -69,7 +82,23 @@ before update on public.profiles
 for each row
 execute function public.keep_signup_channel();
 
+create or replace function public.is_market_buyer()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.profiles p
+    where p.id = auth.uid()
+      and p.role in ('buyer', 'both', 'admin', 'super_admin')
+  );
+$$;
+
 grant execute on function public.is_market_member() to anon, authenticated;
+grant execute on function public.is_market_buyer() to anon, authenticated;
 
 drop policy if exists "Sellers insert own products" on public.market_products;
 create policy "Sellers insert own products"

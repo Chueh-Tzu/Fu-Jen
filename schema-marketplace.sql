@@ -145,7 +145,7 @@ declare
   actor text;
 begin
   select role into actor from public.profiles where id = auth.uid();
-  if actor is distinct from 'market' then
+  if actor not in ('market', 'both') then
     return new;
   end if;
   if new.name is distinct from old.name
@@ -247,7 +247,7 @@ begin
   if buyer.id is null then
     raise exception 'Profile not found';
   end if;
-  if buyer.role not in ('market', 'admin', 'super_admin') then
+  if not public.is_market_buyer() then
     raise exception 'This account is not approved for the marketplace';
   end if;
   if p_shipping not in ('pickup', 'delivery') then
