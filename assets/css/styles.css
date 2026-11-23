@@ -3150,17 +3150,17 @@ html[data-locale="en"] .market-lang-pair { grid-template-columns: 1fr; }
 .swap-price { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; min-width: 0; }
 .swap-check { display: flex !important; align-items: center; gap: 8px; font-weight: 700; }
 .swap-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-.page-market .market-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.swap-card { overflow: hidden; display: flex; flex-direction: column; }
+.page-market .market-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
+.swap-card { overflow: hidden; display: flex; flex-direction: column; height: 100%; }
 .swap-card[data-product] { cursor: pointer; }
 .swap-card .market-card-actions,
 .swap-card .market-card-actions * { cursor: default; }
 .swap-card .market-card-actions .btn { cursor: pointer; }
 .swap-card .market-media, .swap-card video { width: 100%; height: auto; object-fit: contain; background: #f6f3ee; }
-.swap-card-body { display: grid; gap: 6px; padding: 12px 14px 14px; }
+.swap-card-body { display: flex; flex: 1; flex-direction: column; gap: 6px; padding: 12px 14px 14px; }
 .swap-card h3, .swap-code { margin: 0; }
 .swap-code span { font-weight: 700; margin-right: 6px; }
-.swap-card .market-card-actions { display: flex; gap: 8px; align-items: center; }
+.swap-card .market-card-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: auto; padding-top: 8px; }
 .swap-order { display: grid; gap: 10px; padding: 16px; margin-bottom: 12px; }
 .swap-order header, .swap-lines p { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; }
 .swap-query { display: grid; grid-template-columns: minmax(220px, 1fr) 220px auto auto auto; gap: 12px; align-items: end; margin-bottom: 8px; }
