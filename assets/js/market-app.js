@@ -674,6 +674,26 @@
     }).join("");
   }
 
+  function purchaseQty(raw, stock) {
+    var text = String(raw == null ? "" : raw).trim();
+    if (!/^[0-9]+$/.test(text) || Number(text) < 1) {
+      return {
+        ok: false,
+        zh: "數量必須是 1 以上的整數。",
+        en: "Quantity must be a whole number of at least 1."
+      };
+    }
+    var quantity = Number(text);
+    if (quantity > Number(stock)) {
+      return {
+        ok: false,
+        zh: "數量超過可售庫存。",
+        en: "That quantity is more than the available stock."
+      };
+    }
+    return { ok: true, quantity: quantity };
+  }
+
   function cartLines() {
     var cart = readCart();
     return Object.keys(cart).map(function (id) {
@@ -2186,11 +2206,16 @@
       var productId = cartButton.getAttribute("data-cart");
       var product = productById(productId);
       var input = document.querySelector('[data-qty="' + productId + '"]');
-      var quantity = Math.max(1, Number(input && input.value) || 1);
-      if (!product || quantity > Number(product.quantity)) {
-        showStatus("數量超過可售庫存。", "That quantity is more than the available stock.", "err");
+      var parsed = purchaseQty(input && input.value, product && product.quantity);
+      if (!product) {
+        showStatus("找不到這項商品。", "That item could not be found.", "err");
         return;
       }
+      if (!parsed.ok) {
+        showStatus(parsed.zh, parsed.en, "err");
+        return;
+      }
+      var quantity = parsed.quantity;
       var cart = readCart();
       cart[productId] = quantity;
       writeCart(cart);
@@ -2209,11 +2234,16 @@
       var saveId = cartSave.getAttribute("data-cart-save");
       var saveInput = document.querySelector('[data-cart-qty="' + saveId + '"]');
       var saveProduct = productById(saveId);
-      var saveQty = Math.max(1, Number(saveInput && saveInput.value) || 1);
-      if (!saveProduct || saveQty > Number(saveProduct.quantity)) {
-        showStatus("數量超過可售庫存。", "That quantity is more than the available stock.", "err");
+      var parsedSave = purchaseQty(saveInput && saveInput.value, saveProduct && saveProduct.quantity);
+      if (!saveProduct) {
+        showStatus("找不到這項商品。", "That item could not be found.", "err");
         return;
       }
+      if (!parsedSave.ok) {
+        showStatus(parsedSave.zh, parsedSave.en, "err");
+        return;
+      }
+      var saveQty = parsedSave.quantity;
       var savedCart = readCart();
       savedCart[saveId] = saveQty;
       writeCart(savedCart);
@@ -2346,8 +2376,12 @@
       var stockInput = document.querySelector('[data-stock="' + stockId + '"]');
       var stockItem = productById(stockId);
       if (!stockItem || stockItem.seller_id !== uid()) return;
-      var stock = Number(stockInput && stockInput.value);
-      if (stock < 0 || stockInput.value === "") return;
+      var stockText = String(stockInput && stockInput.value || "").trim();
+      if (!/^[0-9]+$/.test(stockText)) {
+        showStatus("上架數量必須是 0 以上的整數。", "Listed quantity must be a whole number of 0 or more.", "err");
+        return;
+      }
+      var stock = Number(stockText);
       var stockResult = await auth.getClient().from("market_products").update({ quantity: stock }).eq("id", stockId).eq("seller_id", uid());
       if (stockResult.error) {
         showStatus("庫存更新失敗：" + stockResult.error.message, "Could not update stock: " + stockResult.error.message, "err");
@@ -2458,7 +2492,10 @@
     setView("member");
   });
 
+  var checkoutBusy = false;
+
   async function checkout() {
+    if (checkoutBusy) return;
     if (registeredSide() === "seller" || !canBuy()) {
       if (registeredSide() === "seller") {
         showStatus("這個帳號是賣家，不能下單。", "This account is a seller and cannot place orders.", "err");
@@ -2495,29 +2532,45 @@
         return;
       }
     }
-    var sb = auth.getClient();
-    for (var i = 0; i < sellers.length; i += 1) {
-      var placed = await sb.rpc("place_market_order", {
-        p_items: groups[sellers[i]],
-        p_shipping: shipping,
-        p_recipient: recipient,
-        p_phone: phone,
-        p_address: address
-      });
-      if (placed.error) {
-        showStatus("下單失敗：" + placed.error.message, "Checkout failed: " + placed.error.message, "err");
-        return;
-      }
+    var invalidLine = chosen.filter(function (line) {
+      return !purchaseQty(line.quantity, line.product.quantity).ok;
+    })[0];
+    if (invalidLine) {
+      var invalidQty = purchaseQty(invalidLine.quantity, invalidLine.product.quantity);
+      showStatus(invalidQty.zh, invalidQty.en, "err");
+      return;
     }
-    var cart = readCart();
-    chosen.forEach(function (line) {
-      delete cart[line.product.id];
-      delete cartPicked[line.product.id];
-    });
-    writeCart(cart);
-    showStatus("付款已送出，等待賣家確認收款。", "Payment submitted. Waiting for the seller to confirm it.", "ok");
-    await refresh();
-    setView("member");
+    checkoutBusy = true;
+    var payButton = document.getElementById("market-checkout");
+    if (payButton) payButton.disabled = true;
+    try {
+      var sb = auth.getClient();
+      for (var i = 0; i < sellers.length; i += 1) {
+        var placed = await sb.rpc("place_market_order", {
+          p_items: groups[sellers[i]],
+          p_shipping: shipping,
+          p_recipient: recipient,
+          p_phone: phone,
+          p_address: address
+        });
+        if (placed.error) {
+          showStatus("下單失敗：" + placed.error.message, "Checkout failed: " + placed.error.message, "err");
+          return;
+        }
+      }
+      var cart = readCart();
+      chosen.forEach(function (line) {
+        delete cart[line.product.id];
+        delete cartPicked[line.product.id];
+      });
+      writeCart(cart);
+      showStatus("付款已送出，等待賣家確認收款。", "Payment submitted. Waiting for the seller to confirm it.", "ok");
+      await refresh();
+      setView("member");
+    } finally {
+      checkoutBusy = false;
+      if (payButton) payButton.disabled = false;
+    }
   }
 
   var localeToggle = document.querySelector("[data-locale-toggle]");
